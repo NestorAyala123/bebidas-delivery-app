@@ -21,16 +21,44 @@ enum DeliveryStatus {
   /// Solicitud o entrega cancelada
   cancelled;
 
+  /// Terminal states: Once reached, no further transitions are allowed
   bool get isTerminal =>
       this == DeliveryStatus.delivered || this == DeliveryStatus.cancelled;
 
+  /// Active states: Ongoing delivery lifecycle
   bool get isActive => !isTerminal;
 
+  /// Indicates a driver is currently assigned and responsible for this delivery
   bool get isAssigned =>
       this == DeliveryStatus.driverAssigned ||
       this == DeliveryStatus.arrivedAtStore ||
       this == DeliveryStatus.pickedUp ||
       this == DeliveryStatus.onTheWay;
+
+  /// RN05: Evaluates if this status can conceptually transition to [nextStatus].
+  bool canTransitionTo(DeliveryStatus nextStatus) {
+    if (this == nextStatus) return false;
+
+    return switch (this) {
+      DeliveryStatus.pendingOffer =>
+        nextStatus == DeliveryStatus.driverAssigned ||
+            nextStatus == DeliveryStatus.cancelled,
+      DeliveryStatus.driverAssigned =>
+        nextStatus == DeliveryStatus.arrivedAtStore ||
+            nextStatus == DeliveryStatus.cancelled,
+      DeliveryStatus.arrivedAtStore =>
+        nextStatus == DeliveryStatus.pickedUp ||
+            nextStatus == DeliveryStatus.cancelled,
+      DeliveryStatus.pickedUp =>
+        nextStatus == DeliveryStatus.onTheWay ||
+            nextStatus == DeliveryStatus.cancelled,
+      DeliveryStatus.onTheWay =>
+        nextStatus == DeliveryStatus.delivered ||
+            nextStatus == DeliveryStatus.cancelled,
+      DeliveryStatus.delivered => false,
+      DeliveryStatus.cancelled => false,
+    };
+  }
 }
 
 /// Backwards compatibility alias for existing code

@@ -1,3 +1,5 @@
+import 'delivery_request.dart';
+import 'delivery_status.dart';
 import 'driver_status.dart';
 
 /// Driver domain entity representing a delivery person.
@@ -26,8 +28,14 @@ class Driver {
          'El nombre del repartidor no puede estar vacío',
        );
 
-  /// Indicates if the driver is currently able to receive and accept new delivery requests.
+  /// RN02: Indicates if the driver is currently able to receive and accept new delivery requests.
   bool get canAcceptDeliveries => status.isAvailable;
+
+  /// RN02: Evaluates if the driver can take a specific delivery request.
+  /// Driver must be available and the request must be in pendingOffer status.
+  bool canTakeDeliveryRequest(DeliveryRequest request) {
+    return canAcceptDeliveries && request.status == DeliveryStatus.pendingOffer;
+  }
 
   /// Returns a copy of the driver with an updated operational status.
   Driver copyWithStatus(DriverStatus newStatus) {
