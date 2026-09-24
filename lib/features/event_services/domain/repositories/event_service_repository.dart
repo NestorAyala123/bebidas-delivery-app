@@ -5,5 +5,7 @@ import '../entities/event_service.dart';
 abstract class EventServiceRepository {
   Future<Result<List<EventService>, Failure>> getAllServices();
   Future<Result<EventService, Failure>> getServiceById(String id);
-  Future<Result<List<EventService>, Failure>> getServicesByProvider(String providerId);
+  Future<Result<List<EventService>, Failure>> getServicesByProvider(
+    String providerId,
+  );
 }

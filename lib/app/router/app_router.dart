@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../../core/router/feature_route_module.dart';
 
 class AppRouter {
@@ -40,9 +41,7 @@ class AppRouter {
       settings: settings,
       builder: (context) => Scaffold(
         appBar: AppBar(title: const Text('Ruta no encontrada')),
-        body: Center(
-          child: Text('No existe la ruta: ${settings.name}'),
-        ),
+        body: Center(child: Text('No existe la ruta: ${settings.name}')),
       ),
     );
   }

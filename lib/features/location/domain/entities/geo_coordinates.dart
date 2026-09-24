@@ -6,11 +6,9 @@ class GeoCoordinates {
   final double latitude;
   final double longitude;
 
-  const GeoCoordinates({
-    required this.latitude,
-    required this.longitude,
-  }) : assert(latitude >= -90.0 && latitude <= 90.0, 'Latitud inválida'),
-       assert(longitude >= -180.0 && longitude <= 180.0, 'Longitud inválida');
+  const GeoCoordinates({required this.latitude, required this.longitude})
+    : assert(latitude >= -90.0 && latitude <= 90.0, 'Latitud inválida'),
+      assert(longitude >= -180.0 && longitude <= 180.0, 'Longitud inválida');
 
   /// Calculates distance to another coordinate in Kilometers using Haversine formula
   double distanceToInKm(GeoCoordinates other) {
@@ -19,7 +17,8 @@ class GeoCoordinates {
     final double dLat = _degToRad(other.latitude - latitude);
     final double dLon = _degToRad(other.longitude - longitude);
 
-    final double a = math.sin(dLat / 2) * math.sin(dLat / 2) +
+    final double a =
+        math.sin(dLat / 2) * math.sin(dLat / 2) +
         math.cos(_degToRad(latitude)) *
             math.cos(_degToRad(other.latitude)) *
             math.sin(dLon / 2) *

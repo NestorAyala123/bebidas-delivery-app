@@ -15,5 +15,8 @@ class Rating {
     required this.score,
     this.comment,
     required this.createdAt,
-  }) : assert(score >= 1 && score <= 5, 'La calificación debe estar entre 1 y 5 estrellas');
+  }) : assert(
+         score >= 1 && score <= 5,
+         'La calificación debe estar entre 1 y 5 estrellas',
+       );
 }

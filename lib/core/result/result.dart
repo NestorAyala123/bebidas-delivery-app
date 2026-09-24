@@ -7,14 +7,14 @@ sealed class Result<S, F> {
   bool get isFailure => this is FailureResult<S, F>;
 
   S? get dataOrNull => switch (this) {
-        Success(data: final d) => d,
-        FailureResult() => null,
-      };
+    Success(data: final d) => d,
+    FailureResult() => null,
+  };
 
   F? get failureOrNull => switch (this) {
-        Success() => null,
-        FailureResult(failure: final f) => f,
-      };
+    Success() => null,
+    FailureResult(failure: final f) => f,
+  };
 
   R fold<R>({
     required R Function(S data) onSuccess,

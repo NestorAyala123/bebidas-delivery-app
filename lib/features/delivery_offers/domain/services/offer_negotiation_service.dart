@@ -22,14 +22,20 @@ class OfferNegotiationService {
     required List<DeliveryOffer> currentOffers,
     required String selectedOfferId,
   }) {
-    final selectedOfferIndex = currentOffers.indexWhere((o) => o.id == selectedOfferId);
+    final selectedOfferIndex = currentOffers.indexWhere(
+      (o) => o.id == selectedOfferId,
+    );
     if (selectedOfferIndex < 0) {
-      throw const DomainException('La oferta seleccionada no existe en la lista');
+      throw const DomainException(
+        'La oferta seleccionada no existe en la lista',
+      );
     }
 
     final selectedOffer = currentOffers[selectedOfferIndex];
     if (selectedOffer.status != DeliveryOfferStatus.pending) {
-      throw const DomainException('Solo se pueden aceptar ofertas en estado pendiente');
+      throw const DomainException(
+        'Solo se pueden aceptar ofertas en estado pendiente',
+      );
     }
 
     return currentOffers.map((offer) {
@@ -37,7 +43,9 @@ class OfferNegotiationService {
         return offer.copyWithStatus(DeliveryOfferStatus.accepted);
       } else if (offer.status == DeliveryOfferStatus.pending) {
         // RN06: Todas las demás ofertas pendientes se cierran
-        return offer.copyWithStatus(DeliveryOfferStatus.closedByAnotherAcceptance);
+        return offer.copyWithStatus(
+          DeliveryOfferStatus.closedByAnotherAcceptance,
+        );
       }
       return offer;
     }).toList();

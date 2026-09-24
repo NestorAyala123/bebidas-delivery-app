@@ -4,10 +4,10 @@ import 'package:bebidas_delivery_app/app/router/app_router.dart';
 import 'package:bebidas_delivery_app/features/auth/presentation/routes/auth_routes.dart';
 
 void main() {
-  testWidgets('App renders welcome page correctly', (WidgetTester tester) async {
-    AppRouter.registerModules([
-      AuthRoutes(),
-    ]);
+  testWidgets('App renders welcome page correctly', (
+    WidgetTester tester,
+  ) async {
+    AppRouter.registerModules([AuthRoutes()]);
 
     await tester.pumpWidget(const BebidasDeliveryApp());
     await tester.pumpAndSettle();

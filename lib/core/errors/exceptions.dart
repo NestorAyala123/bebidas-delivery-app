@@ -6,7 +6,8 @@ abstract class AppException implements Exception {
   const AppException([this.message = '', this.code]);
 
   @override
-  String toString() => '$runtimeType: $message${code != null ? ' (Code: $code)' : ''}';
+  String toString() =>
+      '$runtimeType: $message${code != null ? ' (Code: $code)' : ''}';
 }
 
 class ServerException extends AppException {
@@ -18,9 +19,15 @@ class NetworkException extends AppException {
 }
 
 class CacheException extends AppException {
-  const CacheException([super.message = 'Error de caché o almacenamiento local', super.code]);
+  const CacheException([
+    super.message = 'Error de caché o almacenamiento local',
+    super.code,
+  ]);
 }
 
 class DomainException extends AppException {
-  const DomainException([super.message = 'Error de regla de negocio', super.code]);
+  const DomainException([
+    super.message = 'Error de regla de negocio',
+    super.code,
+  ]);
 }

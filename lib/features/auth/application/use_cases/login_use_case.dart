@@ -19,7 +19,9 @@ class LoginUseCase {
     }
     if (password.trim().length < 6) {
       return Future.value(
-        const FailureResult(ValidationFailure('La contraseña debe tener al menos 6 caracteres')),
+        const FailureResult(
+          ValidationFailure('La contraseña debe tener al menos 6 caracteres'),
+        ),
       );
     }
 
