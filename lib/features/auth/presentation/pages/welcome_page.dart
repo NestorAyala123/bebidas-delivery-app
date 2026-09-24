@@ -6,9 +6,7 @@ class WelcomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Bebidas Delivery'),
-      ),
+      appBar: AppBar(title: const Text('Bebidas Delivery')),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
@@ -32,7 +30,9 @@ class WelcomePage extends StatelessWidget {
               ElevatedButton(
                 onPressed: () {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Módulo Auth listo para desarrollo')),
+                    const SnackBar(
+                      content: Text('Módulo Auth listo para desarrollo'),
+                    ),
                   );
                 },
                 child: const Text('Iniciar Sesión'),

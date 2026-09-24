@@ -6,7 +6,10 @@ void main() {
     test('Calculates approximate distance between two coordinates', () {
       // Coordenadas aproximadas en Lima, Perú
       // Miraflores (-12.1219, -77.0297) -> San Isidro (-12.0970, -77.0365)
-      const miraflores = GeoCoordinates(latitude: -12.1219, longitude: -77.0297);
+      const miraflores = GeoCoordinates(
+        latitude: -12.1219,
+        longitude: -77.0297,
+      );
       const sanIsidro = GeoCoordinates(latitude: -12.0970, longitude: -77.0365);
 
       final distanceKm = miraflores.distanceToInKm(sanIsidro);

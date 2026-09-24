@@ -27,5 +27,7 @@ class OrderDeliveryInfo {
 /// Public contract exposed by the Orders module.
 /// Other modules (like Delivery) must consume this contract, NEVER the internal infrastructure.
 abstract class OrderDeliveryContract {
-  Future<Result<OrderDeliveryInfo, Failure>> getOrderDeliveryInfo(String orderId);
+  Future<Result<OrderDeliveryInfo, Failure>> getOrderDeliveryInfo(
+    String orderId,
+  );
 }

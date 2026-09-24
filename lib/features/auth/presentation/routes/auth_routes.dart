@@ -1,4 +1,5 @@
 import 'package:flutter/widgets.dart';
+
 import '../../../../core/router/feature_route_module.dart';
 import '../pages/welcome_page.dart';
 
@@ -9,8 +10,8 @@ class AuthRoutes implements FeatureRouteModule {
 
   @override
   Map<String, WidgetBuilder> get routes => {
-        welcome: (context) => const WelcomePage(),
-      };
+    welcome: (context) => const WelcomePage(),
+  };
 
   @override
   Route<dynamic>? onGenerateRoute(RouteSettings settings) {

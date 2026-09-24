@@ -49,8 +49,14 @@ void main() {
       final closed3 = updatedOffers.firstWhere((o) => o.id == 'offer-3');
 
       expect(accepted.status, equals(DeliveryOfferStatus.accepted));
-      expect(closed1.status, equals(DeliveryOfferStatus.closedByAnotherAcceptance));
-      expect(closed3.status, equals(DeliveryOfferStatus.closedByAnotherAcceptance));
+      expect(
+        closed1.status,
+        equals(DeliveryOfferStatus.closedByAnotherAcceptance),
+      );
+      expect(
+        closed3.status,
+        equals(DeliveryOfferStatus.closedByAnotherAcceptance),
+      );
     });
 
     test('RN03: Validates available actions when no drivers are around', () {

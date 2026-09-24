@@ -1,9 +1,4 @@
-enum UserRole {
-  client,
-  store,
-  driver,
-  eventProvider,
-}
+enum UserRole { client, store, driver, eventProvider }
 
 class AppUser {
   final String id;

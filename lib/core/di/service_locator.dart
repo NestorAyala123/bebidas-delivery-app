@@ -40,7 +40,8 @@ class ServiceLocator {
   }
 
   /// Checks if an instance of type [T] is registered
-  bool isRegistered<T>() => _singletons.containsKey(T) || _factories.containsKey(T);
+  bool isRegistered<T>() =>
+      _singletons.containsKey(T) || _factories.containsKey(T);
 
   /// Resets all registrations (useful for unit tests)
   void reset() {
