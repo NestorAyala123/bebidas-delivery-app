@@ -10,6 +10,7 @@ class Cart {
 
   bool get isEmpty => items.isEmpty;
   int get totalItemCount => items.fold(0, (acc, item) => acc + item.quantity);
+  double get subtotal => items.fold(0.0, (acc, item) => acc + item.subtotal);
 
   /// Adds an item. Throws DomainException if item is from a different store (RN07).
   Cart addItem({required String targetStoreId, required CartItem item}) {
@@ -36,5 +37,29 @@ class Cart {
     return Cart(storeId: targetStoreId, items: updated);
   }
 
+  /// Removes an item by product ID. If cart becomes empty, storeId is reset.
+  Cart removeItem(String productId) {
+    final updated = items.where((i) => i.productId != productId).toList();
+    return Cart(
+      storeId: updated.isEmpty ? null : storeId,
+      items: updated,
+    );
+  }
+
+  /// Updates quantity for a specific product. If quantity <= 0, item is removed.
+  Cart updateQuantity(String productId, int newQuantity) {
+    if (newQuantity <= 0) {
+      return removeItem(productId);
+    }
+    final updated = items.map((i) {
+      if (i.productId == productId) {
+        return i.copyWith(quantity: newQuantity);
+      }
+      return i;
+    }).toList();
+    return Cart(storeId: storeId, items: updated);
+  }
+
   Cart clear() => const Cart();
 }
+
