@@ -1,0 +1,331 @@
+openapi: 3.0.3
+info:
+  title: Identity and Communication API
+  version: 1.0.0
+  description: Public contract for auth, users and chat modules.
+servers:
+  - url: https://api.example.com
+tags:
+  - name: Auth
+  - name: Users
+  - name: Chat
+paths:
+  /v1/auth/register:
+    post:
+      tags: [Auth]
+      operationId: register
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: User and tokens created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /v1/auth/login:
+    post:
+      tags: [Auth]
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /v1/auth/refresh:
+    post:
+      tags: [Auth]
+      operationId: refreshToken
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refreshToken]
+              properties:
+                refreshToken: { type: string, minLength: 32 }
+      responses:
+        '200':
+          description: Rotated tokens
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TokenResponse' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /v1/auth/logout:
+    post:
+      tags: [Auth]
+      security: [{ bearerAuth: [] }]
+      operationId: logout
+      responses:
+        '204': { description: Session revoked }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /v1/users/me:
+    get:
+      tags: [Users]
+      security: [{ bearerAuth: [] }]
+      operationId: getCurrentIdentity
+      responses:
+        '200':
+          description: Current identity
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/IdentityResponse' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    patch:
+      tags: [Users]
+      security: [{ bearerAuth: [] }]
+      operationId: updateCurrentProfile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UpdateProfileRequest' }
+      responses:
+        '200':
+          description: Updated identity
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/IdentityResponse' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /v1/users/{userId}:
+    get:
+      tags: [Users]
+      security: [{ bearerAuth: [] }]
+      operationId: getUserById
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      responses:
+        '200':
+          description: Public identity
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/IdentityResponse' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /v1/conversations:
+    post:
+      tags: [Chat]
+      security: [{ bearerAuth: [] }]
+      operationId: createConversation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateConversationRequest' }
+      responses:
+        '201':
+          description: Conversation created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Conversation' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /v1/conversations/{conversationId}/participants:
+    post:
+      tags: [Chat]
+      security: [{ bearerAuth: [] }]
+      operationId: addConversationParticipant
+      parameters:
+        - $ref: '#/components/parameters/ConversationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AddParticipantRequest' }
+      responses:
+        '200': { description: Participant added }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /v1/conversations/{conversationId}/messages:
+    post:
+      tags: [Chat]
+      security: [{ bearerAuth: [] }]
+      operationId: sendMessage
+      parameters:
+        - $ref: '#/components/parameters/ConversationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SendMessageRequest' }
+      responses:
+        '201':
+          description: Message created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ChatMessage' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    get:
+      tags: [Chat]
+      security: [{ bearerAuth: [] }]
+      operationId: listMessages
+      parameters:
+        - $ref: '#/components/parameters/ConversationId'
+        - in: query
+          name: cursor
+          schema: { type: string }
+        - in: query
+          name: limit
+          schema: { type: integer, minimum: 1, maximum: 100, default: 50 }
+      responses:
+        '200':
+          description: Paginated messages
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/ChatMessage' }
+                  nextCursor: { type: string, nullable: true }
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    UserId:
+      name: userId
+      in: path
+      required: true
+      schema: { type: string, minLength: 1 }
+    ConversationId:
+      name: conversationId
+      in: path
+      required: true
+      schema: { type: string, minLength: 1 }
+  schemas:
+    Role:
+      type: string
+      enum: [client, store, driver, event_provider]
+    RegisterRequest:
+      type: object
+      required: [email, password, displayName, role]
+      properties:
+        email: { type: string, format: email }
+        password: { type: string, minLength: 8, format: password }
+        displayName: { type: string, minLength: 1, maxLength: 120 }
+        phoneNumber: { type: string, maxLength: 30 }
+        role: { $ref: '#/components/schemas/Role' }
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string, format: email }
+        password: { type: string, format: password }
+    TokenResponse:
+      type: object
+      required: [accessToken, refreshToken, tokenType, expiresIn]
+      properties:
+        accessToken: { type: string }
+        refreshToken: { type: string }
+        tokenType: { type: string, enum: [Bearer] }
+        expiresIn: { type: integer, format: int32 }
+    Identity:
+      type: object
+      required: [id, email, displayName, role, isActive, createdAt]
+      properties:
+        id: { type: string }
+        email: { type: string, format: email }
+        displayName: { type: string }
+        phoneNumber: { type: string, nullable: true }
+        role: { $ref: '#/components/schemas/Role' }
+        isActive: { type: boolean }
+        createdAt: { type: string, format: date-time }
+    IdentityResponse:
+      type: object
+      required: [data]
+      properties:
+        data: { $ref: '#/components/schemas/Identity' }
+    AuthResponse:
+      type: object
+      required: [user, tokens]
+      properties:
+        user: { $ref: '#/components/schemas/Identity' }
+        tokens: { $ref: '#/components/schemas/TokenResponse' }
+    UpdateProfileRequest:
+      type: object
+      required: [displayName]
+      properties:
+        displayName: { type: string, minLength: 1, maxLength: 120 }
+        phoneNumber: { type: string, nullable: true, maxLength: 30 }
+    ConversationParticipant:
+      type: object
+      required: [userId, role, joinedAt]
+      properties:
+        userId: { type: string }
+        role: { $ref: '#/components/schemas/Role' }
+        joinedAt: { type: string, format: date-time }
+    CreateConversationRequest:
+      type: object
+      required: [type, participants]
+      properties:
+        type: { type: string, enum: [direct, order_support] }
+        orderId: { type: string, nullable: true }
+        participants:
+          type: array
+          minItems: 2
+          items: { $ref: '#/components/schemas/ConversationParticipant' }
+    AddParticipantRequest:
+      type: object
+      required: [userId, role]
+      properties:
+        userId: { type: string }
+        role: { $ref: '#/components/schemas/Role' }
+    Conversation:
+      type: object
+      required: [id, type, participants, createdAt, updatedAt]
+      properties:
+        id: { type: string }
+        type: { type: string, enum: [direct, order_support] }
+        orderId: { type: string, nullable: true }
+        participants:
+          type: array
+          items: { $ref: '#/components/schemas/ConversationParticipant' }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    SendMessageRequest:
+      type: object
+      required: [type]
+      properties:
+        type: { type: string, enum: [text, image, location, system] }
+        text: { type: string, maxLength: 4000 }
+    ChatMessage:
+      type: object
+      required: [id, conversationId, senderId, type, createdAt]
+      properties:
+        id: { type: string }
+        conversationId: { type: string }
+        senderId: { type: string }
+        type: { type: string, enum: [text, image, location, system] }
+        text: { type: string, nullable: true }
+        createdAt: { type: string, format: date-time }
+        readAt: { type: string, format: date-time, nullable: true }
+  responses:
+    Unauthorized:
+      description: Missing, expired, or invalid token
+    Forbidden:
+      description: Authenticated user lacks permission
+    NotFound:
+      description: Resource not found
+    Conflict:
+      description: Resource already exists
+    ValidationError:
+      description: Request validation failed
