@@ -36,6 +36,43 @@ void main() {
       expect(confirmedOrder.status.canSearchDriver, isTrue);
     });
 
+    test('Only valid order status transitions are allowed', () {
+      final order = Order(
+        id: 'ord-2',
+        customerId: 'usr-1',
+        storeId: 'store-1',
+        status: OrderStatus.created,
+        deliveryAddress: 'Av. Siempre Viva 123',
+        createdAt: DateTime.now(),
+        items: [
+          const OrderItem(
+            productId: 'prod-1',
+            productName: 'Cerveza Lager 330ml',
+            frozenUnitPrice: 5.0,
+            quantity: 1,
+          ),
+        ],
+      );
+
+      expect(
+        () => order.copyWithStatus(OrderStatus.delivered),
+        throwsA(isA<DomainException>()),
+      );
+      expect(
+        () => order.copyWithStatus(OrderStatus.rejected),
+        throwsA(isA<DomainException>()),
+      );
+      final rejected = order.copyWithStatus(
+        OrderStatus.rejected,
+        rejectionReason: 'Producto agotado',
+      );
+      expect(rejected.rejectionReason, 'Producto agotado');
+      expect(
+        () => rejected.copyWithStatus(OrderStatus.confirmed),
+        throwsA(isA<DomainException>()),
+      );
+    });
+
     test('RN07: Cart throws DomainException when adding items from a different store', () {
       var cart = const Cart();
 
