@@ -99,4 +99,15 @@ class DeliveryRequest {
       createdAt: createdAt,
     );
   }
+
+  /// RN05: Transitions to [newStatus] validating conceptual lifecycle rules.
+  /// Throws [DomainException] if the transition is invalid.
+  DeliveryRequest transitionTo(DeliveryStatus newStatus) {
+    if (!status.canTransitionTo(newStatus)) {
+      throw DomainException(
+        'RN05: Transición de estado inválida de ${status.name} a ${newStatus.name}',
+      );
+    }
+    return copyWithStatus(newStatus);
+  }
 }

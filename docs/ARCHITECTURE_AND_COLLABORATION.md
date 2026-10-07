@@ -9,7 +9,7 @@ main (Producción)
         ├── feature/stores-products        (Wendy)
         ├── feature/cart-orders            (David)
         ├── feature/location-services      (Adriano)
-        └── feature/delivery-offers        (Néstor)
+        └── feature/delivery               (Néstor)
 ```
 
 - **Regla de oro**: Nadie hace push directo a `main` ni a `develop`.
@@ -26,7 +26,7 @@ main (Producción)
 | **Wendy** | `stores`, `products`, `pricing`, `returnable_containers` | `feature/stores-products` | Comercios, Horarios, Catálogo, Disponibilidad, Precios escalonados (RN04), Envases retornables (RN05). |
 | **David** | `cart`, `orders` | `feature/cart-orders` | Carrito unitienda (RN07), Creación de pedido, Precios congelados (RN08), Estados del pedido, Confirmación (RN01). |
 | **Adriano** | `location`, `event_services` | `feature/location-services` | GPS, Permisos, Mapas, Distancias (Haversine), Comercios cercanos, Servicios para eventos. |
-| **Néstor** | `delivery`, `delivery_offers`, `ratings` | `feature/delivery-offers` | Modalidades de entrega (RN02), Negociación de ofertas y cierre automático (RN06), Alternativas si no hay choferes (RN03), Calificaciones. |
+| **Néstor** | `delivery`, `delivery_offers`, `ratings` | `feature/delivery` | Modalidades de entrega (RN02), Negociación de ofertas y cierre automático (RN06), Alternativas si no hay choferes (RN03), Calificaciones. |
 
 ---
 
@@ -59,3 +59,15 @@ features/<modulo>/
 3. **Inyección de Dependencias Desacoplada (`FeatureDiModule`)**:
    - Cada feature registra sus casos de uso e infraestructura implementando `FeatureDiModule`.
    - Nadie tiene que tocar `injection_container.dart` cada vez que crea un Use Case.
+
+---
+
+## 5. Registro de Decisiones de Arquitectura (ADR)
+
+### Semana 1: Dominio de Delivery y Contrato con Orders
+1. **Modalidad de entrega explícita (`OrderDeliveryMethod`):**
+   - El parámetro es obligatorio (`pickup`, `storeDelivery`, `externalDelivery`). No tiene valores por defecto silenciosos, garantizando que ninguna orden active reparto externo por accidente.
+2. **Delimitación de responsabilidad para `distanceInKm`:**
+   - Es opcional (`double?`). `orders` únicamente provee las direcciones textuales (`pickupAddress`, `deliveryAddress`). La geocodificación, cálculo métrico y tarificación corresponden a `delivery` y `location`.
+3. **Desacoplamiento estricto del módulo `orders`:**
+   - `delivery` consume exclusivamente `OrderDeliveryContract` y `OrderDeliveryInfo`. Jamás importa la entidad concreta `Order` ni sus repositorios internos.
