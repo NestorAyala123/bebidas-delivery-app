@@ -29,4 +29,26 @@ class GeoCoordinates {
   }
 
   static double _degToRad(double deg) => deg * (math.pi / 180.0);
+
+  GeoCoordinates copyWith({double? latitude, double? longitude}) {
+    return GeoCoordinates(
+      latitude: latitude ?? this.latitude,
+      longitude: longitude ?? this.longitude,
+    );
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is GeoCoordinates &&
+          runtimeType == other.runtimeType &&
+          latitude == other.latitude &&
+          longitude == other.longitude;
+
+  @override
+  int get hashCode => latitude.hashCode ^ longitude.hashCode;
+
+  @override
+  String toString() =>
+      'GeoCoordinates(lat: $latitude, lng: $longitude)';
 }
