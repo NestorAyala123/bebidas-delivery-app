@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../routes/auth_routes.dart';
+
 class WelcomePage extends StatelessWidget {
   const WelcomePage({super.key});
 
@@ -29,11 +31,7 @@ class WelcomePage extends StatelessWidget {
               const SizedBox(height: 32),
               ElevatedButton(
                 onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Módulo Auth listo para desarrollo'),
-                    ),
-                  );
+                  Navigator.pushNamed(context, AuthRoutes.login);
                 },
                 child: const Text('Iniciar Sesión'),
               ),
@@ -44,3 +42,4 @@ class WelcomePage extends StatelessWidget {
     );
   }
 }
+

@@ -40,10 +40,7 @@ class Cart {
   /// Removes an item by product ID. If cart becomes empty, storeId is reset.
   Cart removeItem(String productId) {
     final updated = items.where((i) => i.productId != productId).toList();
-    return Cart(
-      storeId: updated.isEmpty ? null : storeId,
-      items: updated,
-    );
+    return Cart(storeId: updated.isEmpty ? null : storeId, items: updated);
   }
 
   /// Updates quantity for a specific product. If quantity <= 0, item is removed.
@@ -62,4 +59,3 @@ class Cart {
 
   Cart clear() => const Cart();
 }
-

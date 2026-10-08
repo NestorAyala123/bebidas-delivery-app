@@ -86,21 +86,27 @@ void main() {
       );
     });
 
-    test('updateQuantity modifies quantity or removes item if quantity <= 0', () {
-      var cart = const Cart();
-      cart = cart.addItem(targetStoreId: 'store-1', item: item1);
-      cart = cart.addItem(targetStoreId: 'store-1', item: item2);
+    test(
+      'updateQuantity modifies quantity or removes item if quantity <= 0',
+      () {
+        var cart = const Cart();
+        cart = cart.addItem(targetStoreId: 'store-1', item: item1);
+        cart = cart.addItem(targetStoreId: 'store-1', item: item2);
 
-      cart = cart.updateQuantity('p-1', 10);
-      expect(cart.items.firstWhere((i) => i.productId == 'p-1').quantity, equals(10));
-      expect(cart.subtotal, equals(22.0)); // (10 * 2.0) + (2 * 1.0)
+        cart = cart.updateQuantity('p-1', 10);
+        expect(
+          cart.items.firstWhere((i) => i.productId == 'p-1').quantity,
+          equals(10),
+        );
+        expect(cart.subtotal, equals(22.0)); // (10 * 2.0) + (2 * 1.0)
 
-      // Setting quantity to 0 removes the item
-      cart = cart.updateQuantity('p-1', 0);
-      expect(cart.items.any((i) => i.productId == 'p-1'), isFalse);
-      expect(cart.items.length, equals(1));
-      expect(cart.subtotal, equals(2.0));
-    });
+        // Setting quantity to 0 removes the item
+        cart = cart.updateQuantity('p-1', 0);
+        expect(cart.items.any((i) => i.productId == 'p-1'), isFalse);
+        expect(cart.items.length, equals(1));
+        expect(cart.subtotal, equals(2.0));
+      },
+    );
 
     test('removeItem removes item and resets storeId if cart is emptied', () {
       var cart = const Cart();

@@ -54,22 +54,28 @@ void main() {
   });
 
   group('RejectOrderUseCase', () {
-    test('rejects order successfully when inputs and reason are valid', () async {
-      final result = await rejectUseCase(
-        const RejectOrderInput(
-          orderId: 'ord-123',
-          storeId: 'store-abc',
-          reason: 'Sin inventario de cerveza',
-        ),
-      );
+    test(
+      'rejects order successfully when inputs and reason are valid',
+      () async {
+        final result = await rejectUseCase(
+          const RejectOrderInput(
+            orderId: 'ord-123',
+            storeId: 'store-abc',
+            reason: 'Sin inventario de cerveza',
+          ),
+        );
 
-      expect(result.isSuccess, isTrue);
-      final rejected = result.dataOrNull!;
-      expect(rejected.status, equals(OrderStatus.rejected));
-      expect(rejected.rejectionReason, equals('Sin inventario de cerveza'));
-      expect(repository.lastRejectedOrderId, equals('ord-123'));
-      expect(repository.lastRejectedReason, equals('Sin inventario de cerveza'));
-    });
+        expect(result.isSuccess, isTrue);
+        final rejected = result.dataOrNull!;
+        expect(rejected.status, equals(OrderStatus.rejected));
+        expect(rejected.rejectionReason, equals('Sin inventario de cerveza'));
+        expect(repository.lastRejectedOrderId, equals('ord-123'));
+        expect(
+          repository.lastRejectedReason,
+          equals('Sin inventario de cerveza'),
+        );
+      },
+    );
 
     test('fails with ValidationFailure when reason is empty', () async {
       final result = await rejectUseCase(
@@ -85,18 +91,21 @@ void main() {
       expect(repository.lastRejectedOrderId, isNull);
     });
 
-    test('fails with ValidationFailure when orderId or storeId is blank', () async {
-      final result = await rejectUseCase(
-        const RejectOrderInput(
-          orderId: '',
-          storeId: 'store-abc',
-          reason: 'Cerrado por hoy',
-        ),
-      );
+    test(
+      'fails with ValidationFailure when orderId or storeId is blank',
+      () async {
+        final result = await rejectUseCase(
+          const RejectOrderInput(
+            orderId: '',
+            storeId: 'store-abc',
+            reason: 'Cerrado por hoy',
+          ),
+        );
 
-      expect(result.isFailure, isTrue);
-      expect(result.failureOrNull, isA<ValidationFailure>());
-    });
+        expect(result.isFailure, isTrue);
+        expect(result.failureOrNull, isA<ValidationFailure>());
+      },
+    );
   });
 }
 

@@ -49,6 +49,5 @@ class GeoCoordinates {
   int get hashCode => latitude.hashCode ^ longitude.hashCode;
 
   @override
-  String toString() =>
-      'GeoCoordinates(lat: $latitude, lng: $longitude)';
+  String toString() => 'GeoCoordinates(lat: $latitude, lng: $longitude)';
 }

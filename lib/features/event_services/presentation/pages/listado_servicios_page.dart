@@ -23,8 +23,7 @@ class _ListadoServiciosPageState extends State<ListadoServiciosPage> {
       id: 'svc-001',
       providerId: 'prov-A',
       title: 'Bartender Profesional',
-      description:
-          'Coctelería artesanal para bodas, quinceañeros y eventos corporativos.',
+      description: 'Coctelería artesanal para bodas, quinceañeros y eventos corporativos.',
       serviceType: EventServiceType.bartender,
       estimatedPrice: 150.00,
       locationLabel: 'Manta, Manabí',
@@ -35,8 +34,7 @@ class _ListadoServiciosPageState extends State<ListadoServiciosPage> {
       id: 'svc-002',
       providerId: 'prov-B',
       title: 'Hielo y Enfriadores Premium',
-      description:
-          'Provisión de hielo en bloque, cubo y frappé + enfriadores en alquiler.',
+      description: 'Provisión de hielo en bloque, cubo y frappé + enfriadores en alquiler.',
       serviceType: EventServiceType.iceAndCoolers,
       estimatedPrice: 80.00,
       locationLabel: 'Portoviejo, Manabí',
@@ -71,9 +69,7 @@ class _ListadoServiciosPageState extends State<ListadoServiciosPage> {
 
   List<FichaServicio> get _filtered => _selectedType == null
       ? _dummyFichas
-      : _dummyFichas
-          .where((f) => f.serviceType == _selectedType)
-          .toList();
+      : _dummyFichas.where((f) => f.serviceType == _selectedType).toList();
 
   @override
   Widget build(BuildContext context) {
@@ -153,41 +149,43 @@ class _ListadoServiciosPageState extends State<ListadoServiciosPage> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (_) => Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Padding(
-            padding: EdgeInsets.fromLTRB(20, 20, 20, 8),
-            child: Text(
-              'Filtrar por tipo',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+      builder: (_) => RadioGroup<EventServiceType>(
+        groupValue: _selectedType,
+        onChanged: (v) {
+          setState(() => _selectedType = v);
+          Navigator.of(context).pop();
+        },
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Padding(
+              padding: EdgeInsets.fromLTRB(20, 20, 20, 8),
+              child: Text(
+                'Filtrar por tipo',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
             ),
-          ),
-          ...EventServiceType.values.map(
-            (type) => RadioListTile<EventServiceType>(
-              title: Text(_typeLabel(type)),
-              value: type,
-              groupValue: _selectedType,
-              onChanged: (v) {
-                setState(() => _selectedType = v);
-                Navigator.of(context).pop();
-              },
+            ...EventServiceType.values.map(
+              (type) => RadioListTile<EventServiceType>(
+                title: Text(_typeLabel(type)),
+                value: type,
+              ),
             ),
-          ),
-          const SizedBox(height: 12),
-        ],
+            const SizedBox(height: 12),
+          ],
+        ),
       ),
     );
   }
 
   String _typeLabel(EventServiceType type) => switch (type) {
-        EventServiceType.bartender => 'Bartender',
-        EventServiceType.iceAndCoolers => 'Hielo y Enfriadores',
-        EventServiceType.soundAndDj => 'Sonido y DJ',
-        EventServiceType.customCocktailBar => 'Barra de Cocteles',
-        EventServiceType.other => 'Otro',
-      };
+    EventServiceType.bartender => 'Bartender',
+    EventServiceType.iceAndCoolers => 'Hielo y Enfriadores',
+    EventServiceType.soundAndDj => 'Sonido y DJ',
+    EventServiceType.customCocktailBar => 'Barra de Cocteles',
+    EventServiceType.other => 'Otro',
+  };
 }
 
 // ── FichaCard widget ─────────────────────────────────────────────────────────
