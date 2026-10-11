@@ -28,14 +28,13 @@ class WelcomePage extends StatelessWidget {
               ),
               const SizedBox(height: 32),
               ElevatedButton(
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Módulo Auth listo para desarrollo'),
-                    ),
-                  );
-                },
+                onPressed: () => Navigator.pushNamed(context, '/stores'),
                 child: const Text('Iniciar Sesión'),
+              ),
+              const SizedBox(height: 8),
+              OutlinedButton(
+                onPressed: () => Navigator.pushNamed(context, '/stores'),
+                child: const Text('Administrar comercios'),
               ),
             ],
           ),

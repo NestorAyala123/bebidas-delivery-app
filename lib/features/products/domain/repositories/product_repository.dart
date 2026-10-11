@@ -7,6 +7,7 @@ abstract class ProductRepository {
   Future<Result<List<Product>, Failure>> getProductsByStore(String storeId);
   Future<Result<List<Product>, Failure>> getAvailableProducts(String storeId);
   Future<Result<Product, Failure>> createProduct(Product product);
+  Future<Result<Product, Failure>> updateProduct(Product product);
   Future<Result<void, Failure>> updateStockStatus(
     String productId,
     bool isAvailable,
