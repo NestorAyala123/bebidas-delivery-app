@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/errors/failures.dart';
+import '../../../pricing/domain/entities/price_rule.dart';
 import '../../../products/application/use_cases/save_product_use_case.dart';
 import '../../../products/application/use_cases/update_product_availability_use_case.dart';
 import '../../../products/domain/entities/product.dart';
 import '../../../products/domain/repositories/product_repository.dart';
+import '../../../returnable_containers/domain/entities/returnable_container.dart';
 import '../../application/use_cases/save_store_use_case.dart';
 import '../../application/use_cases/update_store_status_use_case.dart';
 import '../../domain/entities/store.dart';
@@ -26,6 +28,9 @@ class _StoreManagementPageState extends State<StoreManagementPage> {
   final _productNameController = TextEditingController();
   final _productPriceController = TextEditingController();
   final _productImageController = TextEditingController();
+  final _tierQuantityController = TextEditingController();
+  final _tierPriceController = TextEditingController();
+  final _depositController = TextEditingController();
   final _storeRepository = sl.get<StoreRepository>();
   final _productRepository = sl.get<ProductRepository>();
   late final SaveStoreUseCase _saveStore;
@@ -60,6 +65,9 @@ class _StoreManagementPageState extends State<StoreManagementPage> {
       _productNameController,
       _productPriceController,
       _productImageController,
+      _tierQuantityController,
+      _tierPriceController,
+      _depositController,
     ]) {
       controller.dispose();
     }
@@ -137,21 +145,60 @@ class _StoreManagementPageState extends State<StoreManagementPage> {
   Future<void> _saveProductForm() async {
     final store = _selectedStore;
     final price = double.tryParse(_productPriceController.text);
+    final tierQuantity = int.tryParse(_tierQuantityController.text);
+    final tierPrice = double.tryParse(_tierPriceController.text);
+    final deposit = double.tryParse(_depositController.text) ?? 0;
     if (store == null || price == null) {
       _showFailure(
         const ValidationFailure('Selecciona un comercio y un precio válido'),
       );
       return;
     }
+    final hasTierInput =
+        _tierQuantityController.text.trim().isNotEmpty ||
+        _tierPriceController.text.trim().isNotEmpty;
+    if (hasTierInput && (tierQuantity == null || tierPrice == null)) {
+      _showFailure(
+        const ValidationFailure('Completa la cantidad y el precio escalonado'),
+      );
+      return;
+    }
+    if (deposit < 0) {
+      _showFailure(
+        const ValidationFailure('El depósito no puede ser negativo'),
+      );
+      return;
+    }
+    final productId = 'product-${DateTime.now().microsecondsSinceEpoch}';
     final result = await _saveProduct(
       Product(
-        id: 'product-${DateTime.now().microsecondsSinceEpoch}',
+        id: productId,
         storeId: store.id,
         name: _productNameController.text,
         basePrice: price,
         imageUrl: _productImageController.text.trim().isEmpty
             ? null
             : _productImageController.text.trim(),
+        priceRules: tierQuantity != null && tierPrice != null
+            ? [
+                PriceRule(
+                  id: 'rule-${DateTime.now().microsecondsSinceEpoch}',
+                  productId: productId,
+                  minQuantity: tierQuantity,
+                  unitPrice: tierPrice,
+                ),
+              ]
+            : const [],
+        isReturnableContainer: deposit > 0,
+        containerDepositPrice: deposit,
+        returnableContainer: deposit > 0
+            ? ReturnableContainer(
+                id: 'container-$productId',
+                productId: productId,
+                isReturnable: true,
+                depositPrice: deposit,
+              )
+            : null,
       ),
     );
     if (!mounted) return;
@@ -160,6 +207,9 @@ class _StoreManagementPageState extends State<StoreManagementPage> {
         _productNameController.clear();
         _productPriceController.clear();
         _productImageController.clear();
+        _tierQuantityController.clear();
+        _tierPriceController.clear();
+        _depositController.clear();
         _showMessage('Producto guardado');
         _loadProducts();
       },
@@ -321,6 +371,21 @@ class _StoreManagementPageState extends State<StoreManagementPage> {
               keyboardType: TextInputType.number,
             ),
             _field(_productImageController, 'URL de imagen (opcional)'),
+            _field(
+              _tierQuantityController,
+              'Cantidad mínima para precio escalonado (opcional)',
+              keyboardType: TextInputType.number,
+            ),
+            _field(
+              _tierPriceController,
+              'Precio unitario escalonado (opcional)',
+              keyboardType: TextInputType.number,
+            ),
+            _field(
+              _depositController,
+              'Depósito por envase retornable (opcional)',
+              keyboardType: TextInputType.number,
+            ),
             FilledButton(
               onPressed: _selectedStore == null ? null : _saveProductForm,
               child: const Text('Guardar producto'),

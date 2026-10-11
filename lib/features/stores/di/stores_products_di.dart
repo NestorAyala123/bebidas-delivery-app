@@ -1,4 +1,8 @@
 import '../../../../core/di/service_locator.dart';
+import '../../pricing/application/use_cases/save_price_rule_use_case.dart';
+import '../../returnable_containers/application/use_cases/save_returnable_container_use_case.dart';
+import '../../returnable_containers/domain/repositories/returnable_container_repository.dart';
+import '../../returnable_containers/infrastructure/repositories/in_memory_returnable_container_repository.dart';
 import '../../products/application/use_cases/save_product_use_case.dart';
 import '../../products/application/use_cases/update_product_availability_use_case.dart';
 import '../../products/domain/repositories/product_repository.dart';
@@ -40,6 +44,23 @@ class StoresProductsDi implements FeatureDiModule {
       locator.registerLazySingleton(
         () =>
             UpdateProductAvailabilityUseCase(locator.get<ProductRepository>()),
+      );
+    }
+    if (!locator.isRegistered<SavePriceRuleUseCase>()) {
+      locator.registerLazySingleton(
+        () => SavePriceRuleUseCase(locator.get<ProductRepository>()),
+      );
+    }
+    if (!locator.isRegistered<ReturnableContainerRepository>()) {
+      locator.registerLazySingleton<ReturnableContainerRepository>(
+        InMemoryReturnableContainerRepository.new,
+      );
+    }
+    if (!locator.isRegistered<SaveReturnableContainerUseCase>()) {
+      locator.registerLazySingleton(
+        () => SaveReturnableContainerUseCase(
+          locator.get<ReturnableContainerRepository>(),
+        ),
       );
     }
   }

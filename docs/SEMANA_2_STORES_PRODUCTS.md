@@ -9,6 +9,8 @@ La primera vertical de la rama `feature/stores-products` permite:
 - Cambiar el comercio entre abierto y cerrado.
 - Registrar productos básicos con nombre, precio e imagen opcional.
 - Editar productos y cambiar su disponibilidad.
+- Configurar un precio escalonado por cantidad mínima.
+- Configurar el depósito de un envase retornable por producto.
 - Consultar los productos asociados a un comercio y filtrar los disponibles.
 
 ## Capas
@@ -16,7 +18,8 @@ La primera vertical de la rama `feature/stores-products` permite:
 - `domain`: entidades y contratos de repositorio. No importa Flutter, Firebase ni
   servicios externos.
 - `application`: casos de uso `SaveStoreUseCase`, `UpdateStoreStatusUseCase`,
-  `SaveProductUseCase` y `UpdateProductAvailabilityUseCase`, incluyendo
+  `SaveProductUseCase`, `UpdateProductAvailabilityUseCase`,
+  `SavePriceRuleUseCase` y `SaveReturnableContainerUseCase`, incluyendo
   validaciones de negocio de entrada.
 - `infrastructure`: repositorios en memoria para hacer funcional la primera
   vertical sin fijar todavía una decisión de persistencia.
@@ -35,6 +38,8 @@ Se agregaron pruebas para:
 - Cambio de estado abierto/cerrado.
 - Alta, edición y disponibilidad de productos.
 - Precio negativo e imagen opcional.
+- Regla de precio asociada al producto.
+- Depósito obligatorio para envases retornables.
 
 Comandos verificados:
 
@@ -43,4 +48,3 @@ dart format .
 flutter analyze
 flutter test
 ```
-
