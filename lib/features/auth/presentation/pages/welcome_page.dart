@@ -43,7 +43,7 @@ class WelcomePage extends StatelessWidget {
                   Navigator.pushNamed(context, '/mapa');
                 },
                 icon: const Icon(Icons.map_outlined),
-                label: const Text('Ver Mapa y GPS (Semana 2 - Adriano)'),
+                label: const Text('Ver Mapa y GPS'),
               ),
             ],
           ),
