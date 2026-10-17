@@ -5,7 +5,7 @@
   <img src="https://img.shields.io/badge/Dart-3.13+-0175C2?style=for-the-badge&logo=dart&logoColor=white" alt="Dart" />
   <img src="https://img.shields.io/badge/Architecture-Modular_Monolith-success?style=for-the-badge" alt="Architecture" />
   <img src="https://img.shields.io/badge/Team-5_Developers-orange?style=for-the-badge" alt="Team" />
-  <img src="https://img.shields.io/badge/Tests-Passing_14%2F14-brightgreen?style=for-the-badge" alt="Tests" />
+  <img src="https://img.shields.io/badge/Tests-Passing_33%2F33-brightgreen?style=for-the-badge" alt="Tests" />
 </p>
 
 ---
@@ -124,12 +124,16 @@ flutter test
 flutter analyze
 ```
 
-### Cobertura inicial de pruebas:
+### Cobertura de pruebas (Semana 2):
 - ✅ `test/features/orders/order_business_rules_test.dart` (RN01, RN07, RN08)
 - ✅ `test/features/products/pricing_rules_test.dart` (RN04)
 - ✅ `test/features/returnable_containers/returnable_container_test.dart` (RN05)
 - ✅ `test/features/delivery_offers/delivery_offers_rules_test.dart` (RN06, RN03)
-- ✅ `test/features/location/haversine_distance_test.dart` (Haversine)
+- ✅ `test/features/location/haversine_distance_test.dart` (Cálculo Haversine)
+- ✅ `test/features/location/obtener_ubicacion_actual_use_case_test.dart` (Permisos GPS y Ubicación Actual)
+- ✅ `test/features/location/obtener_comercios_cercanos_use_case_test.dart` (Comercios ordenados por distancia)
+- ✅ `test/features/location/location_map_controller_test.dart` (Estados: denegado, concedido, simulado)
+- ✅ `test/features/location/mapa_proximo_page_widget_test.dart` (Visualización de mapa, marcadores y denegación de permisos)
 - ✅ `test/widget_test.dart` (Smoke test de arranque de la app)
 
 ---

@@ -168,7 +168,9 @@ class _ListadoServiciosPageState extends State<ListadoServiciosPage> {
             (type) => RadioListTile<EventServiceType>(
               title: Text(_typeLabel(type)),
               value: type,
+              // ignore: deprecated_member_use
               groupValue: _selectedType,
+              // ignore: deprecated_member_use
               onChanged: (v) {
                 setState(() => _selectedType = v);
                 Navigator.of(context).pop();

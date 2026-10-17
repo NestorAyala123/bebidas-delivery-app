@@ -37,6 +37,14 @@ class WelcomePage extends StatelessWidget {
                 },
                 child: const Text('Iniciar Sesión'),
               ),
+              const SizedBox(height: 12),
+              FilledButton.tonalIcon(
+                onPressed: () {
+                  Navigator.pushNamed(context, '/mapa');
+                },
+                icon: const Icon(Icons.map_outlined),
+                label: const Text('Ver Mapa y GPS (Semana 2 - Adriano)'),
+              ),
             ],
           ),
         ),
