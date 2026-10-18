@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 
+import 'features/location/di/location_di.dart';
+import 'features/location/presentation/routes/location_routes.dart';
+import 'features/cart/di/cart_di.dart';
+
 import 'app/app.dart';
 import 'app/dependency_injection/injection_container.dart';
 import 'app/router/app_router.dart';
@@ -12,10 +16,15 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Registrar las rutas de los módulos
-  AppRouter.registerModules([AuthRoutes(), StoresRoutes()]);
+  AppRouter.registerModules([AuthRoutes(), StoresRoutes(), LocationRoutes()]);
 
   // Registrar las dependencias de los módulos
-  await InjectionContainer.init([AuthDi(), StoresProductsDi()]);
+  await InjectionContainer.init([
+    AuthDi(),
+    StoresProductsDi(),
+    LocationDi(),
+    CartDi(),
+  ]);
 
   runApp(const BebidasDeliveryApp());
 }
