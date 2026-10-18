@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../routes/auth_routes.dart';
+import '../../../location/presentation/routes/location_routes.dart';
 
 class WelcomePage extends StatelessWidget {
   const WelcomePage({super.key});
@@ -24,16 +25,38 @@ class WelcomePage extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               const Text(
-                'Plataforma colaborativa para Clientes, Comercios, Repartidores y Eventos.',
+                'Plataforma colaborativa para Clientes, Comercios, '
+                'Repartidores y Eventos.',
                 style: TextStyle(color: Colors.grey),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 32),
+
+              // Acceso al inicio de sesión
               ElevatedButton(
                 onPressed: () {
                   Navigator.pushNamed(context, AuthRoutes.login);
                 },
                 child: const Text('Iniciar Sesión'),
+              ),
+              const SizedBox(height: 12),
+
+              // Acceso al registro
+              TextButton(
+                onPressed: () {
+                  Navigator.pushNamed(context, AuthRoutes.register);
+                },
+                child: const Text('Crear una cuenta'),
+              ),
+              const SizedBox(height: 12),
+
+              // Acceso al mapa de comercios cercanos
+              OutlinedButton.icon(
+                onPressed: () {
+                  Navigator.pushNamed(context, LocationRoutes.mapa);
+                },
+                icon: const Icon(Icons.map_outlined),
+                label: const Text('Ver mapa de comercios cercanos'),
               ),
             ],
           ),
@@ -42,4 +65,3 @@ class WelcomePage extends StatelessWidget {
     );
   }
 }
-

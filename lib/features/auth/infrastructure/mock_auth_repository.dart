@@ -4,8 +4,11 @@ import '../../users/domain/entities/app_user.dart';
 import '../domain/entities/user_session.dart';
 import '../domain/repositories/auth_repository.dart';
 
-/// In-memory mock adapter for authentication scaffolding and UI testing.
+/// In-memory adapter for local development and tests. Replace with Firebase/API.
 class MockAuthRepository implements AuthRepository {
+  final Map<String, MockAccount> _accounts = {
+    for (final account in MockAccounts.all) account.email: account,
+  };
   UserSession? _session;
 
   @override
@@ -13,35 +16,14 @@ class MockAuthRepository implements AuthRepository {
     required String email,
     required String password,
   }) async {
-    if (password.trim().isEmpty) {
-      return const FailureResult(ValidationFailure('Credenciales inválidas'));
+    final account = _accounts[email.trim().toLowerCase()];
+    if (account == null || account.password != password) {
+      return const FailureResult(
+        UnauthorizedFailure('Correo o contraseña incorrectos'),
+      );
     }
-
-    // Role resolution based on email prefix/keyword to test all flows
-    final normalized = email.trim().toLowerCase();
-    final UserRole resolvedRole;
-    if (normalized.contains('driver') || normalized.contains('repartidor')) {
-      resolvedRole = UserRole.driver;
-    } else if (normalized.contains('store') ||
-        normalized.contains('comercio') ||
-        normalized.contains('tienda')) {
-      resolvedRole = UserRole.store;
-    } else if (normalized.contains('event') ||
-        normalized.contains('evento') ||
-        normalized.contains('proveedor')) {
-      resolvedRole = UserRole.eventProvider;
-    } else {
-      resolvedRole = UserRole.client;
-    }
-
-    final session = UserSession(
-      userId: 'mock-user-1',
-      email: normalized,
-      token: 'mock-token-xyz-123',
-      role: resolvedRole,
-    );
-    _session = session;
-    return Success(session);
+    _session = _sessionFor(account);
+    return Success(_session!);
   }
 
   @override
@@ -51,19 +33,29 @@ class MockAuthRepository implements AuthRepository {
     required String name,
     UserRole role = UserRole.client,
   }) async {
-    if (name.trim().isEmpty) {
+    final normalizedEmail = email.trim().toLowerCase();
+    if (name.trim().isEmpty || normalizedEmail.isEmpty) {
+      return const FailureResult(ValidationFailure('El nombre es obligatorio'));
+    }
+    if (_accounts.containsKey(normalizedEmail)) {
       return const FailureResult(
-        ValidationFailure('El nombre es obligatorio'),
+        ValidationFailure('Ya existe una cuenta con ese correo'),
       );
     }
-    final session = UserSession(
-      userId: 'mock-user-registered',
-      email: email.trim(),
-      token: 'mock-token-registered',
-      role: role,
+    final account = MockAccount(
+      email: normalizedEmail,
+      password: password,
+      user: AppUser(
+        id: 'user-${_accounts.length + 1}',
+        email: normalizedEmail,
+        name: name.trim(),
+        role: role,
+        createdAt: DateTime.now(),
+      ),
     );
-    _session = session;
-    return Success(session);
+    _accounts[normalizedEmail] = account;
+    _session = _sessionFor(account);
+    return Success(_session!);
   }
 
   @override
@@ -75,4 +67,72 @@ class MockAuthRepository implements AuthRepository {
   @override
   Future<Result<UserSession?, Failure>> getCurrentSession() async =>
       Success(_session);
+
+  UserSession _sessionFor(MockAccount account) => UserSession(
+    userId: account.user.id,
+    email: account.user.email,
+    token: 'mock-token-${account.user.id}',
+    user: account.user,
+  );
+}
+
+class MockAccount {
+  final String email;
+  final String password;
+  final AppUser user;
+
+  const MockAccount({
+    required this.email,
+    required this.password,
+    required this.user,
+  });
+}
+
+class MockAccounts {
+  MockAccounts._();
+
+  static final List<MockAccount> all = [
+    _account(
+      'cliente@delivery.com',
+      'password123',
+      'Cliente Delivery',
+      UserRole.client,
+    ),
+    _account('cliente@demo.com', 'cliente123', 'Cliente Demo', UserRole.client),
+    _account(
+      'comercio@demo.com',
+      'comercio123',
+      'Comercio Demo',
+      UserRole.store,
+    ),
+    _account(
+      'repartidor@demo.com',
+      'repartidor123',
+      'Repartidor Demo',
+      UserRole.driver,
+    ),
+    _account(
+      'eventos@demo.com',
+      'eventos123',
+      'Eventos Demo',
+      UserRole.eventProvider,
+    ),
+  ];
+
+  static MockAccount _account(
+    String email,
+    String password,
+    String name,
+    UserRole role,
+  ) => MockAccount(
+    email: email,
+    password: password,
+    user: AppUser(
+      id: 'seed-${role.name}',
+      email: email,
+      name: name,
+      role: role,
+      createdAt: DateTime.utc(2026, 1, 1),
+    ),
+  );
 }

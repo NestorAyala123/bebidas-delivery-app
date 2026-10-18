@@ -4,13 +4,14 @@ class UserSession {
   final String userId;
   final String email;
   final String token;
-  final UserRole role;
+  final AppUser user;
 
   const UserSession({
     required this.userId,
     required this.email,
     required this.token,
-    this.role = UserRole.client,
+    required this.user,
   });
-}
 
+  UserRole get role => user.role;
+}
