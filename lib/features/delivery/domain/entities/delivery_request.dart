@@ -100,6 +100,40 @@ class DeliveryRequest {
     );
   }
 
+  /// Returns a copy of the request with modified fields.
+  DeliveryRequest copyWith({
+    String? id,
+    String? orderId,
+    String? customerId,
+    String? storeId,
+    String? originAddress,
+    String? destinationAddress,
+    double? distanceInKm,
+    double? referenceFare,
+    DeliveryMode? deliveryMode,
+    DeliveryStatus? status,
+    double? initialCustomerOffer,
+    String? assignedDriverId,
+    DateTime? createdAt,
+  }) {
+    return DeliveryRequest(
+      id: id ?? this.id,
+      orderId: orderId ?? this.orderId,
+      customerId: customerId ?? this.customerId,
+      storeId: storeId ?? this.storeId,
+      originAddress: originAddress ?? this.originAddress,
+      destinationAddress: destinationAddress ?? this.destinationAddress,
+      distanceInKm: distanceInKm ?? this.distanceInKm,
+      referenceFare: referenceFare ?? this.referenceFare,
+      deliveryMode: deliveryMode ?? this.deliveryMode,
+      status: status ?? this.status,
+      initialCustomerOffer: initialCustomerOffer ?? this.initialCustomerOffer,
+      isOrderConfirmedByStore: true, // La entidad ya superó RN01 al construirse
+      assignedDriverId: assignedDriverId ?? this.assignedDriverId,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
+
   /// RN05: Transitions to [newStatus] validating conceptual lifecycle rules.
   /// Throws [DomainException] if the transition is invalid.
   DeliveryRequest transitionTo(DeliveryStatus newStatus) {
