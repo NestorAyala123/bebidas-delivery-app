@@ -12,6 +12,8 @@ La primera vertical de la rama `feature/stores-products` permite:
 - Configurar un precio escalonado por cantidad mínima.
 - Configurar el depósito de un envase retornable por producto.
 - Consultar los productos asociados a un comercio y filtrar los disponibles.
+- Consultar el catálogo de un comercio mediante `GetStoreCatalogUseCase`,
+  diferenciando productos disponibles del catálogo completo de administración.
 
 ## Capas
 
