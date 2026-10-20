@@ -51,5 +51,26 @@ void main() {
 
       expect(fee, equals(6.0));
     });
+
+    test('Does not charge a deposit when the product has no deposit', () {
+      final fee = calculator.calculateMissingFee(
+        requiredContainers: 4,
+        returnedContainers: 0,
+        depositPerContainer: 0,
+      );
+
+      expect(fee, equals(0.0));
+    });
+
+    test('Rejects a negative returned-container count', () {
+      expect(
+        () => calculator.calculateMissingFee(
+          requiredContainers: 2,
+          returnedContainers: -1,
+          depositPerContainer: 1,
+        ),
+        throwsAssertionError,
+      );
+    });
   });
 }

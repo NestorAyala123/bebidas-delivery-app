@@ -12,6 +12,11 @@ class ContainerFeeCalculator {
     required int returnedContainers,
     required double depositPerContainer,
   }) {
+    assert(
+      returnedContainers >= 0,
+      'La cantidad de envases devueltos no puede ser negativa',
+    );
+
     if (requiredContainers <= 0 || depositPerContainer <= 0) {
       return 0.0;
     }
