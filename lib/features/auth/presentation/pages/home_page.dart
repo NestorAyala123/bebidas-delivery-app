@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../../../event_services/presentation/pages/listado_servicios_page.dart';
 import '../../../location/presentation/pages/mapa_proximo_page.dart';
+import '../../../orders/presentation/pages/order_summary_page.dart';
+import '../../../orders/presentation/pages/orders_history_page.dart';
 import '../../../users/domain/entities/app_user.dart';
 import '../../domain/entities/user_session.dart';
 import '../routes/auth_routes.dart';
@@ -18,7 +20,6 @@ class HomePage extends StatelessWidget {
     final roleLabel = _roleLabel(session.role);
     final roleColor = _roleColor(session.role);
     final roleIcon = _roleIcon(session.role);
-
 
     return Scaffold(
       appBar: AppBar(
@@ -99,6 +100,46 @@ class HomePage extends StatelessWidget {
 
             const SizedBox(height: 12),
 
+            // Orders Module: Summary and Creation
+            ListTile(
+              leading: const CircleAvatar(
+                backgroundColor: Color(0xFFE3F2FD),
+                child: Icon(Icons.shopping_cart_checkout, color: Colors.blue),
+              ),
+              title: const Text('Crear Pedido / Resumen'),
+              subtitle: const Text('Precios por rango, envases y creación pendiente'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => OrderSummaryPage(session: session),
+                  ),
+                );
+              },
+            ),
+            const Divider(),
+
+            // Orders Module: History
+            ListTile(
+              leading: const CircleAvatar(
+                backgroundColor: Color(0xFFFFF8E1),
+                child: Icon(Icons.receipt_long, color: Colors.amber),
+              ),
+              title: const Text('Historial de Pedidos'),
+              subtitle: const Text('Pedidos registrados con precios históricos congelados'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => OrdersHistoryPage(session: session),
+                  ),
+                );
+              },
+            ),
+            const Divider(),
+
             // Modules
             ListTile(
               leading: const CircleAvatar(
@@ -140,7 +181,7 @@ class HomePage extends StatelessWidget {
                 child: Icon(Icons.local_shipping, color: Colors.orange),
               ),
               title: const Text('Módulo de Delivery'),
-              subtitle: Text('Estado de repartos y entregas colaborativas'),
+              subtitle: const Text('Estado de repartos y entregas colaborativas'),
               trailing: const Icon(Icons.chevron_right),
               onTap: () {
                 ScaffoldMessenger.of(context).showSnackBar(

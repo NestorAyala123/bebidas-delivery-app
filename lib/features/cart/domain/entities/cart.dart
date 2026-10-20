@@ -60,7 +60,13 @@ class Cart {
 
     if (existingIndex >= 0) {
       final current = updated[existingIndex];
+      final tiers = current.quantityTiers.isNotEmpty
+          ? current.quantityTiers
+          : item.quantityTiers;
+      final base = current.basePrice > 0 ? current.basePrice : item.basePrice;
       updated[existingIndex] = current.copyWith(
+        basePrice: base,
+        quantityTiers: tiers,
         quantity: current.quantity + item.quantity,
       );
     } else {
