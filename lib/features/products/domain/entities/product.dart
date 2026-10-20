@@ -33,6 +33,8 @@ class Product {
 
   /// Calculates the effective unit price for a given quantity (RN04)
   double getUnitPriceForQuantity(int quantity) {
+    assert(quantity > 0, 'La cantidad debe ser mayor a 0');
+
     final tiers = <QuantityPricingTier>[
       ...quantityTiers,
       ...priceRules

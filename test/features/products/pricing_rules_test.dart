@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:bebidas_delivery_app/features/pricing/domain/entities/quantity_pricing_tier.dart';
+import 'package:bebidas_delivery_app/features/pricing/domain/entities/price_rule.dart';
 import 'package:bebidas_delivery_app/features/products/domain/entities/product.dart';
 
 void main() {
@@ -39,6 +40,33 @@ void main() {
       // Reaches tier 2 (>= 12)
       expect(product.getUnitPriceForQuantity(12), equals(8.0));
       expect(product.getUnitPriceForQuantity(24), equals(8.0));
+    });
+
+    test('ignores inactive rules and applies the exact quantity boundary', () {
+      const product = Product(
+        id: 'prod-1',
+        storeId: 'store-1',
+        name: 'Six-pack Cerveza',
+        basePrice: 10.0,
+        priceRules: [
+          PriceRule(
+            id: 'inactive',
+            productId: 'prod-1',
+            minQuantity: 2,
+            unitPrice: 1.0,
+            isActive: false,
+          ),
+          PriceRule(
+            id: 'active',
+            productId: 'prod-1',
+            minQuantity: 6,
+            unitPrice: 9.0,
+          ),
+        ],
+      );
+
+      expect(product.getUnitPriceForQuantity(5), equals(10.0));
+      expect(product.getUnitPriceForQuantity(6), equals(9.0));
     });
   });
 }
