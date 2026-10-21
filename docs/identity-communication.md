@@ -122,6 +122,31 @@ Formato base de mensaje:
 Tipos futuros (`image`, `location`, `system`) deben conservar `text` nulo o
 vacío según el esquema de versión que se publique.
 
+## 5. Semana 3: perfiles, autorización y mensajes de texto
+
+Perfiles (`users`):
+
+- `UpdateProfileUseCase`: solo el dueño (`requester.id == userId`) con permiso
+  `profile:update:own`. Nombre de 2 a 60 caracteres; teléfono opcional de 7 a 15
+  dígitos (puede iniciar con `+`); un teléfono en blanco lo elimina.
+- `GetProfileUseCase`: el dueño ve su identidad completa; cualquier otro usuario
+  autenticado recibe `IdentityContract.toPublic()` (sin correo ni teléfono).
+- `ListContactsUseCase`: identidades públicas con las que se puede conversar.
+- `InMemoryUserRepository` es la fuente de verdad de `AppUser`; `MockAuthRepository`
+  solo guarda credenciales, así que un cambio de perfil sobrevive a un nuevo login.
+
+Chat (`chat`):
+
+- `CreateConversationUseCase`: exige `chat:conversation:create`, que el solicitante
+  sea participante, sin repetidos ni desconocidos. Los roles de los participantes
+  se toman de la identidad, no de la solicitud. Es idempotente.
+- `SendMessageUseCase`: exige `chat:message:send`, remitente = solicitante, ser
+  participante, texto entre 1 y 1000 caracteres (solo `type: text`).
+- `WatchMessagesUseCase` / `ListConversationsUseCase`: la lectura se restringe a
+  participantes; una conversación ajena y una inexistente responden igual.
+- Rutas: `/chat` (lista y "Nueva conversación") y `/chat/room` (mensajes).
+  `InMemoryChatRepository` debe sustituirse por Firestore con reglas equivalentes.
+
 ## Evidencia sugerida para el PR
 
 ```bash

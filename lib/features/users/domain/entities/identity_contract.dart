@@ -34,6 +34,17 @@ class IdentityContract {
     createdAt: user.createdAt,
   );
 
+  /// Version shown to other users: contact data stays with the owner.
+  IdentityContract toPublic() => IdentityContract(
+    id: id,
+    email: '',
+    displayName: displayName,
+    phoneNumber: null,
+    role: role,
+    isActive: isActive,
+    createdAt: createdAt,
+  );
+
   Map<String, Object?> toJson() => {
     'id': id,
     'email': email,

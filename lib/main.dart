@@ -5,15 +5,18 @@ import 'app/dependency_injection/injection_container.dart';
 import 'app/router/app_router.dart';
 import 'features/auth/di/auth_di.dart';
 import 'features/auth/presentation/routes/auth_routes.dart';
+import 'features/chat/di/chat_di.dart';
+import 'features/chat/presentation/routes/chat_routes.dart';
+import 'features/users/di/users_di.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Register modular feature routes
-  AppRouter.registerModules([AuthRoutes()]);
+  AppRouter.registerModules([AuthRoutes(), ChatRoutes()]);
 
   // Register modular dependency injection modules
-  await InjectionContainer.init([AuthDi()]);
+  await InjectionContainer.init([UsersDi(), AuthDi(), ChatDi()]);
 
   runApp(const BebidasDeliveryApp());
 }

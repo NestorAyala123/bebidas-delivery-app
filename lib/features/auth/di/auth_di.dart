@@ -1,4 +1,5 @@
-import '../../../../core/di/service_locator.dart';
+import '../../../core/di/service_locator.dart';
+import '../../users/infrastructure/in_memory_user_repository.dart';
 import '../infrastructure/mock_auth_repository.dart';
 import '../application/use_cases/check_access_rules_use_case.dart';
 import '../application/use_cases/get_current_user_use_case.dart';
@@ -12,7 +13,9 @@ class AuthDi implements FeatureDiModule {
   @override
   void registerDependencies(ServiceLocator locator) {
     if (locator.isRegistered<AuthController>()) return;
-    locator.registerLazySingleton<AuthRepository>(MockAuthRepository.new);
+    locator.registerLazySingleton<AuthRepository>(
+      () => MockAuthRepository(users: locator.get<InMemoryUserRepository>()),
+    );
     locator.registerFactory<LoginUseCase>(
       () => LoginUseCase(locator.get<AuthRepository>()),
     );
