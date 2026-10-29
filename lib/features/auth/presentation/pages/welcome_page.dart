@@ -45,6 +45,14 @@ class WelcomePage extends StatelessWidget {
                 icon: const Icon(Icons.map_outlined),
                 label: const Text('Ver Mapa y GPS'),
               ),
+              const SizedBox(height: 12),
+              OutlinedButton.icon(
+                onPressed: () {
+                  Navigator.pushNamed(context, '/eventos');
+                },
+                icon: const Icon(Icons.celebration_outlined),
+                label: const Text('Servicios para Eventos'),
+              ),
             ],
           ),
         ),

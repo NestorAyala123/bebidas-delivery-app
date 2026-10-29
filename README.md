@@ -5,7 +5,7 @@
   <img src="https://img.shields.io/badge/Dart-3.13+-0175C2?style=for-the-badge&logo=dart&logoColor=white" alt="Dart" />
   <img src="https://img.shields.io/badge/Architecture-Modular_Monolith-success?style=for-the-badge" alt="Architecture" />
   <img src="https://img.shields.io/badge/Team-5_Developers-orange?style=for-the-badge" alt="Team" />
-  <img src="https://img.shields.io/badge/Tests-Passing_33%2F33-brightgreen?style=for-the-badge" alt="Tests" />
+  <img src="https://img.shields.io/badge/Tests-Passing_55%2F55-brightgreen?style=for-the-badge" alt="Tests" />
 </p>
 
 ---
@@ -134,6 +134,12 @@ flutter analyze
 - ✅ `test/features/location/obtener_comercios_cercanos_use_case_test.dart` (Comercios ordenados por distancia)
 - ✅ `test/features/location/location_map_controller_test.dart` (Estados: denegado, concedido, simulado)
 - ✅ `test/features/location/mapa_proximo_page_widget_test.dart` (Visualización de mapa, marcadores y denegación de permisos)
+- ✅ `test/features/location/nearby_stores_real_test.dart` (Comercios reales, distancias aproximadas y filtros de radio)
+- ✅ `test/features/event_services/publicar_ficha_use_case_test.dart` (Validaciones y reglas de negocio al publicar ficha)
+- ✅ `test/features/event_services/in_memory_ficha_servicio_repository_test.dart` (Persistencia y consulta de proveedores de eventos)
+- ✅ `test/features/event_services/event_services_controller_test.dart` (Gestión de estado, filtrado y publicación)
+- ✅ `test/features/event_services/listado_servicios_page_widget_test.dart` (Consulta interactiva de fichas y filtros por categoría)
+- ✅ `test/features/event_services/publicar_ficha_page_widget_test.dart` (Formulario de publicación y validación de campos)
 - ✅ `test/widget_test.dart` (Smoke test de arranque de la app)
 
 ---
