@@ -62,13 +62,24 @@ class WelcomePage extends StatelessWidget {
 
               const SizedBox(height: 12),
 
-              // Acceso al mapa
+              // Acceso al mapa (ruta resuelta desde LocationRoutes)
               OutlinedButton.icon(
                 onPressed: () {
                   Navigator.pushNamed(context, LocationRoutes.mapa);
                 },
                 icon: const Icon(Icons.map_outlined),
                 label: const Text('Ver mapa de comercios cercanos'),
+              ),
+
+              const SizedBox(height: 12),
+
+              // Acceso a servicios para eventos (ruta literal de Adriano)
+              FilledButton.tonalIcon(
+                onPressed: () {
+                  Navigator.pushNamed(context, '/eventos');
+                },
+                icon: const Icon(Icons.celebration_outlined),
+                label: const Text('Servicios para Eventos'),
               ),
             ],
           ),

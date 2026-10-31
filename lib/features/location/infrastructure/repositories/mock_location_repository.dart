@@ -29,6 +29,14 @@ class MockLocationRepository implements LocationRepository {
                 coordinates:
                     GeoCoordinates(latitude: -0.9690, longitude: -80.7100),
                 distanceKm: 0.3,
+                address: 'Av. Flavio Reyes y Calle 24',
+                isOpen: true,
+                phone: '+593 99 223 3445',
+                description: 'Vinos, whiskies importados y cervezas bien frías.',
+                hasOwnDelivery: true,
+                allowsExternalDelivery: true,
+                allowsPickup: true,
+                openingHours: '10:00 - 02:00',
               ),
               NearbyStore(
                 id: 'store-002',
@@ -36,6 +44,14 @@ class MockLocationRepository implements LocationRepository {
                 coordinates:
                     GeoCoordinates(latitude: -0.9650, longitude: -80.7050),
                 distanceKm: 0.8,
+                address: 'Calle 13 y Av. 24, Barrio Córdova',
+                isOpen: true,
+                phone: '+593 98 765 4321',
+                description: 'Venta por mayor y menor, packs de cerveza artesanal.',
+                hasOwnDelivery: false,
+                allowsExternalDelivery: true,
+                allowsPickup: true,
+                openingHours: '09:00 - 23:00',
               ),
               NearbyStore(
                 id: 'store-003',
@@ -43,6 +59,14 @@ class MockLocationRepository implements LocationRepository {
                 coordinates:
                     GeoCoordinates(latitude: -0.9720, longitude: -80.7130),
                 distanceKm: 1.2,
+                address: 'Av. 4 de Noviembre y Calle 114',
+                isOpen: true,
+                phone: '+593 99 112 2334',
+                description: 'Snacks, hielo, gaseosas y licores nacionales.',
+                hasOwnDelivery: false,
+                allowsExternalDelivery: true,
+                allowsPickup: true,
+                openingHours: '08:00 - 00:00',
               ),
               NearbyStore(
                 id: 'store-004',
@@ -50,6 +74,14 @@ class MockLocationRepository implements LocationRepository {
                 coordinates:
                     GeoCoordinates(latitude: -0.9620, longitude: -80.7150),
                 distanceKm: 1.5,
+                address: 'Av. Malecón Jaime Chávez Gutiérrez',
+                isOpen: false,
+                phone: '+593 97 889 9001',
+                description: 'Aguardientes, rones añejos y cajas para eventos.',
+                hasOwnDelivery: true,
+                allowsExternalDelivery: false,
+                allowsPickup: true,
+                openingHours: '14:00 - 03:00',
               ),
               NearbyStore(
                 id: 'store-005',
@@ -57,6 +89,14 @@ class MockLocationRepository implements LocationRepository {
                 coordinates:
                     GeoCoordinates(latitude: -0.9685, longitude: -80.7030),
                 distanceKm: 0.6,
+                address: 'Vía Barbasquillo, frente a Plaza del Sol',
+                isOpen: true,
+                phone: '+593 96 333 4455',
+                description: 'Atención ininterrumpida las 24 horas todos los días.',
+                hasOwnDelivery: true,
+                allowsExternalDelivery: true,
+                allowsPickup: true,
+                openingHours: '24 Horas',
               ),
             ];
 

@@ -26,6 +26,8 @@ class LocationMapController extends ChangeNotifier {
   NearbyStore? _selectedStore;
   String? _errorMessage;
   bool _isSimulatedMode = false;
+  double _searchRadiusKm = 5.0;
+  String _searchQuery = '';
 
   LocationMapController({
     required this.obtenerUbicacionActualUseCase,
@@ -38,6 +40,21 @@ class LocationMapController extends ChangeNotifier {
   NearbyStore? get selectedStore => _selectedStore;
   String? get errorMessage => _errorMessage;
   bool get isSimulatedMode => _isSimulatedMode;
+  double get searchRadiusKm => _searchRadiusKm;
+  String get searchQuery => _searchQuery;
+
+  /// Retorna los comercios filtrados por texto de búsqueda.
+  List<NearbyStore> get filteredStores {
+    if (_searchQuery.trim().isEmpty) {
+      return _nearbyStores;
+    }
+    final q = _searchQuery.toLowerCase().trim();
+    return _nearbyStores.where((store) {
+      return store.name.toLowerCase().contains(q) ||
+          store.address.toLowerCase().contains(q) ||
+          store.description.toLowerCase().contains(q);
+    }).toList();
+  }
 
   bool get isLoading => _status == LocationStatus.loading;
   bool get isPermissionDenied => _status == LocationStatus.permissionDenied;
@@ -73,13 +90,31 @@ class LocationMapController extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Carga comercios cercanos usando las coordenadas proporcionadas
+  /// Carga comercios cercanos usando las coordenadas proporcionadas y el radio actual
   Future<void> _fetchNearbyStores(GeoCoordinates origin) async {
-    final storesResult = await obtenerComerciosCercanosUseCase(origin: origin);
+    final storesResult = await obtenerComerciosCercanosUseCase(
+      origin: origin,
+      radiusKm: _searchRadiusKm,
+    );
     final data = storesResult.dataOrNull;
     if (data != null) {
       _nearbyStores = data;
     }
+  }
+
+  /// Cambia el radio de búsqueda de comercios y recalcula la lista
+  Future<void> updateSearchRadius(double radiusKm) async {
+    _searchRadiusKm = radiusKm;
+    if (_userPosition != null) {
+      await _fetchNearbyStores(_userPosition!);
+      notifyListeners();
+    }
+  }
+
+  /// Aplica filtro por texto (nombre, dirección o descripción)
+  void setSearchQuery(String query) {
+    _searchQuery = query;
+    notifyListeners();
   }
 
   /// Reintenta la solicitud de permisos y obtención de posición

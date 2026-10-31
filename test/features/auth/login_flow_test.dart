@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:bebidas_delivery_app/app/app.dart';
@@ -9,12 +8,13 @@ import 'package:bebidas_delivery_app/features/auth/application/use_cases/login_u
 import 'package:bebidas_delivery_app/features/auth/di/auth_di.dart';
 import 'package:bebidas_delivery_app/features/auth/infrastructure/mock_auth_repository.dart';
 import 'package:bebidas_delivery_app/features/auth/presentation/routes/auth_routes.dart';
+import 'package:bebidas_delivery_app/features/users/di/users_di.dart';
 
 void main() {
   setUp(() async {
     sl.reset();
     AppRouter.registerModules([AuthRoutes()]);
-    await InjectionContainer.init([AuthDi()]);
+    await InjectionContainer.init([UsersDi(), AuthDi()]);
   });
 
   group('Auth Login Flow Tests', () {
@@ -23,12 +23,12 @@ void main() {
       final useCase = LoginUseCase(repository);
 
       final result = await useCase(
-        email: 'cliente@delivery.com',
-        password: 'password123',
+        email: 'cliente@demo.com',
+        password: 'cliente123',
       );
 
       expect(result.isSuccess, isTrue);
-      expect(result.dataOrNull?.email, 'cliente@delivery.com');
+      expect(result.dataOrNull?.email, 'cliente@demo.com');
       expect(result.dataOrNull?.role.name, 'client');
     });
 
@@ -49,10 +49,7 @@ void main() {
       final repository = MockAuthRepository();
       final useCase = LoginUseCase(repository);
 
-      final result = await useCase(
-        email: 'test@delivery.com',
-        password: '123',
-      );
+      final result = await useCase(email: 'test@delivery.com', password: '123');
 
       expect(result.isFailure, isTrue);
       expect(
@@ -73,8 +70,8 @@ void main() {
       await tester.pumpAndSettle();
 
       // Verified on LoginPage
-      expect(find.text('Ingresa a tu cuenta'), findsOneWidget);
-      expect(find.widgetWithText(ElevatedButton, 'Ingresar'), findsOneWidget);
+      expect(find.text('Correo'), findsOneWidget);
+      expect(find.text('Continuar'), findsOneWidget);
     });
   });
 }

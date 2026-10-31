@@ -1,75 +1,88 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/di/service_locator.dart';
 import '../../domain/entities/event_service.dart';
 import '../../domain/entities/ficha_servicio.dart';
+import '../../domain/usecases/obtener_servicios_use_case.dart';
+import '../../domain/usecases/publicar_ficha_use_case.dart';
+import '../../infrastructure/repositories/in_memory_ficha_servicio_repository.dart';
+import '../controllers/event_services_controller.dart';
+import 'detalle_ficha_page.dart';
+import 'publicar_ficha_page.dart';
 
-/// Prototype screen: browsable list of event-service cards (fichas).
+/// Pantalla para consultar y filtrar las fichas básicas de proveedores de eventos.
 ///
-/// Week-1 scope: static layout / visual prototype using dummy data.
-/// Real Firestore integration happens in Week 3.
+/// Implementa:
+/// - Consulta de fichas desde el caso de uso y repositorio en infraestructura.
+/// - Filtrado interactivo por categorías de evento (Bartender, Hielo, Sonido, Barra, etc.).
+/// - Buscador por texto en tiempo real.
+/// - Acceso a publicación de nuevas fichas mediante [PublicarFichaPage].
+/// - Consulta detallada de la ficha mediante [DetalleFichaPage].
 class ListadoServiciosPage extends StatefulWidget {
-  const ListadoServiciosPage({super.key});
+  final EventServicesController? controller;
+
+  const ListadoServiciosPage({super.key, this.controller});
 
   @override
   State<ListadoServiciosPage> createState() => _ListadoServiciosPageState();
 }
 
 class _ListadoServiciosPageState extends State<ListadoServiciosPage> {
-  // ---------------------------------------------------------------------------
-  // Dummy data — replaced by ObtenerServiciosUseCase in Week 3
-  // ---------------------------------------------------------------------------
-  static final List<FichaServicio> _dummyFichas = [
-    FichaServicio(
-      id: 'svc-001',
-      providerId: 'prov-A',
-      title: 'Bartender Profesional',
-      description: 'Coctelería artesanal para bodas, quinceañeros y eventos corporativos.',
-      serviceType: EventServiceType.bartender,
-      estimatedPrice: 150.00,
-      locationLabel: 'Manta, Manabí',
-      contactPhone: '+593 99 111 2233',
-      createdAt: '2026-10-01',
-    ),
-    FichaServicio(
-      id: 'svc-002',
-      providerId: 'prov-B',
-      title: 'Hielo y Enfriadores Premium',
-      description: 'Provisión de hielo en bloque, cubo y frappé + enfriadores en alquiler.',
-      serviceType: EventServiceType.iceAndCoolers,
-      estimatedPrice: 80.00,
-      locationLabel: 'Portoviejo, Manabí',
-      contactPhone: '+593 98 444 5566',
-      createdAt: '2026-10-02',
-    ),
-    FichaServicio(
-      id: 'svc-003',
-      providerId: 'prov-C',
-      title: 'DJ + Equipo de Sonido',
-      description: 'Sets de música en vivo, equipos JBL y luces LED.',
-      serviceType: EventServiceType.soundAndDj,
-      estimatedPrice: 300.00,
-      locationLabel: 'Manta, Manabí',
-      contactPhone: '+593 96 777 8899',
-      createdAt: '2026-10-03',
-    ),
-    FichaServicio(
-      id: 'svc-004',
-      providerId: 'prov-D',
-      title: 'Barra de Cocteles Personalizados',
-      description: 'Diseñamos la bebida signature de tu evento.',
-      serviceType: EventServiceType.customCocktailBar,
-      estimatedPrice: 220.00,
-      locationLabel: 'Bahía de Caráquez',
-      contactPhone: '+593 99 333 0011',
-      createdAt: '2026-10-04',
-    ),
-  ];
+  late final EventServicesController _controller;
+  bool _isControllerInternal = false;
+  final TextEditingController _searchController = TextEditingController();
 
-  EventServiceType? _selectedType;
+  @override
+  void initState() {
+    super.initState();
 
-  List<FichaServicio> get _filtered => _selectedType == null
-      ? _dummyFichas
-      : _dummyFichas.where((f) => f.serviceType == _selectedType).toList();
+    if (widget.controller != null) {
+      _controller = widget.controller!;
+    } else {
+      _isControllerInternal = true;
+      final obtener = ServiceLocator.instance.isRegistered<ObtenerServiciosUseCase>()
+          ? ServiceLocator.instance.get<ObtenerServiciosUseCase>()
+          : null;
+      final publicar = ServiceLocator.instance.isRegistered<PublicarFichaUseCase>()
+          ? ServiceLocator.instance.get<PublicarFichaUseCase>()
+          : null;
+
+      if (obtener != null && publicar != null) {
+        _controller = EventServicesController(
+          obtenerServiciosUseCase: obtener,
+          publicarFichaUseCase: publicar,
+        );
+      } else {
+        // Fallback autónomo si la pantalla se prueba sin contenedor previo
+        final repo = InMemoryFichaServicioRepository();
+        _controller = EventServicesController(
+          obtenerServiciosUseCase: ObtenerServiciosUseCase(repo),
+          publicarFichaUseCase: PublicarFichaUseCase(repo),
+        );
+      }
+    }
+
+    _controller.addListener(_onControllerUpdate);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _controller.loadFichas();
+    });
+  }
+
+  void _onControllerUpdate() {
+    if (!mounted) return;
+    setState(() {});
+  }
+
+  @override
+  void dispose() {
+    _controller.removeListener(_onControllerUpdate);
+    _searchController.dispose();
+    if (_isControllerInternal) {
+      _controller.dispose();
+    }
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -85,56 +98,159 @@ class _ListadoServiciosPageState extends State<ListadoServiciosPage> {
         elevation: 0,
         actions: [
           IconButton(
-            icon: const Icon(Icons.filter_list),
-            tooltip: 'Filtrar',
-            onPressed: _showFilterSheet,
+            icon: const Icon(Icons.add_circle_outline),
+            tooltip: 'Publicar Ficha',
+            onPressed: _navigateToPublish,
           ),
         ],
       ),
       body: Column(
         children: [
-          // ── Active filter chip ───────────────────────────────────────────
-          if (_selectedType != null)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(12, 10, 12, 0),
-              child: Row(
-                children: [
-                  Text(
-                    'Filtrando: ',
-                    style: Theme.of(context).textTheme.bodySmall,
+          // ── Barra de Búsqueda ─────────────────────────────────────────────
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+            child: TextField(
+              controller: _searchController,
+              decoration: InputDecoration(
+                hintText: 'Buscar proveedor o servicio...',
+                prefixIcon: const Icon(Icons.search, size: 20),
+                suffixIcon: _searchController.text.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear, size: 18),
+                        onPressed: () {
+                          _searchController.clear();
+                          _controller.setSearchQuery('');
+                        },
+                      )
+                    : null,
+                contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
+                filled: true,
+                fillColor: Colors.white,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(24),
+                  borderSide: BorderSide(color: Colors.grey.shade300),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(24),
+                  borderSide: BorderSide(color: Colors.grey.shade300),
+                ),
+              ),
+              onChanged: (val) => _controller.setSearchQuery(val),
+            ),
+          ),
+
+          // ── Selector de Categorías (Chips) ────────────────────────────────
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            child: Row(
+              children: [
+                FilterChip(
+                  label: const Text('Todos'),
+                  selected: _controller.selectedType == null,
+                  onSelected: (_) => _controller.filterByType(null),
+                ),
+                const SizedBox(width: 8),
+                ...EventServiceType.values.map((type) {
+                  final isSelected = _controller.selectedType == type;
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 8.0),
+                    child: FilterChip(
+                      label: Text(_typeLabel(type)),
+                      selected: isSelected,
+                      onSelected: (_) => _controller.filterByType(type),
+                    ),
+                  );
+                }),
+              ],
+            ),
+          ),
+
+          // ── Estado de Carga o Error ───────────────────────────────────────
+          if (_controller.isLoading)
+            const Expanded(
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    CircularProgressIndicator(),
+                    SizedBox(height: 12),
+                    Text('Consultando fichas de eventos...'),
+                  ],
+                ),
+              ),
+            )
+          else if (_controller.errorMessage != null)
+            Expanded(
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                      const SizedBox(height: 12),
+                      Text(
+                        _controller.errorMessage!,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(color: Colors.red),
+                      ),
+                      const SizedBox(height: 16),
+                      ElevatedButton.icon(
+                        onPressed: () => _controller.loadFichas(),
+                        icon: const Icon(Icons.refresh),
+                        label: const Text('Reintentar'),
+                      ),
+                    ],
                   ),
-                  Chip(
-                    label: Text(_typeLabel(_selectedType!)),
-                    deleteIcon: const Icon(Icons.close, size: 16),
-                    onDeleted: () => setState(() => _selectedType = null),
-                    backgroundColor: colorScheme.primaryContainer,
-                  ),
-                ],
+                ),
+              ),
+            )
+          else if (_controller.filteredFichas.isEmpty)
+            Expanded(
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.event_busy, size: 56, color: Colors.grey.shade400),
+                    const SizedBox(height: 12),
+                    const Text(
+                      'No se encontraron fichas para este criterio',
+                      style: TextStyle(fontSize: 15, color: Colors.grey),
+                    ),
+                    const SizedBox(height: 8),
+                    TextButton.icon(
+                      onPressed: () {
+                        _searchController.clear();
+                        _controller.setSearchQuery('');
+                        _controller.filterByType(null);
+                      },
+                      icon: const Icon(Icons.clear_all),
+                      label: const Text('Limpiar filtros'),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          else
+            // ── Lista de Fichas Básicas ─────────────────────────────────────
+            Expanded(
+              child: ListView.builder(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 80),
+                itemCount: _controller.filteredFichas.length,
+                itemBuilder: (context, index) {
+                  final ficha = _controller.filteredFichas[index];
+                  return _FichaCard(
+                    ficha: ficha,
+                    onTap: () => _navigateToDetail(ficha),
+                  );
+                },
               ),
             ),
-          // ── Card list ────────────────────────────────────────────────────
-          Expanded(
-            child: _filtered.isEmpty
-                ? const Center(
-                    child: Text('No hay fichas para este tipo de servicio'),
-                  )
-                : ListView.builder(
-                    padding: const EdgeInsets.all(12),
-                    itemCount: _filtered.length,
-                    itemBuilder: (context, index) =>
-                        _FichaCard(ficha: _filtered[index]),
-                  ),
-          ),
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Publicación de ficha disponible en Semana 3'),
-            ),
-          );
-        },
+        onPressed: _navigateToPublish,
         icon: const Icon(Icons.add),
         label: const Text('Publicar servicio'),
         backgroundColor: colorScheme.primary,
@@ -143,57 +259,44 @@ class _ListadoServiciosPageState extends State<ListadoServiciosPage> {
     );
   }
 
-  void _showFilterSheet() {
-    showModalBottomSheet<void>(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (_) => RadioGroup<EventServiceType>(
-        groupValue: _selectedType,
-        onChanged: (v) {
-          setState(() => _selectedType = v);
-          Navigator.of(context).pop();
-        },
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Padding(
-              padding: EdgeInsets.fromLTRB(20, 20, 20, 8),
-              child: Text(
-                'Filtrar por tipo',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-            ),
-            ...EventServiceType.values.map(
-              (type) => RadioListTile<EventServiceType>(
-                title: Text(_typeLabel(type)),
-                value: type,
-              ),
-            ),
-            const SizedBox(height: 12),
-          ],
-        ),
+  void _navigateToDetail(FichaServicio ficha) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => DetalleFichaPage(ficha: ficha),
       ),
     );
   }
 
-  String _typeLabel(EventServiceType type) => switch (type) {
-    EventServiceType.bartender => 'Bartender',
-    EventServiceType.iceAndCoolers => 'Hielo y Enfriadores',
-    EventServiceType.soundAndDj => 'Sonido y DJ',
-    EventServiceType.customCocktailBar => 'Barra de Cocteles',
-    EventServiceType.other => 'Otro',
-  };
+  void _navigateToPublish() async {
+    final created = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => PublicarFichaPage(controller: _controller),
+      ),
+    );
+
+    if (created == true) {
+      _controller.loadFichas();
+    }
+  }
+
+  static String _typeLabel(EventServiceType type) => switch (type) {
+        EventServiceType.bartender => 'Bartender',
+        EventServiceType.iceAndCoolers => 'Hielo & Enfriadores',
+        EventServiceType.soundAndDj => 'Sonido & DJ',
+        EventServiceType.customCocktailBar => 'Barra de Cocteles',
+        EventServiceType.other => 'Otro',
+      };
 }
 
-// ── FichaCard widget ─────────────────────────────────────────────────────────
+// ── FichaCard Widget ─────────────────────────────────────────────────────────
 
 class _FichaCard extends StatelessWidget {
   final FichaServicio ficha;
+  final VoidCallback onTap;
 
-  const _FichaCard({required this.ficha});
+  const _FichaCard({required this.ficha, required this.onTap});
 
   static const Map<EventServiceType, IconData> _icons = {
     EventServiceType.bartender: Icons.sports_bar,
@@ -212,79 +315,75 @@ class _FichaCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Icon badge
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: colorScheme.primaryContainer,
-                borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Icon badge
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: colorScheme.primaryContainer,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, color: colorScheme.primary, size: 28),
               ),
-              child: Icon(icon, color: colorScheme.primary, size: 28),
-            ),
-            const SizedBox(width: 14),
-            // Content
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    ficha.title,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    ficha.description,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 4,
-                    children: [
-                      _InfoChip(
-                        icon: Icons.location_on,
-                        label: ficha.locationLabel,
+              const SizedBox(width: 14),
+              // Content
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      ficha.title,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
                       ),
-                      _InfoChip(
-                        icon: Icons.attach_money,
-                        label: '\$${ficha.estimatedPrice.toStringAsFixed(0)}',
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  SizedBox(
-                    width: double.infinity,
-                    child: OutlinedButton.icon(
-                      onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(
-                              'Chat con proveedor ${ficha.providerId} — Semana 5',
-                            ),
-                          ),
-                        );
-                      },
-                      icon: const Icon(Icons.chat_bubble_outline, size: 16),
-                      label: const Text('Contactar proveedor'),
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 4),
+                    Text(
+                      ficha.description,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 4,
+                      children: [
+                        _InfoChip(
+                          icon: Icons.location_on,
+                          label: ficha.locationLabel,
+                        ),
+                        _InfoChip(
+                          icon: Icons.attach_money,
+                          label: '\$${ficha.estimatedPrice.toStringAsFixed(0)}',
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: onTap,
+                        icon: const Icon(Icons.visibility_outlined, size: 16),
+                        label: const Text('Consultar ficha'),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

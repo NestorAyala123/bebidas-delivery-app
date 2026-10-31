@@ -16,11 +16,17 @@ import 'package:bebidas_delivery_app/features/pricing/domain/entities/quantity_p
 import 'package:bebidas_delivery_app/features/users/domain/entities/app_user.dart';
 
 void main() {
-  const testSession = UserSession(
+  final testSession = UserSession(
     userId: 'user-david-test',
     email: 'david@test.com',
     token: 'test-token-123',
-    role: UserRole.client,
+    user: AppUser(
+      id: 'user-david-test',
+      email: 'david@test.com',
+      name: 'David Test',
+      role: UserRole.client,
+      createdAt: DateTime(2026, 10, 19),
+    ),
   );
 
   group('OrderSummaryPage Widget Tests', () {
@@ -46,62 +52,69 @@ void main() {
       expect(find.text('Cargar Artículos de Demostración'), findsOneWidget);
     });
 
-    testWidgets('Renders items, tiers, returnable containers, and creates pending order', (tester) async {
-      const itemWithTiers = CartItem(
-        productId: 'prod-1',
-        productName: 'Cerveza Club 330ml',
-        unitPrice: 2.40,
-        basePrice: 3.00,
-        quantity: 6,
-        isReturnable: true,
-        containerDeposit: 0.50,
-        quantityTiers: [QuantityPricingTier(minQuantity: 6, unitPrice: 2.40)],
-      );
+    testWidgets(
+      'Renders items, tiers, returnable containers, and creates pending order',
+      (tester) async {
+        const itemWithTiers = CartItem(
+          productId: 'prod-1',
+          productName: 'Cerveza Club 330ml',
+          unitPrice: 2.40,
+          basePrice: 3.00,
+          quantity: 6,
+          isReturnable: true,
+          containerDeposit: 0.50,
+          quantityTiers: [QuantityPricingTier(minQuantity: 6, unitPrice: 2.40)],
+        );
 
-      final initialCart = const Cart().addItem(
-        targetStoreId: 'store-1',
-        item: itemWithTiers,
-      );
+        final initialCart = const Cart().addItem(
+          targetStoreId: 'store-1',
+          item: itemWithTiers,
+        );
 
-      final cartRepo = InMemoryCartRepository(initialCart);
-      final orderRepo = InMemoryOrderRepository();
-      final createOrderUseCase = CreateOrderUseCase(
-        repository: orderRepo,
-        generateOrderId: () => 'ORD-TEST-99',
-      );
+        final cartRepo = InMemoryCartRepository(initialCart);
+        final orderRepo = InMemoryOrderRepository();
+        final createOrderUseCase = CreateOrderUseCase(
+          repository: orderRepo,
+          generateOrderId: () => 'ORD-TEST-99',
+        );
 
-      await tester.pumpWidget(
-        MaterialApp(
-          home: OrderSummaryPage(
-            session: testSession,
-            cartRepository: cartRepo,
-            createOrderUseCase: createOrderUseCase,
+        await tester.pumpWidget(
+          MaterialApp(
+            home: OrderSummaryPage(
+              session: testSession,
+              cartRepository: cartRepo,
+              createOrderUseCase: createOrderUseCase,
+            ),
           ),
-        ),
-      );
-      await tester.pumpAndSettle();
+        );
+        await tester.pumpAndSettle();
 
-      // Check item and tier badge
-      expect(find.text('Cerveza Club 330ml'), findsOneWidget);
-      expect(find.text('Precio por Rango'), findsOneWidget);
-      expect(find.text('Envases Retornables (RN05)'), findsOneWidget);
+        // Check item and tier badge
+        expect(find.text('Cerveza Club 330ml'), findsOneWidget);
+        expect(find.text('Precio por Rango'), findsOneWidget);
+        expect(find.text('Envases Retornables (RN05)'), findsOneWidget);
 
-      // Tap confirm button
-      final confirmButton = find.text('Confirmar Pedido (Crear como Pendiente)');
-      expect(confirmButton, findsOneWidget);
-      await tester.ensureVisible(confirmButton);
-      await tester.tap(confirmButton);
-      await tester.pumpAndSettle();
+        // Tap confirm button
+        final confirmButton = find.text(
+          'Confirmar Pedido (Crear como Pendiente)',
+        );
+        expect(confirmButton, findsOneWidget);
+        await tester.ensureVisible(confirmButton);
+        await tester.tap(confirmButton);
+        await tester.pumpAndSettle();
 
-      // Dialog confirms created pending order
-      expect(find.text('¡Pedido Creado!'), findsOneWidget);
-      expect(find.text('ID del Pedido: ORD-TEST-99'), findsOneWidget);
-      expect(find.text('Pendiente'), findsWidgets);
-    });
+        // Dialog confirms created pending order
+        expect(find.text('¡Pedido Creado!'), findsOneWidget);
+        expect(find.text('ID del Pedido: ORD-TEST-99'), findsOneWidget);
+        expect(find.text('Pendiente'), findsWidgets);
+      },
+    );
   });
 
   group('OrdersHistoryPage Widget Tests', () {
-    testWidgets('Renders customer order with frozen prices and pending badge', (tester) async {
+    testWidgets('Renders customer order with frozen prices and pending badge', (
+      tester,
+    ) async {
       final existingOrder = Order(
         id: 'ORD-HIST-01',
         customerId: 'user-david-test',
@@ -138,7 +151,10 @@ void main() {
       expect(find.text('Pedido #ORD-HIST-01'), findsOneWidget);
       expect(find.text('Pendiente'), findsOneWidget);
       expect(find.text('Cerveza Club 330ml'), findsOneWidget);
-      expect(find.text('Precio congelado: \$2.40 c/u (Retornable)'), findsOneWidget);
+      expect(
+        find.text('Precio congelado: \$2.40 c/u (Retornable)'),
+        findsOneWidget,
+      );
       expect(find.text('Total Inalterable:'), findsOneWidget);
       expect(find.text('\$15.40'), findsOneWidget); // 14.40 + 1.00 = 15.40
     });

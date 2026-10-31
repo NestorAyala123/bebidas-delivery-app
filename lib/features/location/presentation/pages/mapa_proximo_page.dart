@@ -496,7 +496,7 @@ class _MapaProximoPageState extends State<MapaProximoPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -513,53 +513,124 @@ class _MapaProximoPageState extends State<MapaProximoPage> {
                   ],
                 ),
               ),
-              Expanded(
-                child: ListView.separated(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                  itemCount: _controller.nearbyStores.length,
-                  separatorBuilder: (context, index) => const Divider(height: 1),
-                  itemBuilder: (context, index) {
-                    final store = _controller.nearbyStores[index];
-                    final isSelected = _controller.selectedStore?.id == store.id;
 
-                    return ListTile(
-                      selected: isSelected,
-                      selectedTileColor: colorScheme.primaryContainer.withAlpha(50),
-                      leading: CircleAvatar(
-                        backgroundColor: colorScheme.primaryContainer,
-                        child: Icon(
-                          Icons.storefront,
-                          color: colorScheme.primary,
+              // Selector de radio de búsqueda
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                child: Row(
+                  children: [
+                    const Text('Radio:', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                    const SizedBox(width: 8),
+                    Wrap(
+                      spacing: 6,
+                      children: [2.0, 5.0, 10.0].map((radius) {
+                        final isSelected = _controller.searchRadiusKm == radius;
+                        return ChoiceChip(
+                          label: Text('${radius.toInt()} km', style: const TextStyle(fontSize: 11)),
+                          selected: isSelected,
+                          visualDensity: VisualDensity.compact,
+                          onSelected: (_) => _controller.updateSearchRadius(radius),
+                        );
+                      }).toList(),
+                    ),
+                  ],
+                ),
+              ),
+
+              Expanded(
+                child: _controller.filteredStores.isEmpty
+                    ? Center(
+                        child: Text(
+                          'No hay comercios en un radio de ${_controller.searchRadiusKm.toInt()} km',
+                          style: TextStyle(color: Colors.grey.shade600),
                         ),
-                      ),
-                      title: Text(
-                        store.name,
-                        style: const TextStyle(fontWeight: FontWeight.w600),
-                      ),
-                      subtitle: Text(
-                        'A ${store.distanceKm.toStringAsFixed(2)} km de ti',
-                        style: TextStyle(color: Colors.grey.shade700),
-                      ),
-                      trailing: IconButton(
-                        icon: const Icon(Icons.pin_drop, color: Colors.deepOrange),
-                        onPressed: () {
-                          _controller.selectStore(store);
-                          _mapController.move(
-                            LatLng(
-                              store.coordinates.latitude,
-                              store.coordinates.longitude,
+                      )
+                    : ListView.separated(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                        itemCount: _controller.filteredStores.length,
+                        separatorBuilder: (context, index) => const Divider(height: 1),
+                        itemBuilder: (context, index) {
+                          final store = _controller.filteredStores[index];
+                          final isSelected = _controller.selectedStore?.id == store.id;
+
+                          return ListTile(
+                            selected: isSelected,
+                            selectedTileColor: colorScheme.primaryContainer.withAlpha(50),
+                            leading: CircleAvatar(
+                              backgroundColor: store.isOpen
+                                  ? colorScheme.primaryContainer
+                                  : Colors.grey.shade200,
+                              child: Icon(
+                                Icons.storefront,
+                                color: store.isOpen
+                                    ? colorScheme.primary
+                                    : Colors.grey.shade600,
+                              ),
                             ),
-                            16.0,
+                            title: Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    store.name,
+                                    style: const TextStyle(fontWeight: FontWeight.w600),
+                                  ),
+                                ),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: store.isOpen
+                                        ? Colors.green.withAlpha(30)
+                                        : Colors.grey.withAlpha(30),
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: Text(
+                                    store.isOpen ? 'Abierto' : 'Cerrado',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                      color: store.isOpen ? Colors.green.shade800 : Colors.grey.shade700,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            subtitle: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'A ${store.distanceKm.toStringAsFixed(2)} km de ti',
+                                  style: TextStyle(color: Colors.grey.shade700),
+                                ),
+                                if (store.address.isNotEmpty)
+                                  Text(
+                                    store.address,
+                                    style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                              ],
+                            ),
+                            trailing: IconButton(
+                              icon: const Icon(Icons.pin_drop, color: Colors.deepOrange),
+                              onPressed: () {
+                                _controller.selectStore(store);
+                                _mapController.move(
+                                  LatLng(
+                                    store.coordinates.latitude,
+                                    store.coordinates.longitude,
+                                  ),
+                                  16.0,
+                                );
+                              },
+                            ),
+                            onTap: () {
+                              _controller.selectStore(store);
+                              _showStoreModal(context, store);
+                            },
                           );
                         },
                       ),
-                      onTap: () {
-                        _controller.selectStore(store);
-                        _showStoreModal(context, store);
-                      },
-                    );
-                  },
-                ),
               ),
             ],
           ),
@@ -583,25 +654,49 @@ class _MapaProximoPageState extends State<MapaProximoPage> {
             children: [
               Row(
                 children: [
-                  const CircleAvatar(
-                    backgroundColor: Colors.deepOrange,
+                  CircleAvatar(
+                    backgroundColor: store.isOpen ? Colors.deepOrange : Colors.grey,
                     foregroundColor: Colors.white,
-                    child: Icon(Icons.storefront),
+                    child: const Icon(Icons.storefront),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          store.name,
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                store.name,
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: store.isOpen ? Colors.green.shade50 : Colors.red.shade50,
+                                border: Border.all(
+                                  color: store.isOpen ? Colors.green : Colors.red,
+                                ),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(
+                                store.isOpen ? 'Abierto' : 'Cerrado',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: store.isOpen ? Colors.green.shade800 : Colors.red.shade800,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                         Text(
-                          'Distancia: ${store.distanceKm.toStringAsFixed(2)} km',
+                          'Distancia: ${store.distanceKm.toStringAsFixed(2)} km (${store.formattedDistance})',
                           style: const TextStyle(color: Colors.grey),
                         ),
                       ],
@@ -609,10 +704,76 @@ class _MapaProximoPageState extends State<MapaProximoPage> {
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
-              Text(
-                'Coordenadas: Lat ${store.coordinates.latitude.toStringAsFixed(4)}, Lng ${store.coordinates.longitude.toStringAsFixed(4)}',
-                style: const TextStyle(fontSize: 12, color: Colors.black54),
+              const SizedBox(height: 12),
+              if (store.description.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8.0),
+                  child: Text(
+                    store.description,
+                    style: const TextStyle(fontSize: 13, fontStyle: FontStyle.italic),
+                  ),
+                ),
+              Row(
+                children: [
+                  const Icon(Icons.location_on_outlined, size: 16, color: Colors.grey),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      store.address,
+                      style: const TextStyle(fontSize: 13),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Row(
+                children: [
+                  const Icon(Icons.access_time, size: 16, color: Colors.grey),
+                  const SizedBox(width: 6),
+                  Text(
+                    'Horario: ${store.openingHours}',
+                    style: const TextStyle(fontSize: 13),
+                  ),
+                ],
+              ),
+              if (store.phone.isNotEmpty) ...[
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    const Icon(Icons.phone_outlined, size: 16, color: Colors.grey),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Tel: ${store.phone}',
+                      style: const TextStyle(fontSize: 13),
+                    ),
+                  ],
+                ),
+              ],
+              const SizedBox(height: 12),
+              // Modalidades de entrega (RN02)
+              Wrap(
+                spacing: 6,
+                runSpacing: 4,
+                children: [
+                  if (store.hasOwnDelivery)
+                    _DeliveryBadge(
+                      label: 'Delivery Propio',
+                      icon: Icons.two_wheeler,
+                      color: Colors.blue.shade700,
+                    ),
+                  if (store.allowsExternalDelivery)
+                    _DeliveryBadge(
+                      label: 'Repartidor Externo',
+                      icon: Icons.delivery_dining,
+                      color: Colors.orange.shade800,
+                    ),
+                  if (store.allowsPickup)
+                    _DeliveryBadge(
+                      label: 'Retiro en Tienda',
+                      icon: Icons.store,
+                      color: Colors.purple.shade700,
+                    ),
+                ],
               ),
               const SizedBox(height: 20),
               SizedBox(
@@ -634,6 +795,41 @@ class _MapaProximoPageState extends State<MapaProximoPage> {
           ),
         );
       },
+    );
+  }
+}
+
+class _DeliveryBadge extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final Color color;
+
+  const _DeliveryBadge({
+    required this.label,
+    required this.icon,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withAlpha(25),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: color.withAlpha(80)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: color),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: color),
+          ),
+        ],
+      ),
     );
   }
 }
