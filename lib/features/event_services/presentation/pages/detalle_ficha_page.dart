@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../../domain/entities/consulta_servicio.dart';
 import '../../domain/entities/event_service.dart';
 import '../../domain/entities/ficha_servicio.dart';
+import 'solicitar_consulta_page.dart';
 
 /// Pantalla para consultar la ficha completa de un proveedor de eventos.
 class DetalleFichaPage extends StatelessWidget {
@@ -165,7 +167,29 @@ class DetalleFichaPage extends StatelessWidget {
                 style: const TextStyle(fontSize: 14, height: 1.5),
               ),
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 20),
+
+            // Acción principal: solicitar cotización / consulta
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () => _openConsulta(context),
+                icon: const Icon(Icons.request_quote_outlined),
+                label: const Text(
+                  'Solicitar Cotización / Consulta',
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: colorScheme.primary,
+                  foregroundColor: colorScheme.onPrimary,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
 
             // Botones de Acción
             Row(
@@ -213,6 +237,25 @@ class DetalleFichaPage extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _openConsulta(BuildContext context) async {
+    final created = await Navigator.push<ConsultaServicio>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => SolicitarConsultaPage(ficha: ficha),
+      ),
+    );
+
+    if (created != null && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Consulta enviada al proveedor de "${ficha.title}"',
+          ),
+        ),
+      );
+    }
   }
 
   static IconData _getIconForType(EventServiceType type) {

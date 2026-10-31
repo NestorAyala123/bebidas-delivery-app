@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:geolocator/geolocator.dart';
 
 import '../../../../core/errors/failures.dart';
@@ -141,7 +143,7 @@ class GeolocatorLocationRepository implements LocationRepository {
 
       if (permission == LocationPermission.deniedForever) {
         return const FailureResult(
-          PermissionFailure(
+          PermissionPermanentlyDeniedFailure(
             'El permiso de ubicación fue denegado permanentemente. Habilítalo en los ajustes de la aplicación.',
           ),
         );
@@ -158,6 +160,24 @@ class GeolocatorLocationRepository implements LocationRepository {
         GeoCoordinates(
           latitude: position.latitude,
           longitude: position.longitude,
+        ),
+      );
+    } on TimeoutException {
+      return const FailureResult(
+        LocationTimeoutFailure(
+          'El GPS no respondió a tiempo. Verifica que estés en un lugar despejado o ingresa tu dirección manualmente.',
+        ),
+      );
+    } on LocationServiceDisabledException {
+      return const FailureResult(
+        LocationUnavailableFailure(
+          'El servicio de GPS está desactivado. Actívalo en la configuración de tu dispositivo.',
+        ),
+      );
+    } on PermissionDeniedException {
+      return const FailureResult(
+        PermissionFailure(
+          'El permiso de ubicación fue denegado. Se requiere para encontrar comercios cercanos.',
         ),
       );
     } catch (e) {
@@ -186,7 +206,11 @@ class GeolocatorLocationRepository implements LocationRepository {
 
       storesWithDistances.sort((a, b) => a.distanceKm.compareTo(b.distanceKm));
 
-      return Success(storesWithDistances);
+      final withinRadius = storesWithDistances
+          .where((store) => store.distanceKm <= radiusKm)
+          .toList();
+
+      return Success(withinRadius);
     } catch (e) {
       return FailureResult(
         ServerFailure('Error al calcular comercios cercanos: $e'),

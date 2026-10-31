@@ -9,13 +9,17 @@ import '../../domain/usecases/obtener_ubicacion_actual_use_case.dart';
 /// Útil para pruebas automatizadas y demostraciones sin depender de sensores reales.
 class MockLocationRepository implements LocationRepository {
   bool shouldGrantPermission;
+  bool isPermanentlyDenied;
   bool isServiceEnabled;
+  bool isTimeout;
   GeoCoordinates simulatedPosition;
   List<NearbyStore> mockStores;
 
   MockLocationRepository({
     this.shouldGrantPermission = true,
+    this.isPermanentlyDenied = false,
     this.isServiceEnabled = true,
+    this.isTimeout = false,
     this.simulatedPosition = const GeoCoordinates(
       latitude: -0.9676534,
       longitude: -80.7088841, // Manta, Manabí
@@ -110,6 +114,18 @@ class MockLocationRepository implements LocationRepository {
     if (!isServiceEnabled) {
       return const FailureResult(
         LocationUnavailableFailure('El servicio de GPS está desactivado'),
+      );
+    }
+    if (isTimeout) {
+      return const FailureResult(
+        LocationTimeoutFailure('El GPS no respondió a tiempo'),
+      );
+    }
+    if (isPermanentlyDenied) {
+      return const FailureResult(
+        PermissionPermanentlyDeniedFailure(
+          'El permiso de ubicación fue denegado permanentemente en ajustes',
+        ),
       );
     }
     if (!shouldGrantPermission) {

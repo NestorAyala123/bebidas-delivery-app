@@ -59,5 +59,33 @@ void main() {
       expect(controller.errorMessage, isNotNull);
       expect(controller.nearbyStores, isEmpty);
     });
+
+    test('loadCurrentLocation detecta permiso denegado permanentemente', () async {
+      repository.isPermanentlyDenied = true;
+
+      await controller.loadCurrentLocation();
+
+      expect(controller.status, equals(LocationStatus.permissionPermanentlyDenied));
+      expect(controller.isPermissionPermanentlyDenied, isTrue);
+      expect(controller.errorMessage, contains('permanentemente'));
+    });
+
+    test('loadCurrentLocation detecta timeout o falta de señal GPS', () async {
+      repository.isTimeout = true;
+
+      await controller.loadCurrentLocation();
+
+      expect(controller.status, equals(LocationStatus.timeout));
+      expect(controller.isTimeout, isTrue);
+      expect(controller.errorMessage, contains('GPS'));
+    });
+
+    test('useManualLocation activa fallback con dirección y comercios', () async {
+      await controller.useManualLocation('Av. Flavio Reyes, Manta');
+
+      expect(controller.status, equals(LocationStatus.success));
+      expect(controller.manualAddress, equals('Av. Flavio Reyes, Manta'));
+      expect(controller.nearbyStores, isNotEmpty);
+    });
   });
 }

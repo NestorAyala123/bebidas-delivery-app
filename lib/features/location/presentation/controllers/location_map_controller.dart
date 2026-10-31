@@ -12,7 +12,9 @@ enum LocationStatus {
   loading,
   success,
   permissionDenied,
+  permissionPermanentlyDenied,
   serviceDisabled,
+  timeout,
   error,
 }
 
@@ -26,6 +28,7 @@ class LocationMapController extends ChangeNotifier {
   NearbyStore? _selectedStore;
   String? _errorMessage;
   bool _isSimulatedMode = false;
+  String? _manualAddress;
   double _searchRadiusKm = 5.0;
   String _searchQuery = '';
 
@@ -40,6 +43,7 @@ class LocationMapController extends ChangeNotifier {
   NearbyStore? get selectedStore => _selectedStore;
   String? get errorMessage => _errorMessage;
   bool get isSimulatedMode => _isSimulatedMode;
+  String? get manualAddress => _manualAddress;
   double get searchRadiusKm => _searchRadiusKm;
   String get searchQuery => _searchQuery;
 
@@ -57,7 +61,13 @@ class LocationMapController extends ChangeNotifier {
   }
 
   bool get isLoading => _status == LocationStatus.loading;
-  bool get isPermissionDenied => _status == LocationStatus.permissionDenied;
+  bool get isPermissionDenied =>
+      _status == LocationStatus.permissionDenied ||
+      _status == LocationStatus.permissionPermanentlyDenied;
+  bool get isPermissionPermanentlyDenied =>
+      _status == LocationStatus.permissionPermanentlyDenied;
+  bool get isServiceDisabled => _status == LocationStatus.serviceDisabled;
+  bool get isTimeout => _status == LocationStatus.timeout;
   bool get isSuccess => _status == LocationStatus.success;
 
   /// Carga la ubicación actual solicitando los permisos GPS
@@ -65,6 +75,7 @@ class LocationMapController extends ChangeNotifier {
     _status = LocationStatus.loading;
     _errorMessage = null;
     _isSimulatedMode = false;
+    _manualAddress = null;
     notifyListeners();
 
     final result = await obtenerUbicacionActualUseCase();
@@ -75,8 +86,14 @@ class LocationMapController extends ChangeNotifier {
         await _fetchNearbyStores(data);
         _status = LocationStatus.success;
       case FailureResult(:final failure):
-        if (failure is PermissionFailure) {
+        if (failure is PermissionPermanentlyDeniedFailure) {
+          _status = LocationStatus.permissionPermanentlyDenied;
+          _errorMessage = failure.message;
+        } else if (failure is PermissionFailure) {
           _status = LocationStatus.permissionDenied;
+          _errorMessage = failure.message;
+        } else if (failure is LocationTimeoutFailure) {
+          _status = LocationStatus.timeout;
           _errorMessage = failure.message;
         } else if (failure is LocationUnavailableFailure) {
           _status = LocationStatus.serviceDisabled;
@@ -131,9 +148,19 @@ class LocationMapController extends ChangeNotifier {
     }
   }
 
+  /// Abre la configuración del sensor de ubicación / GPS del dispositivo
+  Future<void> openLocationSettings() async {
+    try {
+      await Geolocator.openLocationSettings();
+    } catch (_) {
+      // Ignorar si no está disponible en la plataforma
+    }
+  }
+
   /// Activa el modo de prueba con datos simulados (para pruebas o si no hay GPS disponible)
   Future<void> useSimulatedLocation() async {
     _status = LocationStatus.loading;
+    _manualAddress = null;
     notifyListeners();
 
     // Coordenadas simuladas en Manta, Manabí
@@ -151,11 +178,45 @@ class LocationMapController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Fallback amigable cuando no hay señal GPS: el usuario escribe su
+  /// dirección manualmente y se usan coordenadas de referencia para no
+  /// bloquear la exploración de comercios.
+  Future<void> useManualLocation(String address) async {
+    final cleanAddress = address.trim();
+    if (cleanAddress.isEmpty) return;
+
+    await useSimulatedLocation();
+    _manualAddress = cleanAddress;
+    notifyListeners();
+  }
+
   /// Simula la denegación de permisos para fines de demostración del PR / docente
   void simulatePermissionDenied() {
     _status = LocationStatus.permissionDenied;
     _errorMessage =
         'Permiso de ubicación denegado por el usuario. La app no puede consultar el GPS.';
+    _userPosition = null;
+    _nearbyStores = [];
+    _selectedStore = null;
+    notifyListeners();
+  }
+
+  /// Simula la denegación permanente de permisos
+  void simulatePermissionPermanentlyDenied() {
+    _status = LocationStatus.permissionPermanentlyDenied;
+    _errorMessage =
+        'Permiso denegado permanentemente en ajustes. Debes activarlo manualmente en la configuración del teléfono.';
+    _userPosition = null;
+    _nearbyStores = [];
+    _selectedStore = null;
+    notifyListeners();
+  }
+
+  /// Simula que el GPS está desactivado
+  void simulateServiceDisabled() {
+    _status = LocationStatus.serviceDisabled;
+    _errorMessage =
+        'El sensor de GPS está apagado en tu teléfono. Por favor enciéndelo.';
     _userPosition = null;
     _nearbyStores = [];
     _selectedStore = null;
