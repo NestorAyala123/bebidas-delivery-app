@@ -8,7 +8,6 @@ import '../repositories/delivery_repository.dart';
 /// 100% pure Dart, independiente de Flutter y Firebase.
 class CreateDeliveryRequestUseCase {
   final DeliveryRepository repository;
-  // TODO(week3): usar feeCalculator para calcular/validar referenceFare
   final DeliveryFee feeCalculator;
 
   const CreateDeliveryRequestUseCase(
@@ -17,6 +16,15 @@ class CreateDeliveryRequestUseCase {
   });
 
   Future<Result<DeliveryRequest, Failure>> call(DeliveryRequest request) {
+    if (request.distanceInKm == null || request.distanceInKm! < 0) {
+      return Future.value(
+        const FailureResult(
+          ValidationFailure(
+            'La distancia en kilómetros es obligatoria y debe ser mayor o igual a 0',
+          ),
+        ),
+      );
+    }
     if (request.originAddress.trim().isEmpty) {
       return Future.value(
         const FailureResult(
@@ -31,6 +39,10 @@ class CreateDeliveryRequestUseCase {
         ),
       );
     }
-    return repository.createDeliveryRequest(request);
+
+    final calculatedFare = feeCalculator.calculate(request.distanceInKm!);
+    final requestToPersist = request.copyWith(referenceFare: calculatedFare);
+
+    return repository.createDeliveryRequest(requestToPersist);
   }
 }

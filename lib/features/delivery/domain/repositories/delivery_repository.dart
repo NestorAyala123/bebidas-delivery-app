@@ -18,4 +18,7 @@ abstract class DeliveryRepository {
     String driverId,
     DriverStatus status,
   );
+
+  // ── Métodos de Semana 3 (Solicitudes Pendientes para Repartidor) ───────────
+  Future<Result<List<DeliveryRequest>, Failure>> getPendingDeliveryRequests();
 }

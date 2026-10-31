@@ -130,4 +130,13 @@ class MockDeliveryRepository implements DeliveryRepository {
     _driverStatuses[driverId] = status;
     return const Success(null);
   }
+
+  @override
+  Future<Result<List<DeliveryRequest>, Failure>> getPendingDeliveryRequests() async {
+    await _simulateLatency();
+    final pending = _requests.values
+        .where((r) => r.status == DeliveryStatus.pendingOffer)
+        .toList();
+    return Success(pending);
+  }
 }
