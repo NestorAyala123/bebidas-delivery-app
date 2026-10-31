@@ -1,28 +1,39 @@
-import '../../../../core/errors/failures.dart';
-import '../../../../core/result/result.dart';
+import '../../../core/errors/failures.dart';
+import '../../../core/result/result.dart';
 import '../../users/domain/entities/app_user.dart';
+import '../../users/infrastructure/in_memory_user_repository.dart';
 import '../domain/entities/user_session.dart';
 import '../domain/repositories/auth_repository.dart';
 
 /// In-memory adapter for local development and tests. Replace with Firebase/API.
+///
+/// Credentials live here; user data lives in [InMemoryUserRepository] so that
+/// profile edits survive a logout/login cycle.
 class MockAuthRepository implements AuthRepository {
-  final Map<String, MockAccount> _accounts = {
-    for (final account in MockAccounts.all) account.email: account,
+  final InMemoryUserRepository users;
+  final Map<String, String> _passwords = {
+    for (final account in MockAccounts.all) account.email: account.password,
   };
   UserSession? _session;
+
+  MockAuthRepository({InMemoryUserRepository? users})
+    : users =
+          users ??
+          InMemoryUserRepository(MockAccounts.all.map((a) => a.user));
 
   @override
   Future<Result<UserSession, Failure>> login({
     required String email,
     required String password,
   }) async {
-    final account = _accounts[email.trim().toLowerCase()];
-    if (account == null || account.password != password) {
+    final normalizedEmail = email.trim().toLowerCase();
+    final user = users.findByEmail(normalizedEmail);
+    if (user == null || _passwords[normalizedEmail] != password) {
       return const FailureResult(
         UnauthorizedFailure('Correo o contraseña incorrectos'),
       );
     }
-    _session = _sessionFor(account);
+    _session = _sessionFor(user);
     return Success(_session!);
   }
 
@@ -37,24 +48,21 @@ class MockAuthRepository implements AuthRepository {
     if (name.trim().isEmpty || normalizedEmail.isEmpty) {
       return const FailureResult(ValidationFailure('El nombre es obligatorio'));
     }
-    if (_accounts.containsKey(normalizedEmail)) {
+    if (users.findByEmail(normalizedEmail) != null) {
       return const FailureResult(
         ValidationFailure('Ya existe una cuenta con ese correo'),
       );
     }
-    final account = MockAccount(
+    final user = AppUser(
+      id: 'user-${users.length + 1}',
       email: normalizedEmail,
-      password: password,
-      user: AppUser(
-        id: 'user-${_accounts.length + 1}',
-        email: normalizedEmail,
-        name: name.trim(),
-        role: role,
-        createdAt: DateTime.now(),
-      ),
+      name: name.trim(),
+      role: role,
+      createdAt: DateTime.now(),
     );
-    _accounts[normalizedEmail] = account;
-    _session = _sessionFor(account);
+    users.add(user);
+    _passwords[normalizedEmail] = password;
+    _session = _sessionFor(user);
     return Success(_session!);
   }
 
@@ -68,11 +76,11 @@ class MockAuthRepository implements AuthRepository {
   Future<Result<UserSession?, Failure>> getCurrentSession() async =>
       Success(_session);
 
-  UserSession _sessionFor(MockAccount account) => UserSession(
-    userId: account.user.id,
-    email: account.user.email,
-    token: 'mock-token-${account.user.id}',
-    user: account.user,
+  UserSession _sessionFor(AppUser user) => UserSession(
+    userId: user.id,
+    email: user.email,
+    token: 'mock-token-${user.id}',
+    user: user,
   );
 }
 
@@ -92,12 +100,6 @@ class MockAccounts {
   MockAccounts._();
 
   static final List<MockAccount> all = [
-    _account(
-      'cliente@delivery.com',
-      'password123',
-      'Cliente Delivery',
-      UserRole.client,
-    ),
     _account('cliente@demo.com', 'cliente123', 'Cliente Demo', UserRole.client),
     _account(
       'comercio@demo.com',

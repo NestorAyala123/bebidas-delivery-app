@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 
 import '../../../../core/router/feature_route_module.dart';
+import '../pages/edit_profile_page.dart';
 import '../pages/login_page.dart';
 import '../pages/profile_page.dart';
 import '../pages/register_page.dart';
@@ -17,6 +18,7 @@ class AuthRoutes implements FeatureRouteModule {
     login: (context) => const LoginPage(),
     register: (context) => const RegisterPage(),
     ProfilePage.route: (context) => const ProfilePage(),
+    EditProfilePage.route: (context) => const EditProfilePage(),
   };
 
   @override

@@ -7,6 +7,8 @@ import '../../application/use_cases/get_current_user_use_case.dart';
 import '../../application/use_cases/login_use_case.dart';
 import '../../application/use_cases/logout_use_case.dart';
 import '../../application/use_cases/register_use_case.dart';
+import '../../../users/domain/entities/app_user.dart';
+import '../../../users/domain/entities/identity_contract.dart';
 import '../../domain/entities/user_session.dart';
 
 class AuthController extends ChangeNotifier {
@@ -53,6 +55,32 @@ class AuthController extends ChangeNotifier {
       session = currentSession;
       notifyListeners();
     }
+  }
+
+  /// The identity of the signed-in user, as consumed by other modules.
+  IdentityContract? get identity {
+    final current = session;
+    return current == null ? null : IdentityContract.fromUser(current.user);
+  }
+
+  /// Keeps the in-memory session aligned after the profile is edited.
+  void refreshProfile(IdentityContract updated) {
+    final current = session;
+    if (current == null || current.userId != updated.id) return;
+    session = UserSession(
+      userId: current.userId,
+      email: current.email,
+      token: current.token,
+      user: AppUser(
+        id: updated.id,
+        email: updated.email,
+        name: updated.displayName,
+        phoneNumber: updated.phoneNumber,
+        role: updated.role,
+        createdAt: updated.createdAt,
+      ),
+    );
+    notifyListeners();
   }
 
   Future<void> logout() async {

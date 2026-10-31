@@ -4,5 +4,6 @@ import '../entities/app_user.dart';
 
 abstract class UserRepository {
   Future<Result<AppUser, Failure>> getUserById(String id);
+  Future<Result<List<AppUser>, Failure>> listUsers();
   Future<Result<void, Failure>> updateProfile(AppUser user);
 }

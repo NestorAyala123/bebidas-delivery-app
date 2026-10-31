@@ -31,9 +31,7 @@ class _LoginPageState extends State<LoginPage> {
     final success = await _controller.login(
       LoginRequest(email: _email.text, password: _password.text),
     );
-
     if (!mounted) return;
-
     if (success) {
       Navigator.pushReplacementNamed(context, ProfilePage.route);
     } else {
@@ -85,11 +83,6 @@ class _AuthForm extends StatelessWidget {
         constraints: const BoxConstraints(maxWidth: 420),
         child: Column(
           children: [
-            const Text(
-              'Ingresa a tu cuenta',
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 24),
             TextField(
               controller: email,
               keyboardType: TextInputType.emailAddress,
@@ -102,11 +95,11 @@ class _AuthForm extends StatelessWidget {
               decoration: const InputDecoration(labelText: 'Contraseña'),
             ),
             const SizedBox(height: 24),
-            ElevatedButton(
+            FilledButton(
               onPressed: loading ? null : onSubmit,
               child: loading
                   ? const CircularProgressIndicator()
-                  : const Text('Ingresar'),
+                  : const Text('Continuar'),
             ),
             footer,
             const Text(

@@ -35,3 +35,8 @@ class Conversation {
     this.orderId,
   });
 }
+
+extension ConversationAccess on Conversation {
+  bool hasParticipant(String userId) =>
+      participants.any((participant) => participant.userId == userId);
+}
