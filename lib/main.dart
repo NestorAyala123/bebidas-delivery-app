@@ -14,6 +14,7 @@ import 'features/location/di/location_di.dart';
 import 'features/location/presentation/routes/location_routes.dart';
 
 import 'features/cart/di/cart_di.dart';
+import 'features/orders/di/orders_di.dart';
 
 import 'features/users/di/users_di.dart';
 
@@ -35,6 +36,7 @@ void main() async {
     StoresProductsDi(),
     LocationDi(),
     CartDi(),
+    OrdersDi(),
     UsersDi(),
     ChatDi(),
   ]);

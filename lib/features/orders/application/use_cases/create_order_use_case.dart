@@ -18,6 +18,22 @@ class CreateOrderInput {
     required this.cart,
     this.missingContainersFee = 0,
   });
+
+  /// Factory helper that automatically calculates missing container fee (RN05)
+  factory CreateOrderInput.fromCart({
+    required String customerId,
+    required String deliveryAddress,
+    required Cart cart,
+    int returnedContainers = 0,
+  }) {
+    final calc = cart.calculateTotals(returnedContainers: returnedContainers);
+    return CreateOrderInput(
+      customerId: customerId,
+      deliveryAddress: deliveryAddress,
+      cart: cart,
+      missingContainersFee: calc.missingContainersFee,
+    );
+  }
 }
 
 class CreateOrderUseCase {
