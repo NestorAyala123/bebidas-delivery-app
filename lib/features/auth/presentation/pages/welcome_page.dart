@@ -39,6 +39,7 @@ class WelcomePage extends StatelessWidget {
                 },
                 child: const Text('Iniciar Sesión'),
               ),
+
               const SizedBox(height: 12),
 
               // Acceso al registro
@@ -48,9 +49,20 @@ class WelcomePage extends StatelessWidget {
                 },
                 child: const Text('Crear una cuenta'),
               ),
+
               const SizedBox(height: 12),
 
-              // Acceso al mapa de comercios cercanos
+              // Acceso a comercios
+              OutlinedButton(
+                onPressed: () {
+                  Navigator.pushNamed(context, '/stores');
+                },
+                child: const Text('Administrar comercios'),
+              ),
+
+              const SizedBox(height: 12),
+
+              // Acceso al mapa
               OutlinedButton.icon(
                 onPressed: () {
                   Navigator.pushNamed(context, LocationRoutes.mapa);

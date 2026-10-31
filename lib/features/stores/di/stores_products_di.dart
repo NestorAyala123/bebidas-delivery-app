@@ -4,6 +4,7 @@ import '../../returnable_containers/application/use_cases/save_returnable_contai
 import '../../returnable_containers/domain/repositories/returnable_container_repository.dart';
 import '../../returnable_containers/infrastructure/repositories/in_memory_returnable_container_repository.dart';
 import '../../products/application/use_cases/save_product_use_case.dart';
+import '../../products/application/use_cases/get_store_catalog_use_case.dart';
 import '../../products/application/use_cases/update_product_availability_use_case.dart';
 import '../../products/domain/repositories/product_repository.dart';
 import '../../products/infrastructure/repositories/in_memory_product_repository.dart';
@@ -38,6 +39,11 @@ class StoresProductsDi implements FeatureDiModule {
     if (!locator.isRegistered<SaveProductUseCase>()) {
       locator.registerLazySingleton(
         () => SaveProductUseCase(locator.get<ProductRepository>()),
+      );
+    }
+    if (!locator.isRegistered<GetStoreCatalogUseCase>()) {
+      locator.registerLazySingleton(
+        () => GetStoreCatalogUseCase(locator.get<ProductRepository>()),
       );
     }
     if (!locator.isRegistered<UpdateProductAvailabilityUseCase>()) {
