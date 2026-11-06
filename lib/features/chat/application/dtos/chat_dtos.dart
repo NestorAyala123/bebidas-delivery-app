@@ -4,11 +4,15 @@ class CreateConversationRequest {
   final ConversationType type;
   final List<ConversationParticipant> participants;
   final String? orderId;
+  final String? subjectId;
+  final String? subjectTitle;
 
   const CreateConversationRequest({
     required this.type,
     required this.participants,
     this.orderId,
+    this.subjectId,
+    this.subjectTitle,
   });
 }
 
