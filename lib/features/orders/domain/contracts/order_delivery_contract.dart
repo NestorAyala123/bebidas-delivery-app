@@ -11,6 +11,8 @@ class OrderDeliveryInfo {
   final bool isConfirmedByStore; // RN01
   final int totalItemsCount;
   final double orderTotal;
+  final List<String> availableDeliveryModes;
+  final Map<String, String> storeOpeningHours;
 
   const OrderDeliveryInfo({
     required this.orderId,
@@ -21,6 +23,8 @@ class OrderDeliveryInfo {
     required this.isConfirmedByStore,
     required this.totalItemsCount,
     required this.orderTotal,
+    this.availableDeliveryModes = const [],
+    this.storeOpeningHours = const {},
   });
 }
 

@@ -47,7 +47,11 @@ class Order {
       deliveryAddress: deliveryAddress,
       missingContainersFee: missingContainersFee,
       createdAt: createdAt,
-      confirmedAt: confirmedAt ?? this.confirmedAt,
+      confirmedAt:
+          confirmedAt ??
+          (newStatus == OrderStatus.confirmed
+              ? DateTime.now()
+              : this.confirmedAt),
     );
   }
 }
