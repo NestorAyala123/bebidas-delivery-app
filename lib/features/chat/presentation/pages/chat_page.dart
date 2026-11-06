@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/di/service_locator.dart';
-import '../../../auth/presentation/state/auth_controller.dart';
+import '../../../auth/presentation/widgets/session_gate.dart';
+import '../../../users/domain/entities/identity_contract.dart';
 import '../../application/dtos/chat_dtos.dart';
 import '../../application/use_cases/send_message_use_case.dart';
 import '../../application/use_cases/watch_messages_use_case.dart';
@@ -14,17 +15,31 @@ class ChatPageArguments {
   const ChatPageArguments({required this.conversationId, required this.title});
 }
 
-class ChatPage extends StatefulWidget {
+class ChatPage extends StatelessWidget {
   final ChatPageArguments arguments;
 
   const ChatPage({super.key, required this.arguments});
 
   @override
-  State<ChatPage> createState() => _ChatPageState();
+  Widget build(BuildContext context) => SessionGate(
+    title: arguments.title,
+    // Rebuilt per identity: a different user re-checks access from scratch.
+    builder: (context, identity) =>
+        _ChatRoom(arguments: arguments, requester: identity),
+  );
 }
 
-class _ChatPageState extends State<ChatPage> {
-  final _auth = sl.get<AuthController>();
+class _ChatRoom extends StatefulWidget {
+  final ChatPageArguments arguments;
+  final IdentityContract requester;
+
+  const _ChatRoom({required this.arguments, required this.requester});
+
+  @override
+  State<_ChatRoom> createState() => _ChatRoomState();
+}
+
+class _ChatRoomState extends State<_ChatRoom> {
   final _input = TextEditingController();
   Stream<List<ChatMessage>>? _messages;
   String? _error;
@@ -43,14 +58,9 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   Future<void> _open() async {
-    final requester = _auth.identity;
-    if (requester == null) {
-      setState(() => _error = 'Inicia sesión para ver esta conversación');
-      return;
-    }
     final result = await sl.get<WatchMessagesUseCase>()(
       widget.arguments.conversationId,
-      requester: requester,
+      requester: widget.requester,
     );
     if (!mounted) return;
     setState(() {
@@ -60,34 +70,38 @@ class _ChatPageState extends State<ChatPage> {
   }
 
   Future<void> _send() async {
-    final requester = _auth.identity;
-    if (requester == null || _input.text.trim().isEmpty) return;
+    if (_sending || _input.text.trim().isEmpty) return;
     setState(() => _sending = true);
     final result = await sl.get<SendMessageUseCase>()(
       SendMessageRequest(
         conversationId: widget.arguments.conversationId,
-        senderId: requester.id,
+        senderId: widget.requester.id,
         text: _input.text,
       ),
-      requester: requester,
+      requester: widget.requester,
     );
     if (!mounted) return;
     setState(() => _sending = false);
     result.fold(
       onSuccess: (_) => _input.clear(),
-      onFailure: (failure) => ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(failure.message))),
+      onFailure: (failure) =>
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text(failure.message))),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final myId = _auth.identity?.id;
+    final myId = widget.requester.id;
     return Scaffold(
       appBar: AppBar(title: Text(widget.arguments.title)),
       body: _error != null
-          ? Center(child: Text(_error!))
+          ? Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Text(_error!, textAlign: TextAlign.center),
+              ),
+            )
           : _messages == null
           ? const Center(child: CircularProgressIndicator())
           : Column(
@@ -117,11 +131,7 @@ class _ChatPageState extends State<ChatPage> {
                     },
                   ),
                 ),
-                _Composer(
-                  controller: _input,
-                  sending: _sending,
-                  onSend: _send,
-                ),
+                _Composer(controller: _input, sending: _sending, onSend: _send),
               ],
             ),
     );

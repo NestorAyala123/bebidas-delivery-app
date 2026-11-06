@@ -11,6 +11,15 @@ class ConversationSummary {
   final String title;
 
   const ConversationSummary({required this.conversation, required this.title});
+
+  /// What the conversation is about, for the list subtitle.
+  String get kindLabel => switch (conversation.type) {
+    ConversationType.storeInquiry => 'Consulta a comercio',
+    ConversationType.serviceInquiry => 'Consulta de servicio para eventos',
+    ConversationType.orderSupport =>
+      'Pedido ${conversation.orderId ?? ''}'.trim(),
+    ConversationType.direct => 'Conversación directa',
+  };
 }
 
 /// Conversations of the requester, titled with the other participants' names.
@@ -46,10 +55,12 @@ class ListConversationsUseCase {
         );
         names.add(profile.dataOrNull?.displayName ?? 'Usuario');
       }
+      final people = names.isEmpty ? 'Conversación' : names.join(', ');
+      final subject = conversation.subjectTitle;
       summaries.add(
         ConversationSummary(
           conversation: conversation,
-          title: names.isEmpty ? 'Conversación' : names.join(', '),
+          title: subject == null ? people : '$subject · $people',
         ),
       );
     }
