@@ -86,6 +86,8 @@ class AuthController extends ChangeNotifier {
   Future<void> logout() async {
     await logoutUseCase();
     session = null;
+    isLoading = false;
+    errorMessage = null;
     notifyListeners();
   }
 
@@ -96,7 +98,7 @@ class AuthController extends ChangeNotifier {
       notifyListeners();
       return true;
     }
-    errorMessage = result.failureOrNull?.toString();
+    errorMessage = result.failureOrNull?.message;
     notifyListeners();
     return false;
   }
