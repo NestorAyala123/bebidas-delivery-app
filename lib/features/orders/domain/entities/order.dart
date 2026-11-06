@@ -1,4 +1,5 @@
 import 'order_item.dart';
+import 'order_delivery_method.dart';
 import 'order_status.dart';
 import '../../../../core/errors/exceptions.dart';
 
@@ -10,11 +11,13 @@ class Order {
   final String storeId; // RN07: Un pedido pertenece a un solo establecimiento
   final List<OrderItem> items;
   final OrderStatus status;
+  final OrderDeliveryMethod deliveryMethod;
   final String deliveryAddress;
   final double missingContainersFee;
   final DateTime createdAt;
   final DateTime? confirmedAt;
   final String? rejectionReason;
+  final List<OrderStatusChange> statusHistory;
 
   const Order({
     required this.id,
@@ -22,11 +25,13 @@ class Order {
     required this.storeId,
     required this.items,
     required this.status,
+    required this.deliveryMethod,
     required this.deliveryAddress,
     this.missingContainersFee = 0.0,
     required this.createdAt,
     this.confirmedAt,
     this.rejectionReason,
+    this.statusHistory = const [],
   }) : assert(items.length > 0, 'Un pedido debe tener al menos un item');
 
   /// Subtotal calculated from frozen prices
@@ -38,12 +43,18 @@ class Order {
 
   /// RN01: El establecimiento debe confirmar el pedido antes de buscar repartidor.
   bool get canRequestDriver => status.canSearchDriver;
+  bool get canCancel => status.canBeCancelled;
+
+  List<OrderStatusChange> get timeline => statusHistory.isEmpty
+      ? [OrderStatusChange(status: status, changedAt: createdAt)]
+      : statusHistory;
 
   /// Creates a copy with an updated status
   Order copyWithStatus(
     OrderStatus newStatus, {
     DateTime? confirmedAt,
     String? rejectionReason,
+    DateTime? changedAt,
   }) {
     if (!_canTransitionTo(newStatus)) {
       throw DomainException(
@@ -57,12 +68,21 @@ class Order {
       );
     }
 
+    final history = List<OrderStatusChange>.of(timeline)
+      ..add(
+        OrderStatusChange(
+          status: newStatus,
+          changedAt: changedAt ?? DateTime.now(),
+        ),
+      );
+
     return Order(
       id: id,
       customerId: customerId,
       storeId: storeId,
       items: items,
       status: newStatus,
+      deliveryMethod: deliveryMethod,
       deliveryAddress: deliveryAddress,
       missingContainersFee: missingContainersFee,
       createdAt: createdAt,
@@ -72,6 +92,7 @@ class Order {
       rejectionReason: newStatus == OrderStatus.rejected
           ? rejectionReason!.trim()
           : this.rejectionReason,
+      statusHistory: history,
     );
   }
 
@@ -82,17 +103,35 @@ class Order {
             newStatus == OrderStatus.rejected ||
             newStatus == OrderStatus.cancelled,
       OrderStatus.confirmed =>
-        newStatus == OrderStatus.lookingForDriver ||
+        newStatus == OrderStatus.preparing ||
+            (deliveryMethod == OrderDeliveryMethod.externalDelivery &&
+                newStatus == OrderStatus.lookingForDriver) ||
             newStatus == OrderStatus.cancelled,
+      OrderStatus.preparing => switch (deliveryMethod) {
+        OrderDeliveryMethod.pickup =>
+          newStatus == OrderStatus.readyForPickup ||
+              newStatus == OrderStatus.cancelled,
+        OrderDeliveryMethod.storeDelivery =>
+          newStatus == OrderStatus.readyForDelivery ||
+              newStatus == OrderStatus.cancelled,
+        OrderDeliveryMethod.externalDelivery =>
+          newStatus == OrderStatus.lookingForDriver ||
+              newStatus == OrderStatus.cancelled,
+      },
+      OrderStatus.readyForPickup => newStatus == OrderStatus.pickedUp,
+      OrderStatus.pickedUp => newStatus == OrderStatus.delivered,
+      OrderStatus.readyForDelivery => newStatus == OrderStatus.inDelivery,
       OrderStatus.lookingForDriver =>
-        newStatus == OrderStatus.driverAssigned ||
-            newStatus == OrderStatus.cancelled,
+        deliveryMethod == OrderDeliveryMethod.externalDelivery &&
+            (newStatus == OrderStatus.driverAssigned ||
+                newStatus == OrderStatus.cancelled),
       OrderStatus.driverAssigned =>
-        newStatus == OrderStatus.inDelivery ||
-            newStatus == OrderStatus.cancelled,
+        deliveryMethod == OrderDeliveryMethod.externalDelivery &&
+            newStatus == OrderStatus.inDelivery,
       OrderStatus.inDelivery =>
-        newStatus == OrderStatus.delivered ||
-            newStatus == OrderStatus.cancelled,
+        (deliveryMethod == OrderDeliveryMethod.storeDelivery ||
+                deliveryMethod == OrderDeliveryMethod.externalDelivery) &&
+            newStatus == OrderStatus.delivered,
       OrderStatus.rejected ||
       OrderStatus.delivered ||
       OrderStatus.cancelled => false,

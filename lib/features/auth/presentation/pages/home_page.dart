@@ -4,6 +4,7 @@ import '../../../event_services/presentation/pages/listado_servicios_page.dart';
 import '../../../location/presentation/pages/mapa_proximo_page.dart';
 import '../../../orders/presentation/pages/order_summary_page.dart';
 import '../../../orders/presentation/pages/orders_history_page.dart';
+import '../../../orders/presentation/pages/store_orders_page.dart';
 import '../../../users/domain/entities/app_user.dart';
 import '../../domain/entities/user_session.dart';
 import '../routes/auth_routes.dart';
@@ -139,6 +140,27 @@ class HomePage extends StatelessWidget {
               },
             ),
             const Divider(),
+
+            if (session.user.isStore) ...[
+              ListTile(
+                leading: const CircleAvatar(
+                  backgroundColor: Color(0xFFE0F2F1),
+                  child: Icon(Icons.receipt_long, color: Colors.teal),
+                ),
+                title: const Text('Gestionar pedidos del comercio'),
+                subtitle: const Text('Aceptar, preparar y actualizar pedidos'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => StoreOrdersPage(session: session),
+                    ),
+                  );
+                },
+              ),
+              const Divider(),
+            ],
 
             // Modules
             ListTile(

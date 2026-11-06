@@ -1,8 +1,11 @@
 import '../../../../core/di/service_locator.dart';
 import '../application/use_cases/confirm_order_use_case.dart';
+import '../application/use_cases/cancel_order_use_case.dart';
 import '../application/use_cases/create_order_use_case.dart';
 import '../application/use_cases/get_customer_orders_use_case.dart';
+import '../application/use_cases/get_store_orders_use_case.dart';
 import '../application/use_cases/reject_order_use_case.dart';
+import '../application/use_cases/update_order_status_use_case.dart';
 import '../domain/repositories/order_repository.dart';
 import '../infrastructure/in_memory_order_repository.dart';
 
@@ -41,6 +44,24 @@ class OrdersDi implements FeatureDiModule {
     if (!locator.isRegistered<RejectOrderUseCase>()) {
       locator.registerFactory<RejectOrderUseCase>(
         () => RejectOrderUseCase(locator.get<OrderRepository>()),
+      );
+    }
+
+    if (!locator.isRegistered<GetStoreOrdersUseCase>()) {
+      locator.registerFactory<GetStoreOrdersUseCase>(
+        () => GetStoreOrdersUseCase(locator.get<OrderRepository>()),
+      );
+    }
+
+    if (!locator.isRegistered<UpdateOrderStatusUseCase>()) {
+      locator.registerFactory<UpdateOrderStatusUseCase>(
+        () => UpdateOrderStatusUseCase(locator.get<OrderRepository>()),
+      );
+    }
+
+    if (!locator.isRegistered<CancelOrderUseCase>()) {
+      locator.registerFactory<CancelOrderUseCase>(
+        () => CancelOrderUseCase(locator.get<OrderRepository>()),
       );
     }
   }

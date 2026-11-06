@@ -9,6 +9,7 @@ import '../../../cart/domain/entities/cart_item.dart';
 import '../../../cart/domain/repositories/cart_repository.dart';
 import '../../../pricing/domain/entities/quantity_pricing_tier.dart';
 import '../../application/use_cases/create_order_use_case.dart';
+import '../../domain/entities/order_delivery_method.dart';
 import 'orders_history_page.dart';
 
 /// Screen that presents the cart summary, volume discount tier calculation (RN04),
@@ -36,6 +37,7 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
   int _returnedContainers = 0;
   bool _isLoading = false;
   Cart _cart = const Cart();
+  OrderDeliveryMethod _deliveryMethod = OrderDeliveryMethod.externalDelivery;
 
   CartRepository get _cartRepo =>
       widget.cartRepository ??
@@ -138,6 +140,7 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
       customerId: widget.session.userId,
       deliveryAddress: address,
       cart: _cart,
+      deliveryMethod: _deliveryMethod,
       returnedContainers: _returnedContainers,
     );
 
@@ -326,6 +329,41 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
                   const SizedBox(height: 16),
 
                   // Delivery Address Card
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: DropdownButtonFormField<OrderDeliveryMethod>(
+                        initialValue: _deliveryMethod,
+                        decoration: const InputDecoration(
+                          labelText: 'Modalidad de entrega',
+                          border: OutlineInputBorder(),
+                        ),
+                        items: const [
+                          DropdownMenuItem(
+                            value: OrderDeliveryMethod.pickup,
+                            child: Text('Retiro en el local'),
+                          ),
+                          DropdownMenuItem(
+                            value: OrderDeliveryMethod.storeDelivery,
+                            child: Text('Delivery propio del comercio'),
+                          ),
+                          DropdownMenuItem(
+                            value: OrderDeliveryMethod.externalDelivery,
+                            child: Text('Repartidor externo'),
+                          ),
+                        ],
+                        onChanged: _isLoading
+                            ? null
+                            : (method) {
+                                if (method != null) {
+                                  setState(() => _deliveryMethod = method);
+                                }
+                              },
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+
                   Card(
                     elevation: 1,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

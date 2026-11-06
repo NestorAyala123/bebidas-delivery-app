@@ -1,5 +1,6 @@
 import '../../../../core/errors/failures.dart';
 import '../../../../core/result/result.dart';
+import '../../../../core/errors/exceptions.dart';
 import '../domain/entities/order.dart';
 import '../domain/entities/order_status.dart';
 import '../domain/repositories/order_repository.dart';
@@ -7,8 +8,10 @@ import '../domain/repositories/order_repository.dart';
 /// In-memory implementation of [OrderRepository] for prototypes and state persistence.
 class InMemoryOrderRepository implements OrderRepository {
   final Map<String, Order> _orders = {};
+  final DateTime Function() _now;
 
-  InMemoryOrderRepository([List<Order>? initialOrders]) {
+  InMemoryOrderRepository([List<Order>? initialOrders, DateTime Function()? now])
+    : _now = now ?? DateTime.now {
     if (initialOrders != null) {
       for (final order in initialOrders) {
         _orders[order.id] = order;
@@ -46,14 +49,16 @@ class InMemoryOrderRepository implements OrderRepository {
       );
     }
     try {
+      final confirmedAt = _now();
       final confirmed = order.copyWithStatus(
         OrderStatus.confirmed,
-        confirmedAt: DateTime.now(),
+        confirmedAt: confirmedAt,
+        changedAt: confirmedAt,
       );
       _orders[confirmed.id] = confirmed;
       return Success(confirmed);
-    } catch (e) {
-      return FailureResult(ValidationFailure(e.toString()));
+    } on DomainException catch (error) {
+      return FailureResult(BusinessRuleFailure(error.message));
     }
   }
 
@@ -76,11 +81,71 @@ class InMemoryOrderRepository implements OrderRepository {
       final rejected = order.copyWithStatus(
         OrderStatus.rejected,
         rejectionReason: reason,
+        changedAt: _now(),
       );
       _orders[rejected.id] = rejected;
       return Success(rejected);
-    } catch (e) {
-      return FailureResult(ValidationFailure(e.toString()));
+    } on DomainException catch (error) {
+      return FailureResult(BusinessRuleFailure(error.message));
+    }
+  }
+
+  @override
+  Future<Result<Order, Failure>> updateOrderStatus({
+    required String orderId,
+    required String storeId,
+    required OrderStatus status,
+  }) async {
+    final order = _orders[orderId.trim()];
+    if (order == null) {
+      return const FailureResult(NotFoundFailure('Pedido no encontrado.'));
+    }
+    if (order.storeId != storeId.trim()) {
+      return const FailureResult(
+        UnauthorizedFailure('No autorizado para gestionar este pedido.'),
+      );
+    }
+    if (status == OrderStatus.created ||
+        status == OrderStatus.confirmed ||
+        status == OrderStatus.rejected ||
+        status == OrderStatus.cancelled) {
+      return const FailureResult(
+        ValidationFailure('Este estado requiere una operación específica.'),
+      );
+    }
+
+    try {
+      final updated = order.copyWithStatus(status, changedAt: _now());
+      _orders[updated.id] = updated;
+      return Success(updated);
+    } on DomainException catch (error) {
+      return FailureResult(BusinessRuleFailure(error.message));
+    }
+  }
+
+  @override
+  Future<Result<Order, Failure>> cancelOrder({
+    required String orderId,
+    required String customerId,
+  }) async {
+    final order = _orders[orderId.trim()];
+    if (order == null) {
+      return const FailureResult(NotFoundFailure('Pedido no encontrado.'));
+    }
+    if (order.customerId != customerId.trim()) {
+      return const FailureResult(
+        UnauthorizedFailure('No autorizado para cancelar este pedido.'),
+      );
+    }
+    try {
+      final cancelled = order.copyWithStatus(
+        OrderStatus.cancelled,
+        changedAt: _now(),
+      );
+      _orders[cancelled.id] = cancelled;
+      return Success(cancelled);
+    } on DomainException catch (error) {
+      return FailureResult(BusinessRuleFailure(error.message));
     }
   }
 

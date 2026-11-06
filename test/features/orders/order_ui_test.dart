@@ -5,13 +5,19 @@ import 'package:bebidas_delivery_app/features/cart/domain/entities/cart.dart';
 import 'package:bebidas_delivery_app/features/cart/domain/entities/cart_item.dart';
 import 'package:bebidas_delivery_app/features/cart/infrastructure/in_memory_cart_repository.dart';
 import 'package:bebidas_delivery_app/features/orders/application/use_cases/create_order_use_case.dart';
+import 'package:bebidas_delivery_app/features/orders/application/use_cases/confirm_order_use_case.dart';
 import 'package:bebidas_delivery_app/features/orders/application/use_cases/get_customer_orders_use_case.dart';
+import 'package:bebidas_delivery_app/features/orders/application/use_cases/get_store_orders_use_case.dart';
+import 'package:bebidas_delivery_app/features/orders/application/use_cases/reject_order_use_case.dart';
+import 'package:bebidas_delivery_app/features/orders/application/use_cases/update_order_status_use_case.dart';
 import 'package:bebidas_delivery_app/features/orders/domain/entities/order.dart';
+import 'package:bebidas_delivery_app/features/orders/domain/entities/order_delivery_method.dart';
 import 'package:bebidas_delivery_app/features/orders/domain/entities/order_item.dart';
 import 'package:bebidas_delivery_app/features/orders/domain/entities/order_status.dart';
 import 'package:bebidas_delivery_app/features/orders/infrastructure/in_memory_order_repository.dart';
 import 'package:bebidas_delivery_app/features/orders/presentation/pages/order_summary_page.dart';
 import 'package:bebidas_delivery_app/features/orders/presentation/pages/orders_history_page.dart';
+import 'package:bebidas_delivery_app/features/orders/presentation/pages/store_orders_page.dart';
 import 'package:bebidas_delivery_app/features/pricing/domain/entities/quantity_pricing_tier.dart';
 import 'package:bebidas_delivery_app/features/users/domain/entities/app_user.dart';
 
@@ -120,6 +126,7 @@ void main() {
         customerId: 'user-david-test',
         storeId: 'store-1',
         status: OrderStatus.created,
+        deliveryMethod: OrderDeliveryMethod.externalDelivery,
         deliveryAddress: 'Av. 4 de Noviembre, Manta',
         createdAt: DateTime(2026, 10, 19, 20, 0),
         items: const [
@@ -149,7 +156,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Pedido #ORD-HIST-01'), findsOneWidget);
-      expect(find.text('Pendiente'), findsOneWidget);
+      expect(find.text('Pendiente'), findsWidgets);
       expect(find.text('Cerveza Club 330ml'), findsOneWidget);
       expect(
         find.text('Precio congelado: \$2.40 c/u (Retornable)'),
@@ -158,5 +165,61 @@ void main() {
       expect(find.text('Total Inalterable:'), findsOneWidget);
       expect(find.text('\$15.40'), findsOneWidget); // 14.40 + 1.00 = 15.40
     });
+  });
+
+  testWidgets('Store can accept and advance a pickup order', (tester) async {
+    final orderRepository = InMemoryOrderRepository([
+      Order(
+        id: 'ORD-STORE-01',
+        customerId: 'customer-1',
+        storeId: 'store-1',
+        status: OrderStatus.created,
+        deliveryMethod: OrderDeliveryMethod.pickup,
+        deliveryAddress: 'Manta',
+        createdAt: DateTime(2026, 11, 6),
+        items: const [
+          OrderItem(
+            productId: 'p-1',
+            productName: 'Bebida',
+            frozenUnitPrice: 3,
+            quantity: 1,
+          ),
+        ],
+      ),
+    ]);
+    final storeSession = UserSession(
+      userId: 'store-1',
+      email: 'store@test.com',
+      token: 'test-token',
+      user: AppUser(
+        id: 'store-1',
+        email: 'store@test.com',
+        name: 'Comercio',
+        role: UserRole.store,
+        createdAt: DateTime(2026, 11, 6),
+      ),
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: StoreOrdersPage(
+          session: storeSession,
+          getStoreOrdersUseCase: GetStoreOrdersUseCase(orderRepository),
+          confirmOrderUseCase: ConfirmOrderUseCase(orderRepository),
+          rejectOrderUseCase: RejectOrderUseCase(orderRepository),
+          updateOrderStatusUseCase: UpdateOrderStatusUseCase(orderRepository),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Aceptar pedido'), findsOneWidget);
+
+    await tester.tap(find.text('Aceptar pedido'));
+    await tester.pumpAndSettle();
+    expect(find.text('Iniciar preparación'), findsOneWidget);
+
+    await tester.tap(find.text('Iniciar preparación'));
+    await tester.pumpAndSettle();
+    expect(find.text('Listo para retirar'), findsOneWidget);
   });
 }

@@ -3,6 +3,7 @@ import 'package:bebidas_delivery_app/core/errors/exceptions.dart';
 import 'package:bebidas_delivery_app/features/cart/domain/entities/cart.dart';
 import 'package:bebidas_delivery_app/features/cart/domain/entities/cart_item.dart';
 import 'package:bebidas_delivery_app/features/orders/domain/entities/order.dart';
+import 'package:bebidas_delivery_app/features/orders/domain/entities/order_delivery_method.dart';
 import 'package:bebidas_delivery_app/features/orders/domain/entities/order_item.dart';
 import 'package:bebidas_delivery_app/features/orders/domain/entities/order_status.dart';
 
@@ -14,6 +15,7 @@ void main() {
         customerId: 'usr-1',
         storeId: 'store-1',
         status: OrderStatus.created,
+        deliveryMethod: OrderDeliveryMethod.externalDelivery,
         deliveryAddress: 'Av. Siempre Viva 123',
         createdAt: DateTime.now(),
         items: [
@@ -42,6 +44,7 @@ void main() {
         customerId: 'usr-1',
         storeId: 'store-1',
         status: OrderStatus.created,
+        deliveryMethod: OrderDeliveryMethod.externalDelivery,
         deliveryAddress: 'Av. Siempre Viva 123',
         createdAt: DateTime.now(),
         items: [
@@ -69,6 +72,50 @@ void main() {
       expect(rejected.rejectionReason, 'Producto agotado');
       expect(
         () => rejected.copyWithStatus(OrderStatus.confirmed),
+        throwsA(isA<DomainException>()),
+      );
+    });
+
+    test('Delivery paths and cancellation rules depend on the selected method', () {
+      final pickupOrder = _order(OrderDeliveryMethod.pickup);
+      expect(
+        pickupOrder.copyWithStatus(OrderStatus.confirmed)
+            .copyWithStatus(OrderStatus.preparing)
+            .copyWithStatus(OrderStatus.readyForPickup)
+            .copyWithStatus(OrderStatus.pickedUp)
+            .copyWithStatus(OrderStatus.delivered)
+            .status,
+        OrderStatus.delivered,
+      );
+
+      final ownDeliveryOrder = _order(OrderDeliveryMethod.storeDelivery);
+      expect(
+        ownDeliveryOrder.copyWithStatus(OrderStatus.confirmed)
+            .copyWithStatus(OrderStatus.preparing)
+            .copyWithStatus(OrderStatus.readyForDelivery)
+            .copyWithStatus(OrderStatus.inDelivery)
+            .copyWithStatus(OrderStatus.delivered)
+            .status,
+        OrderStatus.delivered,
+      );
+
+      final confirmed = _order(
+        OrderDeliveryMethod.externalDelivery,
+      ).copyWithStatus(OrderStatus.confirmed);
+      expect(confirmed.canRequestDriver, isTrue);
+      expect(confirmed.timeline.map((change) => change.status), [
+        OrderStatus.created,
+        OrderStatus.confirmed,
+      ]);
+      expect(
+        confirmed.copyWithStatus(OrderStatus.cancelled).canCancel,
+        isFalse,
+      );
+      final assigned = confirmed.copyWithStatus(
+        OrderStatus.lookingForDriver,
+      ).copyWithStatus(OrderStatus.driverAssigned);
+      expect(
+        () => assigned.copyWithStatus(OrderStatus.cancelled),
         throwsA(isA<DomainException>()),
       );
     });
@@ -111,6 +158,7 @@ void main() {
         customerId: 'usr-1',
         storeId: 'store-1',
         status: OrderStatus.created,
+        deliveryMethod: OrderDeliveryMethod.externalDelivery,
         deliveryAddress: 'Calle Falsa 123',
         createdAt: DateTime.now(),
         items: [
@@ -129,3 +177,21 @@ void main() {
     });
   });
 }
+
+Order _order(OrderDeliveryMethod deliveryMethod) => Order(
+  id: 'ord-delivery-path',
+  customerId: 'usr-1',
+  storeId: 'store-1',
+  status: OrderStatus.created,
+  deliveryMethod: deliveryMethod,
+  deliveryAddress: 'Av. Siempre Viva 123',
+  createdAt: DateTime(2026, 11, 6),
+  items: const [
+    OrderItem(
+      productId: 'prod-1',
+      productName: 'Cerveza',
+      frozenUnitPrice: 3,
+      quantity: 1,
+    ),
+  ],
+);
