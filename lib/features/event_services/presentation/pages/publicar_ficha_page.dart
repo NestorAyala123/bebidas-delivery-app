@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/di/service_locator.dart';
+import '../../../auth/presentation/state/current_identity.dart';
 import '../../../../core/result/result.dart';
 import '../../domain/entities/event_service.dart';
 import '../../domain/entities/ficha_servicio.dart';
@@ -48,7 +49,8 @@ class _PublicarFichaPageState extends State<PublicarFichaPage> {
 
     final nuevaFicha = FichaServicio(
       id: '',
-      providerId: 'prov-user-current',
+      // Contrato Servicios → chat: el proveedor es el usuario con sesión.
+      providerId: currentIdentity()?.id ?? 'prov-user-current',
       title: _titleController.text.trim(),
       description: _descriptionController.text.trim(),
       serviceType: _selectedType,
