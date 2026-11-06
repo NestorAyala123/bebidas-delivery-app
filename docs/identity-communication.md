@@ -147,6 +147,73 @@ Chat (`chat`):
 - Rutas: `/chat` (lista y "Nueva conversación") y `/chat/room` (mensajes).
   `InMemoryChatRepository` debe sustituirse por Firestore con reglas equivalentes.
 
+## 6. Semana 4: chat cliente-comercio y cliente-proveedor, acceso y sesión
+
+Tipos de conversación (`ConversationType`):
+
+| Tipo | Participantes | Asunto obligatorio |
+| --- | --- | --- |
+| `storeInquiry` | cliente ↔ comercio | `subjectId` = `storeId` |
+| `serviceInquiry` | cliente ↔ proveedor de eventos | `subjectId` = `serviceId` |
+| `orderSupport` | cliente/comercio/repartidor (no proveedor) | `orderId` |
+| `direct` | cliente↔comercio, cliente↔proveedor, cliente↔repartidor, comercio↔repartidor | — |
+
+Control de acceso:
+
+- `ConversationPolicy` (dominio) decide qué pares de roles pueden conversar.
+  `CreateConversationUseCase` la aplica con los roles **verificados** por el
+  módulo de identidad; los roles que envía el cliente se ignoran.
+- `OpenInquiryChatUseCase.forStore` / `.forService`: solo un cliente puede
+  iniciarlas. El otro participante **no lo elige el cliente**: se resuelve con
+  el puerto `ChatCounterpartDirectory` (`storeId → Store.ownerId`,
+  `serviceId → FichaServicio.providerId`). Son idempotentes por asunto: el
+  mismo cliente y comercio reabren la misma conversación.
+- Si el comercio o proveedor no tiene cuenta, se informa "todavía no tiene una
+  cuenta para chatear" en lugar de crear un chat huérfano.
+- Lectura y envío siguen restringidos a participantes (semana 3).
+- La lista de "Nueva conversación" solo muestra contactos permitidos por la
+  política.
+
+Integración con otros módulos (cambios mínimos, para revisión de cada dueño):
+
+- `ChatLauncher.openStoreChat` / `.openServiceChat` es el punto de entrada
+  público. Se usa en el botón "Chatear con el comercio" del mapa
+  (`mapa_proximo_page.dart`) y en "Contactar Chat" de la ficha
+  (`detalle_ficha_page.dart`).
+- `store_management_page.dart` guarda como `ownerId` el usuario con sesión y
+  `publicar_ficha_page.dart` guarda como `providerId` el usuario con sesión
+  (antes eran textos fijos y el chat no podía encontrar a la persona).
+- `DemoChatLinks` enlaza los datos de prueba sin cuenta (comercios del mapa
+  `store-00x` y fichas `prov-00x`) con `comercio@demo.com` y
+  `eventos@demo.com`. Es solo para desarrollo; con Firestore se elimina.
+
+Estados de sesión:
+
+- `SessionGate` protege `/chat` y `/chat/room`: escucha `AuthController`; al
+  cerrar sesión la pantalla pasa a "Tu sesión no está activa" y al entrar con
+  otra cuenta se vuelve a comprobar el acceso desde cero (un usuario que no
+  participa ve "No participas en esta conversación").
+- `currentIdentity()` expone la identidad con sesión a otros módulos.
+- `AuthController.logout()` limpia error y carga; los errores de login se
+  muestran con el mensaje legible del `Failure`.
+- El cierre de sesión de `HomePage` ahora cierra la sesión de verdad (antes
+  solo navegaba a la bienvenida).
+
+Recorrido de demostración:
+
+1. Entrar como `cliente@demo.com` / `cliente123`, volver a la bienvenida y abrir
+   "Servicios para Eventos" → una ficha → "Contactar Chat"; escribir un mensaje.
+2. Desde "Ver mapa de comercios cercanos", tocar un comercio → "Chatear con el
+   comercio".
+3. Cerrar sesión y entrar como `eventos@demo.com` / `eventos123` o
+   `comercio@demo.com` / `comercio123` → Perfil → Mensajes: aparece la
+   conversación con el asunto y se puede responder.
+4. Entrar como `repartidor@demo.com`: no ve esas conversaciones.
+
+Pruebas: `test/features/chat/inquiry_chat_test.dart` (política, apertura,
+idempotencia, roles, intrusos) y `test/features/chat/chat_session_states_test.dart`
+(logout, cambio de cuenta, bandeja con asunto).
+
 ## Evidencia sugerida para el PR
 
 ```bash
