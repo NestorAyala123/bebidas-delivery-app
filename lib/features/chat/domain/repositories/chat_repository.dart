@@ -19,4 +19,23 @@ abstract class ChatRepository {
   );
   Future<Result<void, Failure>> sendMessage(ChatMessage message);
   Stream<List<ChatMessage>> getMessagesStream(String conversationId);
+
+  /// Current messages of a conversation, oldest first.
+  Future<Result<List<ChatMessage>, Failure>> getMessages(String conversationId);
+
+  /// Records that [userId] has read [conversationId] up to [readAt].
+  Future<Result<void, Failure>> markAsRead({
+    required String conversationId,
+    required String userId,
+    required DateTime readAt,
+  });
+
+  /// When [userId] last read [conversationId], or `null` if never.
+  Future<Result<DateTime?, Failure>> lastReadAt({
+    required String conversationId,
+    required String userId,
+  });
+
+  /// Emits whenever any message is sent or any conversation is read.
+  Stream<void> get changes;
 }
