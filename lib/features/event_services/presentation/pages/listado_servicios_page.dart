@@ -8,6 +8,7 @@ import '../../domain/usecases/publicar_ficha_use_case.dart';
 import '../../infrastructure/repositories/in_memory_ficha_servicio_repository.dart';
 import '../controllers/event_services_controller.dart';
 import 'detalle_ficha_page.dart';
+import 'mis_consultas_page.dart';
 import 'publicar_ficha_page.dart';
 
 /// Pantalla para consultar y filtrar las fichas básicas de proveedores de eventos.
@@ -97,6 +98,11 @@ class _ListadoServiciosPageState extends State<ListadoServiciosPage> {
         foregroundColor: colorScheme.onPrimary,
         elevation: 0,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.history),
+            tooltip: 'Mis Consultas de Eventos',
+            onPressed: _navigateToMisConsultas,
+          ),
           IconButton(
             icon: const Icon(Icons.add_circle_outline),
             tooltip: 'Publicar Ficha',
@@ -264,6 +270,15 @@ class _ListadoServiciosPageState extends State<ListadoServiciosPage> {
       context,
       MaterialPageRoute(
         builder: (_) => DetalleFichaPage(ficha: ficha),
+      ),
+    );
+  }
+
+  void _navigateToMisConsultas() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const MisConsultasPage(),
       ),
     );
   }

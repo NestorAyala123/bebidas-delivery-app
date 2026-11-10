@@ -50,4 +50,70 @@ void main() {
     expect(find.text('Licorera El Barril'), findsOneWidget);
     expect(find.byIcon(Icons.my_location), findsWidgets);
   });
+
+  testWidgets('Muestra vista específica de permiso denegado permanentemente', (tester) async {
+    final mockRepo = MockLocationRepository(isPermanentlyDenied: true);
+    final controller = LocationMapController(
+      obtenerUbicacionActualUseCase: ObtenerUbicacionActualUseCase(mockRepo),
+      obtenerComerciosCercanosUseCase: ObtenerComerciosCercanosUseCase(mockRepo),
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: MapaProximoPage(controller: controller),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    expect(find.text('Permiso Denegado Permanentemente'), findsOneWidget);
+    expect(find.text('Abrir Ajustes de la Aplicación'), findsOneWidget);
+    expect(find.text('Ver con Ubicación Simulada (Modo Pruebas)'), findsOneWidget);
+  });
+
+  testWidgets('Muestra fallback amigable ante timeout o falta de señal GPS', (tester) async {
+    final mockRepo = MockLocationRepository(isTimeout: true);
+    final controller = LocationMapController(
+      obtenerUbicacionActualUseCase: ObtenerUbicacionActualUseCase(mockRepo),
+      obtenerComerciosCercanosUseCase: ObtenerComerciosCercanosUseCase(mockRepo),
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: MapaProximoPage(controller: controller),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    expect(find.text('Sin Señal GPS'), findsOneWidget);
+    expect(find.text('Reintentar GPS'), findsOneWidget);
+    expect(find.text('Ingresar Dirección Manual'), findsOneWidget);
+    expect(find.text('Usar Coordenadas de Prueba'), findsOneWidget);
+  });
+
+  testWidgets('Ofrece ampliar el radio cuando no hay comercios cercanos', (tester) async {
+    final mockRepo = MockLocationRepository(
+      shouldGrantPermission: true,
+      initialStores: [],
+    );
+    final controller = LocationMapController(
+      obtenerUbicacionActualUseCase: ObtenerUbicacionActualUseCase(mockRepo),
+      obtenerComerciosCercanosUseCase: ObtenerComerciosCercanosUseCase(mockRepo),
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: MapaProximoPage(controller: controller),
+      ),
+    );
+
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('No hay comercios en un radio de 5 km'),
+      findsOneWidget,
+    );
+    expect(find.text('Ampliar radio a 10 km'), findsOneWidget);
+  });
 }

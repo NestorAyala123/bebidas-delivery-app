@@ -121,6 +121,10 @@ class _MapaProximoPageState extends State<MapaProximoPage> {
                 _controller.loadCurrentLocation();
               } else if (value == 'simulate_denied') {
                 _controller.simulatePermissionDenied();
+              } else if (value == 'simulate_permanent_denied') {
+                _controller.simulatePermissionPermanentlyDenied();
+              } else if (value == 'simulate_disabled') {
+                _controller.simulateServiceDisabled();
               } else if (value == 'simulate_success') {
                 _controller.useSimulatedLocation();
               }
@@ -143,6 +147,26 @@ class _MapaProximoPageState extends State<MapaProximoPage> {
                     Icon(Icons.location_off, size: 20, color: Colors.red),
                     SizedBox(width: 8),
                     Text('Simular Permiso Denegado'),
+                  ],
+                ),
+              ),
+              const PopupMenuItem(
+                value: 'simulate_permanent_denied',
+                child: Row(
+                  children: [
+                    Icon(Icons.block, size: 20, color: Colors.deepOrange),
+                    SizedBox(width: 8),
+                    Text('Simular Denegado Permanente'),
+                  ],
+                ),
+              ),
+              const PopupMenuItem(
+                value: 'simulate_disabled',
+                child: Row(
+                  children: [
+                    Icon(Icons.gps_off, size: 20, color: Colors.orange),
+                    SizedBox(width: 8),
+                    Text('Simular GPS Apagado'),
                   ],
                 ),
               ),
@@ -205,6 +229,11 @@ class _MapaProximoPageState extends State<MapaProximoPage> {
       return _buildPermissionDeniedView(context);
     }
 
+    // ── ESTADO: TIMEOUT / SIN SEÑAL GPS ───────────────────────────────────
+    if (_controller.isTimeout) {
+      return _buildTimeoutView(context);
+    }
+
     // ── ESTADO: SERVICIO DESACTIVADO O ERROR ──────────────────────────────
     if (_controller.status == LocationStatus.serviceDisabled ||
         _controller.status == LocationStatus.error) {
@@ -226,8 +255,13 @@ class _MapaProximoPageState extends State<MapaProximoPage> {
   }
 
   /// Vista mostrada explícitamente cuando el usuario deniega los permisos de GPS.
+  ///
+  /// Diferencia entre una denegación temporal ([LocationStatus.permissionDenied])
+  /// y una permanente ([LocationStatus.permissionPermanentlyDenied]); en esta
+  /// última el botón principal abre directamente los ajustes de la app.
   Widget _buildPermissionDeniedView(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final isPermanent = _controller.isPermissionPermanentlyDenied;
 
     return Center(
       child: SingleChildScrollView(
@@ -241,16 +275,18 @@ class _MapaProximoPageState extends State<MapaProximoPage> {
                 color: Colors.red.withAlpha(25),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
-                Icons.location_off,
+              child: Icon(
+                isPermanent ? Icons.block : Icons.location_off,
                 size: 72,
                 color: Colors.redAccent,
               ),
             ),
             const SizedBox(height: 24),
-            const Text(
-              'Permiso de Ubicación Denegado',
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            Text(
+              isPermanent
+                  ? 'Permiso Denegado Permanentemente'
+                  : 'Permiso de Ubicación Denegado',
+              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 12),
@@ -268,14 +304,16 @@ class _MapaProximoPageState extends State<MapaProximoPage> {
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(color: Colors.amber.shade700.withAlpha(80)),
               ),
-              child: const Row(
+              child: Row(
                 children: [
-                  Icon(Icons.info_outline, color: Colors.orange),
-                  SizedBox(width: 10),
+                  const Icon(Icons.info_outline, color: Colors.orange),
+                  const SizedBox(width: 10),
                   Expanded(
                     child: Text(
-                      'Puedes conceder el permiso en cualquier momento o explorar con una ubicación de prueba.',
-                      style: TextStyle(fontSize: 12, color: Colors.black87),
+                      isPermanent
+                          ? 'El sistema ya no volverá a mostrar el diálogo de permiso. Actívalo manualmente en los ajustes de la aplicación.'
+                          : 'Puedes conceder el permiso en cualquier momento o explorar con una ubicación de prueba.',
+                      style: const TextStyle(fontSize: 12, color: Colors.black87),
                     ),
                   ),
                 ],
@@ -285,9 +323,90 @@ class _MapaProximoPageState extends State<MapaProximoPage> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
-                onPressed: () => _controller.retryPermission(),
+                onPressed: isPermanent
+                    ? () => _controller.openAppSettings()
+                    : () => _controller.retryPermission(),
+                icon: Icon(isPermanent ? Icons.settings : Icons.refresh),
+                label: Text(
+                  isPermanent
+                      ? 'Abrir Ajustes de la Aplicación'
+                      : 'Reintentar y Conceder Permiso',
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: colorScheme.primary,
+                  foregroundColor: colorScheme.onPrimary,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                ),
+              ),
+            ),
+            if (!isPermanent) ...[
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () => _controller.openAppSettings(),
+                  icon: const Icon(Icons.settings),
+                  label: const Text('Abrir Ajustes del Dispositivo'),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                ),
+              ),
+            ],
+            const SizedBox(height: 12),
+            TextButton.icon(
+              onPressed: () => _controller.useSimulatedLocation(),
+              icon: const Icon(Icons.science_outlined),
+              label: const Text('Ver con Ubicación Simulada (Modo Pruebas)'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Vista de fallback cuando el GPS no responde a tiempo o no hay señal.
+  Widget _buildTimeoutView(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.orange.withAlpha(25),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.gps_fixed,
+                size: 72,
+                color: Colors.orange,
+              ),
+            ),
+            const SizedBox(height: 24),
+            const Text(
+              'Sin Señal GPS',
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              _controller.errorMessage ??
+                  'No pudimos obtener tu ubicación a tiempo. Puedes reintentar, usar coordenadas de prueba o ingresar tu dirección manualmente.',
+              style: const TextStyle(fontSize: 14, color: Colors.black87, height: 1.4),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () => _controller.loadCurrentLocation(),
                 icon: const Icon(Icons.refresh),
-                label: const Text('Reintentar y Conceder Permiso'),
+                label: const Text('Reintentar GPS'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: colorScheme.primary,
                   foregroundColor: colorScheme.onPrimary,
@@ -299,9 +418,9 @@ class _MapaProximoPageState extends State<MapaProximoPage> {
             SizedBox(
               width: double.infinity,
               child: OutlinedButton.icon(
-                onPressed: () => _controller.openAppSettings(),
-                icon: const Icon(Icons.settings),
-                label: const Text('Abrir Ajustes del Dispositivo'),
+                onPressed: () => _showManualAddressDialog(context),
+                icon: const Icon(Icons.edit_location_alt_outlined),
+                label: const Text('Ingresar Dirección Manual'),
                 style: OutlinedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 14),
                 ),
@@ -311,12 +430,49 @@ class _MapaProximoPageState extends State<MapaProximoPage> {
             TextButton.icon(
               onPressed: () => _controller.useSimulatedLocation(),
               icon: const Icon(Icons.science_outlined),
-              label: const Text('Ver con Ubicación Simulada (Modo Pruebas)'),
+              label: const Text('Usar Coordenadas de Prueba'),
             ),
           ],
         ),
       ),
     );
+  }
+
+  Future<void> _showManualAddressDialog(BuildContext context) async {
+    final addressController = TextEditingController();
+
+    final address = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Ingresar dirección manual'),
+        content: TextField(
+          controller: addressController,
+          autofocus: true,
+          decoration: const InputDecoration(
+            labelText: 'Dirección o sector',
+            hintText: 'Ej. Av. Flavio Reyes, Manta',
+            prefixIcon: Icon(Icons.location_on_outlined),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () =>
+                Navigator.pop(dialogContext, addressController.text.trim()),
+            child: const Text('Usar dirección'),
+          ),
+        ],
+      ),
+    );
+
+    addressController.dispose();
+
+    if (address != null && address.isNotEmpty) {
+      await _controller.useManualLocation(address);
+    }
   }
 
   /// Vista mostrada si el sensor GPS está apagado en el dispositivo.
@@ -345,6 +501,12 @@ class _MapaProximoPageState extends State<MapaProximoPage> {
               label: const Text('Reintentar'),
             ),
             const SizedBox(height: 8),
+            OutlinedButton.icon(
+              onPressed: () => _controller.openLocationSettings(),
+              icon: const Icon(Icons.settings_suggest_outlined),
+              label: const Text('Activar GPS en Ajustes'),
+            ),
+            const SizedBox(height: 8),
             TextButton.icon(
               onPressed: () => _controller.useSimulatedLocation(),
               icon: const Icon(Icons.science),
@@ -364,8 +526,33 @@ class _MapaProximoPageState extends State<MapaProximoPage> {
 
     return Column(
       children: [
-        // Banner indicador si está en modo simulado
-        if (_controller.isSimulatedMode)
+        // Banner indicador si el usuario ingresó una dirección manual
+        if (_controller.manualAddress != null)
+          Container(
+            color: Colors.blue.shade50,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+            child: Row(
+              children: [
+                const Icon(Icons.edit_location_alt, size: 16, color: Colors.blue),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Dirección manual: ${_controller.manualAddress}',
+                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                TextButton(
+                  onPressed: () => _controller.loadCurrentLocation(),
+                  child: const Text('Usar GPS', style: TextStyle(fontSize: 12)),
+                ),
+              ],
+            ),
+          ),
+
+        // Banner indicador si está en modo simulado (sin dirección manual)
+        if (_controller.isSimulatedMode && _controller.manualAddress == null)
           Container(
             color: Colors.amber.shade100,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
@@ -541,9 +728,25 @@ class _MapaProximoPageState extends State<MapaProximoPage> {
               Expanded(
                 child: _controller.filteredStores.isEmpty
                     ? Center(
-                        child: Text(
-                          'No hay comercios en un radio de ${_controller.searchRadiusKm.toInt()} km',
-                          style: TextStyle(color: Colors.grey.shade600),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.storefront_outlined, size: 40, color: Colors.grey.shade400),
+                            const SizedBox(height: 8),
+                            Text(
+                              'No hay comercios en un radio de ${_controller.searchRadiusKm.toInt()} km',
+                              style: TextStyle(color: Colors.grey.shade600),
+                            ),
+                            const SizedBox(height: 12),
+                            ElevatedButton.icon(
+                              onPressed: () => _controller.updateSearchRadius(10.0),
+                              icon: const Icon(Icons.zoom_out_map, size: 18),
+                              label: const Text('Ampliar radio a 10 km'),
+                              style: ElevatedButton.styleFrom(
+                                visualDensity: VisualDensity.compact,
+                              ),
+                            ),
+                          ],
                         ),
                       )
                     : ListView.separated(
