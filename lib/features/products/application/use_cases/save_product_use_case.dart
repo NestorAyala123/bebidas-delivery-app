@@ -23,12 +23,41 @@ class SaveProductUseCase {
         ),
       );
     }
-    if (product.basePrice < 0) {
+    if (!product.basePrice.isFinite || product.basePrice < 0) {
       return Future.value(
         const FailureResult<Product, Failure>(
           ValidationFailure('El precio no puede ser negativo'),
         ),
       );
+    }
+
+    final tierMinimums = <int>{};
+    for (final tier in product.quantityTiers) {
+      if (tier.minQuantity <= 1) {
+        return Future.value(
+          const FailureResult<Product, Failure>(
+            ValidationFailure(
+              'La cantidad mínima escalonada debe ser mayor que 1',
+            ),
+          ),
+        );
+      }
+      if (!tierMinimums.add(tier.minQuantity)) {
+        return Future.value(
+          const FailureResult<Product, Failure>(
+            ValidationFailure(
+              'No puede haber dos precios para el mismo rango de cantidad',
+            ),
+          ),
+        );
+      }
+      if (!tier.unitPrice.isFinite || tier.unitPrice < 0) {
+        return Future.value(
+          const FailureResult<Product, Failure>(
+            ValidationFailure('El precio escalonado no puede ser negativo'),
+          ),
+        );
+      }
     }
 
     if (product.id.trim().isEmpty) return repository.createProduct(product);

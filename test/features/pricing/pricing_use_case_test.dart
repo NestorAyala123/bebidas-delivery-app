@@ -51,4 +51,35 @@ void main() {
 
     expect(result.isFailure, isTrue);
   });
+
+  test('rejects duplicate quantity ranges', () async {
+    final repository = InMemoryProductRepository();
+    const product = Product(
+      id: 'product-1',
+      storeId: 'store-1',
+      name: 'Cerveza',
+      basePrice: 10,
+      priceRules: [
+        PriceRule(
+          id: 'rule-6',
+          productId: 'product-1',
+          minQuantity: 6,
+          unitPrice: 9,
+        ),
+      ],
+    );
+    await repository.createProduct(product);
+
+    final result = await SavePriceRuleUseCase(repository)(
+      product: product,
+      rule: const PriceRule(
+        id: 'rule-other',
+        productId: 'product-1',
+        minQuantity: 6,
+        unitPrice: 8,
+      ),
+    );
+
+    expect(result.isFailure, isTrue);
+  });
 }

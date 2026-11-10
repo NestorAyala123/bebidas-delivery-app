@@ -23,9 +23,27 @@ class SavePriceRuleUseCase {
         ValidationFailure('La cantidad mínima debe ser mayor que 1'),
       );
     }
-    if (rule.unitPrice < 0) {
+    if (!rule.unitPrice.isFinite || rule.unitPrice < 0) {
       return const FailureResult<Product, Failure>(
         ValidationFailure('El precio escalonado no puede ser negativo'),
+      );
+    }
+    if (product.quantityTiers.any(
+      (tier) => tier.minQuantity == rule.minQuantity,
+    )) {
+      return const FailureResult<Product, Failure>(
+        ValidationFailure(
+          'No puede haber dos precios para el mismo rango de cantidad',
+        ),
+      );
+    }
+    if (product.priceRules.any(
+      (item) => item.id != rule.id && item.minQuantity == rule.minQuantity,
+    )) {
+      return const FailureResult<Product, Failure>(
+        ValidationFailure(
+          'No puede haber dos precios para el mismo rango de cantidad',
+        ),
       );
     }
 

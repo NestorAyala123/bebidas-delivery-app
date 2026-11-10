@@ -34,6 +34,13 @@ class Product {
   /// Calculates the effective unit price for a given quantity (RN04)
   double getUnitPriceForQuantity(int quantity) {
     assert(quantity > 0, 'La cantidad debe ser mayor a 0');
+    if (quantity <= 0) {
+      throw ArgumentError.value(
+        quantity,
+        'quantity',
+        'La cantidad debe ser mayor a 0',
+      );
+    }
 
     final tiers = <QuantityPricingTier>[
       ...quantityTiers,
@@ -48,7 +55,8 @@ class Product {
     ];
     if (tiers.isEmpty) return basePrice;
 
-    // Find the highest qualifying tier
+    // Find the highest qualifying tier. The list is copied so the product
+    // configuration remains immutable.
     final sortedTiers = List<QuantityPricingTier>.from(tiers)
       ..sort((a, b) => b.minQuantity.compareTo(a.minQuantity));
 
