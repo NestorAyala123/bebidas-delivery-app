@@ -4,6 +4,7 @@ import 'package:bebidas_delivery_app/core/errors/failures.dart';
 import 'package:bebidas_delivery_app/core/result/result.dart';
 import 'package:bebidas_delivery_app/features/delivery/domain/entities/delivery_request.dart';
 import 'package:bebidas_delivery_app/features/delivery/domain/entities/delivery_status.dart';
+import 'package:bebidas_delivery_app/features/delivery/domain/entities/driver.dart';
 import 'package:bebidas_delivery_app/features/delivery/domain/entities/driver_status.dart';
 import 'package:bebidas_delivery_app/features/delivery/domain/repositories/delivery_repository.dart';
 import 'package:bebidas_delivery_app/features/delivery/domain/use_cases/get_pending_delivery_requests_use_case.dart';
@@ -43,6 +44,16 @@ class FakeErrorDeliveryRepository implements DeliveryRepository {
     DriverStatus status,
   ) =>
       throw UnimplementedError();
+
+  @override
+  Future<Result<DeliveryRequest?, Failure>> getActiveDeliveryRequestByOrderId(
+    String orderId,
+  ) =>
+      throw UnimplementedError();
+
+  @override
+  Future<Result<List<Driver>, Failure>> getRegisteredDrivers() =>
+      throw UnimplementedError();
 }
 
 void main() {
@@ -64,10 +75,10 @@ void main() {
           ),
         );
 
-        // Verificar carga inmediatamente después de pumpWidget
+        // Verificar carga inmediatamente despues de pumpWidget
         expect(find.byType(CircularProgressIndicator), findsOneWidget);
 
-        // Avanzar el reloj virtual más allá de la latencia
+        // Avanzar el reloj virtual mas alla de la latencia
         await tester.pump(const Duration(milliseconds: 100));
         await tester.pumpAndSettle();
 
@@ -101,12 +112,12 @@ void main() {
       },
     );
 
-    // 3. Estado vacío: muestra mensaje cuando no hay solicitudes en pendingOffer
+    // 3. Estado vacio: muestra mensaje cuando no hay solicitudes en pendingOffer
     testWidgets(
       '3. Muestra mensaje cuando no hay solicitudes pendientes disponibles',
       (tester) async {
         final repo = MockDeliveryRepository(latency: Duration.zero);
-        // Cancelamos la única solicitud inicial usando DeliveryStatus.cancelled para que no haya pendientes
+        // Cancelamos la unica solicitud inicial usando DeliveryStatus.cancelled para que no haya pendientes
         await repo.updateStatus('req-001', DeliveryStatus.cancelled.name);
 
         final useCase = GetPendingDeliveryRequestsUseCase(repo);
@@ -127,7 +138,7 @@ void main() {
       },
     );
 
-    // 4. Estado de error: muestra mensaje de falla y botón de reintento
+    // 4. Estado de error: muestra mensaje de falla y boton de reintento
     testWidgets(
       '4. Muestra mensaje de error cuando el caso de uso devuelve falla',
       (tester) async {

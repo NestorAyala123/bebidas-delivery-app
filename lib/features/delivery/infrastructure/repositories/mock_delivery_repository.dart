@@ -2,6 +2,7 @@ import '../../../../core/errors/failures.dart';
 import '../../../../core/result/result.dart';
 import '../../domain/entities/delivery_request.dart';
 import '../../domain/entities/delivery_status.dart';
+import '../../domain/entities/driver.dart';
 import '../../domain/entities/driver_status.dart';
 import '../../domain/repositories/delivery_repository.dart';
 
@@ -12,6 +13,7 @@ class MockDeliveryRepository implements DeliveryRepository {
   final DateTime _seedTime;
 
   final Map<String, DriverStatus> _driverStatuses = {};
+  final Map<String, Driver> _drivers = {};
   final Map<String, DeliveryRequest> _requests = {};
 
   MockDeliveryRepository({
@@ -22,14 +24,41 @@ class MockDeliveryRepository implements DeliveryRepository {
   }
 
   void _initMockData() {
-    // 2 repartidores de prueba con distinta disponibilidad
-    _driverStatuses['driver-1'] = DriverStatus.available;
-    _driverStatuses['driver-2'] = DriverStatus.busy;
+    // Repartidores registrados de prueba con distinta disponibilidad
+    final driver1 = Driver(
+      id: 'driver-1',
+      name: 'Carlos Mendoza',
+      phoneNumber: '+59399111222',
+      status: DriverStatus.available,
+      createdAt: _seedTime.subtract(const Duration(days: 30)),
+    );
+    final driver2 = Driver(
+      id: 'driver-2',
+      name: 'Ana Gómez',
+      phoneNumber: '+59399222333',
+      status: DriverStatus.busy,
+      createdAt: _seedTime.subtract(const Duration(days: 20)),
+    );
+    final driver3 = Driver(
+      id: 'driver-3',
+      name: 'Luis Pérez',
+      phoneNumber: '+59399333444',
+      status: DriverStatus.offline,
+      createdAt: _seedTime.subtract(const Duration(days: 10)),
+    );
+
+    _drivers[driver1.id] = driver1;
+    _drivers[driver2.id] = driver2;
+    _drivers[driver3.id] = driver3;
+
+    _driverStatuses[driver1.id] = driver1.status;
+    _driverStatuses[driver2.id] = driver2.status;
+    _driverStatuses[driver3.id] = driver3.status;
 
     // 1 solicitud de delivery de ejemplo con tarifa referencial calculada
     final initialRequest = DeliveryRequest(
       id: 'req-001',
-      orderId: 'order-101',
+      orderId: 'order-001',
       customerId: 'customer-001',
       storeId: 'store-001',
       originAddress: 'Av. 4 de Noviembre, Manta',
@@ -49,11 +78,33 @@ class MockDeliveryRepository implements DeliveryRepository {
     }
   }
 
+  /// Permite registrar o actualizar un repartidor en el mock para escenarios de prueba.
+  void registerDriver(Driver driver) {
+    _drivers[driver.id] = driver;
+    _driverStatuses[driver.id] = driver.status;
+  }
+
   @override
   Future<Result<DeliveryRequest, Failure>> createDeliveryRequest(
     DeliveryRequest request,
   ) async {
     await _simulateLatency();
+
+    // Protección adicional en la persistencia mock contra duplicados activos
+    final hasActiveDuplicate = _requests.values.any(
+      (r) =>
+          r.id != request.id &&
+          r.orderId == request.orderId &&
+          r.status.isActive,
+    );
+    if (hasActiveDuplicate) {
+      return FailureResult(
+        BusinessRuleFailure(
+          'Ya existe una solicitud de delivery activa para el pedido ${request.orderId}.',
+        ),
+      );
+    }
+
     _requests[request.id] = request;
     return Success(request);
   }
@@ -70,6 +121,18 @@ class MockDeliveryRepository implements DeliveryRepository {
       );
     }
     return Success(request);
+  }
+
+  @override
+  Future<Result<DeliveryRequest?, Failure>> getActiveDeliveryRequestByOrderId(
+    String orderId,
+  ) async {
+    await _simulateLatency();
+    final activeRequest = _requests.values.cast<DeliveryRequest?>().firstWhere(
+          (r) => r?.orderId == orderId && r!.status.isActive,
+          orElse: () => null,
+        );
+    return Success(activeRequest);
   }
 
   @override
@@ -101,8 +164,6 @@ class MockDeliveryRepository implements DeliveryRepository {
       );
     }
 
-    // TODO(week5): evaluar si debe usar request.transitionTo() con validación RN05
-    // en lugar de copyWithStatus(). Por ahora el mock no valida transiciones.
     _requests[id] = request.copyWithStatus(newStatus);
     return const Success(null);
   }
@@ -128,6 +189,10 @@ class MockDeliveryRepository implements DeliveryRepository {
   ) async {
     await _simulateLatency();
     _driverStatuses[driverId] = status;
+    final driver = _drivers[driverId];
+    if (driver != null) {
+      _drivers[driverId] = driver.copyWithStatus(status);
+    }
     return const Success(null);
   }
 
@@ -138,5 +203,11 @@ class MockDeliveryRepository implements DeliveryRepository {
         .where((r) => r.status == DeliveryStatus.pendingOffer)
         .toList();
     return Success(pending);
+  }
+
+  @override
+  Future<Result<List<Driver>, Failure>> getRegisteredDrivers() async {
+    await _simulateLatency();
+    return Success(List.unmodifiable(_drivers.values));
   }
 }

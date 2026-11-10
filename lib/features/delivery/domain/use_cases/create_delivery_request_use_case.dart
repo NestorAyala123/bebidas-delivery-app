@@ -15,27 +15,32 @@ class CreateDeliveryRequestUseCase {
     this.feeCalculator = const DeliveryFee(),
   });
 
-  Future<Result<DeliveryRequest, Failure>> call(DeliveryRequest request) {
+  Future<Result<DeliveryRequest, Failure>> call(DeliveryRequest request) async {
     if (request.distanceInKm == null || request.distanceInKm! < 0) {
-      return Future.value(
-        const FailureResult(
-          ValidationFailure(
-            'La distancia en kilómetros es obligatoria y debe ser mayor o igual a 0',
-          ),
+      return const FailureResult(
+        ValidationFailure(
+          'La distancia en kilómetros es obligatoria y debe ser mayor o igual a 0',
         ),
       );
     }
     if (request.originAddress.trim().isEmpty) {
-      return Future.value(
-        const FailureResult(
-          ValidationFailure('La dirección de origen es obligatoria'),
-        ),
+      return const FailureResult(
+        ValidationFailure('La dirección de origen es obligatoria'),
       );
     }
     if (request.destinationAddress.trim().isEmpty) {
-      return Future.value(
-        const FailureResult(
-          ValidationFailure('La dirección de destino es obligatoria'),
+      return const FailureResult(
+        ValidationFailure('La dirección de destino es obligatoria'),
+      );
+    }
+
+    // Prevención de duplicados: consultar si ya existe una solicitud activa para el mismo orderId
+    final activeExisting =
+        await repository.getActiveDeliveryRequestByOrderId(request.orderId);
+    if (activeExisting.isSuccess && activeExisting.dataOrNull != null) {
+      return FailureResult(
+        BusinessRuleFailure(
+          'Ya existe una solicitud de delivery activa para el pedido ${request.orderId}.',
         ),
       );
     }
