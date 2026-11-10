@@ -66,6 +66,58 @@ class OpenInquiryChatUseCase {
     );
   }
 
+  /// Proveedor → cliente que le hizo una consulta sobre [serviceId].
+  ///
+  /// Only the provider who answers for the service may do it, so a provider
+  /// cannot open chats about other providers' services.
+  Future<Result<Conversation, Failure>> forServiceCustomer({
+    required String serviceId,
+    required String serviceTitle,
+    required String customerId,
+    required IdentityContract requester,
+  }) async {
+    if (requester.rbacRole != Role.eventProvider) {
+      return const FailureResult(
+        UnauthorizedFailure('Solo el proveedor puede responder esta consulta'),
+      );
+    }
+    final provider = (await directory.serviceProviderId(serviceId)).dataOrNull;
+    if (provider != requester.id) {
+      return const FailureResult(
+        UnauthorizedFailure('Este servicio no es tuyo'),
+      );
+    }
+    final joinedAt = now();
+    final result = await createConversation(
+      CreateConversationRequest(
+        type: ConversationType.serviceInquiry,
+        subjectId: serviceId,
+        subjectTitle: serviceTitle.trim().isEmpty ? null : serviceTitle.trim(),
+        participants: [
+          ConversationParticipant(
+            userId: customerId,
+            role: '',
+            joinedAt: joinedAt,
+          ),
+          ConversationParticipant(
+            userId: requester.id,
+            role: requester.rbacRole.value,
+            joinedAt: joinedAt,
+          ),
+        ],
+      ),
+      requester: requester,
+    );
+    if (result.failureOrNull is NotFoundFailure) {
+      return const FailureResult(
+        NotFoundFailure(
+          'Este cliente todavía no tiene una cuenta para chatear',
+        ),
+      );
+    }
+    return result;
+  }
+
   Future<Result<Conversation, Failure>> _open({
     required ConversationType type,
     required Result<String, Failure> counterpart,
