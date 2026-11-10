@@ -4,6 +4,7 @@ import '../../../../core/di/service_locator.dart';
 import '../../../auth/presentation/widgets/session_gate.dart';
 import '../../../users/domain/entities/identity_contract.dart';
 import '../../application/dtos/chat_dtos.dart';
+import '../../application/use_cases/mark_conversation_read_use_case.dart';
 import '../../application/use_cases/send_message_use_case.dart';
 import '../../application/use_cases/watch_messages_use_case.dart';
 import '../../domain/entities/chat_message.dart';
@@ -64,9 +65,21 @@ class _ChatRoomState extends State<_ChatRoom> {
     );
     if (!mounted) return;
     setState(() {
-      _messages = result.dataOrNull;
+      // Everything shown while the room is open counts as read.
+      _messages = result.dataOrNull?.map((messages) {
+        _markRead();
+        return messages;
+      });
       _error = result.failureOrNull?.message;
     });
+  }
+
+  void _markRead() {
+    if (!sl.isRegistered<MarkConversationReadUseCase>()) return;
+    sl.get<MarkConversationReadUseCase>()(
+      widget.arguments.conversationId,
+      requester: widget.requester,
+    );
   }
 
   Future<void> _send() async {
