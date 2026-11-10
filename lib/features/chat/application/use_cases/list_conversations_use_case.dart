@@ -3,14 +3,27 @@ import '../../../../core/result/result.dart';
 import '../../../users/application/use_cases/get_profile_use_case.dart';
 import '../../../users/domain/entities/identity_contract.dart';
 import '../../../users/domain/entities/role.dart';
+import '../../domain/entities/chat_message.dart';
 import '../../domain/entities/conversation.dart';
 import '../../domain/repositories/chat_repository.dart';
+import '../../domain/services/unread_messages.dart';
 
 class ConversationSummary {
   final Conversation conversation;
   final String title;
 
-  const ConversationSummary({required this.conversation, required this.title});
+  /// Newest message, shown as a preview in the inbox.
+  final ChatMessage? lastMessage;
+
+  /// Messages the requester has not read yet.
+  final int unreadCount;
+
+  const ConversationSummary({
+    required this.conversation,
+    required this.title,
+    this.lastMessage,
+    this.unreadCount = 0,
+  });
 
   /// What the conversation is about, for the list subtitle.
   String get kindLabel => switch (conversation.type) {
@@ -22,7 +35,8 @@ class ConversationSummary {
   };
 }
 
-/// Conversations of the requester, titled with the other participants' names.
+/// Conversations of the requester, titled with the other participants' names,
+/// with the last message and how many of them are still unread.
 class ListConversationsUseCase {
   final ChatRepository repository;
   final GetProfileUseCase getProfile;
@@ -57,10 +71,23 @@ class ListConversationsUseCase {
       }
       final people = names.isEmpty ? 'Conversación' : names.join(', ');
       final subject = conversation.subjectTitle;
+      final messages =
+          (await repository.getMessages(conversation.id)).dataOrNull ??
+          const <ChatMessage>[];
+      final lastRead = (await repository.lastReadAt(
+        conversationId: conversation.id,
+        userId: requester.id,
+      )).dataOrNull;
       summaries.add(
         ConversationSummary(
           conversation: conversation,
           title: subject == null ? people : '$subject · $people',
+          lastMessage: messages.isEmpty ? null : messages.last,
+          unreadCount: unreadMessagesFor(
+            messages: messages,
+            userId: requester.id,
+            lastReadAt: lastRead,
+          ).length,
         ),
       );
     }
