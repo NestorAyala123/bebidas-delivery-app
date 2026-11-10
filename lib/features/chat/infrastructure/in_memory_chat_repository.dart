@@ -21,6 +21,8 @@ class InMemoryChatRepository implements ChatRepository {
     required ConversationType type,
     required List<ConversationParticipant> participants,
     String? orderId,
+    String? subjectId,
+    String? subjectTitle,
   }) async {
     final createdAt = _now();
     final conversation = Conversation(
@@ -28,6 +30,8 @@ class InMemoryChatRepository implements ChatRepository {
       type: type,
       participants: List.unmodifiable(participants),
       orderId: orderId,
+      subjectId: subjectId,
+      subjectTitle: subjectTitle,
       createdAt: createdAt,
       updatedAt: createdAt,
     );
@@ -41,9 +45,7 @@ class InMemoryChatRepository implements ChatRepository {
   ) async {
     final conversation = _conversations[conversationId];
     if (conversation == null) {
-      return const FailureResult(
-        NotFoundFailure('Conversación no encontrada'),
-      );
+      return const FailureResult(NotFoundFailure('Conversación no encontrada'));
     }
     return Success(conversation);
   }
@@ -59,17 +61,10 @@ class InMemoryChatRepository implements ChatRepository {
   Future<Result<void, Failure>> sendMessage(ChatMessage message) async {
     final conversation = _conversations[message.conversationId];
     if (conversation == null) {
-      return const FailureResult(
-        NotFoundFailure('Conversación no encontrada'),
-      );
+      return const FailureResult(NotFoundFailure('Conversación no encontrada'));
     }
     _messages.putIfAbsent(message.conversationId, () => []).add(message);
-    _conversations[conversation.id] = Conversation(
-      id: conversation.id,
-      type: conversation.type,
-      participants: conversation.participants,
-      orderId: conversation.orderId,
-      createdAt: conversation.createdAt,
+    _conversations[conversation.id] = conversation.copyWith(
       updatedAt: message.sentAt,
     );
     _changes[message.conversationId]?.add(_snapshot(message.conversationId));

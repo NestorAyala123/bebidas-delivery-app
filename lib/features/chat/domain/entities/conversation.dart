@@ -1,4 +1,10 @@
-enum ConversationType { direct, orderSupport }
+/// Kinds of conversation the MVP supports.
+///
+/// - [direct]: two identified users that may talk (see `ConversationPolicy`).
+/// - [orderSupport]: tied to an `orderId`.
+/// - [storeInquiry]: a client asks a store (tied to a `storeId`).
+/// - [serviceInquiry]: a client asks an event provider (tied to a `serviceId`).
+enum ConversationType { direct, orderSupport, storeInquiry, serviceInquiry }
 
 class ConversationParticipant {
   final String userId;
@@ -23,6 +29,12 @@ class Conversation {
   final ConversationType type;
   final List<ConversationParticipant> participants;
   final String? orderId;
+
+  /// The store or service the conversation is about (`storeId` / `serviceId`).
+  final String? subjectId;
+
+  /// Human label of the subject, e.g. the store name or the service title.
+  final String? subjectTitle;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -33,7 +45,20 @@ class Conversation {
     required this.createdAt,
     required this.updatedAt,
     this.orderId,
+    this.subjectId,
+    this.subjectTitle,
   });
+
+  Conversation copyWith({DateTime? updatedAt}) => Conversation(
+    id: id,
+    type: type,
+    participants: participants,
+    orderId: orderId,
+    subjectId: subjectId,
+    subjectTitle: subjectTitle,
+    createdAt: createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
 }
 
 extension ConversationAccess on Conversation {

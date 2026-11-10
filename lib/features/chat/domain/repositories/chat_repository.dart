@@ -10,6 +10,8 @@ abstract class ChatRepository {
     required ConversationType type,
     required List<ConversationParticipant> participants,
     String? orderId,
+    String? subjectId,
+    String? subjectTitle,
   });
   Future<Result<Conversation, Failure>> getConversation(String conversationId);
   Future<Result<List<Conversation>, Failure>> getConversationsForUser(

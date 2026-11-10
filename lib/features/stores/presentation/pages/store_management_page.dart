@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/di/service_locator.dart';
+import '../../../auth/presentation/state/current_identity.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../pricing/domain/entities/price_rule.dart';
 import '../../../products/application/use_cases/save_product_use_case.dart';
@@ -150,7 +151,8 @@ class _StoreManagementPageState extends State<StoreManagementPage> {
       id:
           _selectedStore?.id ??
           'store-${DateTime.now().microsecondsSinceEpoch}',
-      ownerId: _selectedStore?.ownerId ?? 'current-user',
+      // Contrato Identidad → catálogo: el dueño es el usuario con sesión.
+      ownerId: _selectedStore?.ownerId ?? currentIdentity()?.id ?? 'current-user',
       name: _storeNameController.text,
       description: _storeDescriptionController.text,
       address: _storeAddressController.text,

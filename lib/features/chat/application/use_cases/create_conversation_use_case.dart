@@ -5,6 +5,7 @@ import '../../../users/domain/entities/identity_contract.dart';
 import '../../../users/domain/entities/role.dart';
 import '../../domain/entities/conversation.dart';
 import '../../domain/repositories/chat_repository.dart';
+import '../../domain/services/conversation_policy.dart';
 import '../dtos/chat_dtos.dart';
 
 /// Opens a conversation between identified users. Idempotent: asking again for
@@ -66,11 +67,20 @@ class CreateConversationUseCase {
       );
     }
 
+    final denial = ConversationPolicy.denialReason(
+      type: request.type,
+      roles: [for (final p in verified) Role.fromValue(p.role)!],
+      orderId: request.orderId,
+      subjectId: request.subjectId,
+    );
+    if (denial != null) return FailureResult(UnauthorizedFailure(denial));
+
     final existing = await repository.getConversationsForUser(requester.id);
     final found = existing.dataOrNull?.where(
       (c) =>
           c.type == request.type &&
           c.orderId == request.orderId &&
+          c.subjectId == request.subjectId &&
           c.participants.length == ids.length &&
           ids.every(c.hasParticipant),
     );
@@ -80,6 +90,8 @@ class CreateConversationUseCase {
       type: request.type,
       participants: verified,
       orderId: request.orderId,
+      subjectId: request.subjectId,
+      subjectTitle: request.subjectTitle,
     );
   }
 }

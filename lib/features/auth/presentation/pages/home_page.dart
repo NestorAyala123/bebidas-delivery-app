@@ -6,7 +6,9 @@ import '../../../orders/presentation/pages/order_summary_page.dart';
 import '../../../orders/presentation/pages/orders_history_page.dart';
 import '../../../orders/presentation/pages/store_orders_page.dart';
 import '../../../users/domain/entities/app_user.dart';
+import '../../../../core/di/service_locator.dart';
 import '../../domain/entities/user_session.dart';
+import '../state/auth_controller.dart';
 import '../routes/auth_routes.dart';
 
 class HomePage extends StatelessWidget {
@@ -29,13 +31,7 @@ class HomePage extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.logout),
             tooltip: 'Cerrar Sesión',
-            onPressed: () {
-              Navigator.pushNamedAndRemoveUntil(
-                context,
-                AuthRoutes.welcome,
-                (route) => false,
-              );
-            },
+            onPressed: () => _logout(context),
           ),
         ],
       ),
@@ -108,7 +104,9 @@ class HomePage extends StatelessWidget {
                 child: Icon(Icons.shopping_cart_checkout, color: Colors.blue),
               ),
               title: const Text('Crear Pedido / Resumen'),
-              subtitle: const Text('Precios por rango, envases y creación pendiente'),
+              subtitle: const Text(
+                'Precios por rango, envases y creación pendiente',
+              ),
               trailing: const Icon(Icons.chevron_right),
               onTap: () {
                 Navigator.push(
@@ -128,7 +126,9 @@ class HomePage extends StatelessWidget {
                 child: Icon(Icons.receipt_long, color: Colors.amber),
               ),
               title: const Text('Historial de Pedidos'),
-              subtitle: const Text('Pedidos registrados con precios históricos congelados'),
+              subtitle: const Text(
+                'Pedidos registrados con precios históricos congelados',
+              ),
               trailing: const Icon(Icons.chevron_right),
               onTap: () {
                 Navigator.push(
@@ -203,7 +203,9 @@ class HomePage extends StatelessWidget {
                 child: Icon(Icons.local_shipping, color: Colors.orange),
               ),
               title: const Text('Módulo de Delivery'),
-              subtitle: const Text('Estado de repartos y entregas colaborativas'),
+              subtitle: const Text(
+                'Estado de repartos y entregas colaborativas',
+              ),
               trailing: const Icon(Icons.chevron_right),
               onTap: () {
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -215,13 +217,7 @@ class HomePage extends StatelessWidget {
             ),
             const SizedBox(height: 32),
             OutlinedButton.icon(
-              onPressed: () {
-                Navigator.pushNamedAndRemoveUntil(
-                  context,
-                  AuthRoutes.welcome,
-                  (route) => false,
-                );
-              },
+              onPressed: () => _logout(context),
               icon: const Icon(Icons.logout),
               label: const Text('Cerrar Sesión'),
               style: OutlinedButton.styleFrom(
@@ -233,6 +229,17 @@ class HomePage extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+
+  /// Ends the session for real before leaving: protected pages read it.
+  Future<void> _logout(BuildContext context) async {
+    await sl.get<AuthController>().logout();
+    if (!context.mounted) return;
+    Navigator.pushNamedAndRemoveUntil(
+      context,
+      AuthRoutes.welcome,
+      (route) => false,
     );
   }
 

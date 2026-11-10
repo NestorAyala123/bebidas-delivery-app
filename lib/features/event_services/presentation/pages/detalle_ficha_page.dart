@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../domain/entities/consulta_servicio.dart';
+import '../../../chat/presentation/chat_launcher.dart';
 import '../../domain/entities/event_service.dart';
 import '../../domain/entities/ficha_servicio.dart';
 import 'solicitar_consulta_page.dart';
@@ -143,7 +144,9 @@ class DetalleFichaPage extends StatelessWidget {
             _InfoRow(
               icon: Icons.verified_user,
               title: 'Estado del Servicio',
-              subtitle: ficha.isAvailable ? 'Disponible para contrataciones' : 'No disponible temporalmente',
+              subtitle: ficha.isAvailable
+                  ? 'Disponible para contrataciones'
+                  : 'No disponible temporalmente',
               color: ficha.isAvailable ? Colors.blue : Colors.grey,
             ),
             const SizedBox(height: 20),
@@ -213,15 +216,11 @@ class DetalleFichaPage extends StatelessWidget {
                 const SizedBox(width: 12),
                 Expanded(
                   child: ElevatedButton.icon(
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            'Abriendo conversación con proveedor: ${ficha.title}',
-                          ),
-                        ),
-                      );
-                    },
+                    onPressed: () => ChatLauncher.openServiceChat(
+                      context,
+                      serviceId: ficha.id,
+                      serviceTitle: ficha.title,
+                    ),
                     icon: const Icon(Icons.chat),
                     label: const Text('Contactar Chat'),
                     style: ElevatedButton.styleFrom(
@@ -242,17 +241,13 @@ class DetalleFichaPage extends StatelessWidget {
   Future<void> _openConsulta(BuildContext context) async {
     final created = await Navigator.push<ConsultaServicio>(
       context,
-      MaterialPageRoute(
-        builder: (_) => SolicitarConsultaPage(ficha: ficha),
-      ),
+      MaterialPageRoute(builder: (_) => SolicitarConsultaPage(ficha: ficha)),
     );
 
     if (created != null && context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            'Consulta enviada al proveedor de "${ficha.title}"',
-          ),
+          content: Text('Consulta enviada al proveedor de "${ficha.title}"'),
         ),
       );
     }
@@ -337,4 +332,3 @@ class _InfoRow extends StatelessWidget {
     );
   }
 }
-

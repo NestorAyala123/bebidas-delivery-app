@@ -3,6 +3,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 
 import '../../../../core/di/service_locator.dart';
+import '../../../chat/presentation/chat_launcher.dart';
 import '../../domain/entities/geo_coordinates.dart';
 import '../../domain/entities/nearby_store.dart';
 import '../../domain/usecases/obtener_comercios_cercanos_use_case.dart';
@@ -992,6 +993,22 @@ class _MapaProximoPageState extends State<MapaProximoPage> {
                   },
                   icon: const Icon(Icons.shopping_bag_outlined),
                   label: const Text('Ver Catálogo de Bebidas'),
+                ),
+              ),
+              const SizedBox(height: 8),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    ChatLauncher.openStoreChat(
+                      context,
+                      storeId: store.id,
+                      storeName: store.name,
+                    );
+                  },
+                  icon: const Icon(Icons.chat_bubble_outline),
+                  label: const Text('Chatear con el comercio'),
                 ),
               ),
             ],
