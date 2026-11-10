@@ -1,6 +1,7 @@
 import '../../../../core/errors/failures.dart';
 import '../../../../core/result/result.dart';
 import '../entities/order.dart';
+import '../entities/order_status.dart';
 
 abstract class OrderRepository {
   Future<Result<Order, Failure>> getOrderById(String orderId);
@@ -13,6 +14,15 @@ abstract class OrderRepository {
     required String orderId,
     required String storeId,
     required String reason,
+  });
+  Future<Result<Order, Failure>> updateOrderStatus({
+    required String orderId,
+    required String storeId,
+    required OrderStatus status,
+  });
+  Future<Result<Order, Failure>> cancelOrder({
+    required String orderId,
+    required String customerId,
   });
   Future<Result<List<Order>, Failure>> getOrdersByCustomer(String customerId);
   Future<Result<List<Order>, Failure>> getOrdersByStore(String storeId);

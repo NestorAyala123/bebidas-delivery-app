@@ -1,20 +1,8 @@
 import '../../../../core/errors/failures.dart';
 import '../../../../core/result/result.dart';
+import '../entities/order_delivery_method.dart';
 
-/// Delivery methods supported by an order (Business Rule RN02).
-enum OrderDeliveryMethod {
-  /// Retiro en el local por el cliente
-  pickup,
-
-  /// Delivery propio gestionado por el establecimiento comercial
-  storeDelivery,
-
-  /// Repartidor externo mediante negociación en la app
-  externalDelivery;
-
-  /// True if this order relies on an external driver
-  bool get isExternal => this == OrderDeliveryMethod.externalDelivery;
-}
+export '../entities/order_delivery_method.dart' show OrderDeliveryMethod;
 
 /// Read-only snapshot of an order needed by the delivery module.
 /// Public integration DTO exposed across modules without coupling to internal order infrastructure.

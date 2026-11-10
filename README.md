@@ -144,6 +144,15 @@ flutter analyze
 
 ---
 
+## 🧾 Flujo de pedidos (Semana 4)
+
+- El cliente selecciona retiro en local, delivery propio o repartidor externo al crear el pedido.
+- El comercio entra a **Gestionar pedidos del comercio** para aceptar o rechazar pedidos y registrar preparación, retiro y entrega.
+- El cliente consulta los cambios en su historial y puede cancelar mientras el pedido aún no haya sido retirado ni esté en camino.
+- Los pedidos rechazados no pueden avanzar ni generar despacho. La elegibilidad del repartidor externo se habilita solo después de la confirmación; la creación de su solicitud pertenece al módulo de delivery.
+
+El prototipo usa almacenamiento en memoria: los datos se pierden al cerrar la aplicación. Para la demo, el ID de sesión del comercio debe coincidir con el `storeId` de los pedidos.
+
 ## 💻 Puesta en Marcha Local
 
 ```bash

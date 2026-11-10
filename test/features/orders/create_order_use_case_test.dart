@@ -4,6 +4,7 @@ import 'package:bebidas_delivery_app/features/cart/domain/entities/cart.dart';
 import 'package:bebidas_delivery_app/features/cart/domain/entities/cart_item.dart';
 import 'package:bebidas_delivery_app/features/orders/application/use_cases/create_order_use_case.dart';
 import 'package:bebidas_delivery_app/features/orders/domain/entities/order.dart';
+import 'package:bebidas_delivery_app/features/orders/domain/entities/order_delivery_method.dart';
 import 'package:bebidas_delivery_app/features/orders/domain/entities/order_status.dart';
 import 'package:bebidas_delivery_app/features/orders/domain/repositories/order_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -37,6 +38,7 @@ void main() {
           customerId: 'customer-1',
           deliveryAddress: 'Manta',
           cart: cart,
+          deliveryMethod: OrderDeliveryMethod.externalDelivery,
           missingContainersFee: 1.25,
         ),
       );
@@ -63,6 +65,7 @@ void main() {
           customerId: 'customer-1',
           deliveryAddress: 'Manta',
           cart: Cart(),
+          deliveryMethod: OrderDeliveryMethod.externalDelivery,
         ),
       );
 
@@ -92,6 +95,19 @@ class _FakeOrderRepository implements OrderRepository {
     required String orderId,
     required String storeId,
     required String reason,
+  }) => throw UnimplementedError();
+
+  @override
+  Future<Result<Order, Failure>> updateOrderStatus({
+    required String orderId,
+    required String storeId,
+    required OrderStatus status,
+  }) => throw UnimplementedError();
+
+  @override
+  Future<Result<Order, Failure>> cancelOrder({
+    required String orderId,
+    required String customerId,
   }) => throw UnimplementedError();
 
   @override

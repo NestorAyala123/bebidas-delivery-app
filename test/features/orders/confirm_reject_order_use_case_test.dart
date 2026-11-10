@@ -4,6 +4,7 @@ import 'package:bebidas_delivery_app/core/result/result.dart';
 import 'package:bebidas_delivery_app/features/orders/application/use_cases/confirm_order_use_case.dart';
 import 'package:bebidas_delivery_app/features/orders/application/use_cases/reject_order_use_case.dart';
 import 'package:bebidas_delivery_app/features/orders/domain/entities/order.dart';
+import 'package:bebidas_delivery_app/features/orders/domain/entities/order_delivery_method.dart';
 import 'package:bebidas_delivery_app/features/orders/domain/entities/order_item.dart';
 import 'package:bebidas_delivery_app/features/orders/domain/entities/order_status.dart';
 import 'package:bebidas_delivery_app/features/orders/domain/repositories/order_repository.dart';
@@ -121,6 +122,7 @@ class _MockOrderRepository implements OrderRepository {
       customerId: 'cust-1',
       storeId: storeId,
       status: OrderStatus.created,
+      deliveryMethod: OrderDeliveryMethod.externalDelivery,
       deliveryAddress: 'Av. Flavio Reyes',
       createdAt: DateTime.now(),
       items: const [
@@ -180,4 +182,17 @@ class _MockOrderRepository implements OrderRepository {
   @override
   Future<Result<List<Order>, Failure>> getOrdersByStore(String storeId) =>
       throw UnimplementedError();
+
+  @override
+  Future<Result<Order, Failure>> updateOrderStatus({
+    required String orderId,
+    required String storeId,
+    required OrderStatus status,
+  }) => throw UnimplementedError();
+
+  @override
+  Future<Result<Order, Failure>> cancelOrder({
+    required String orderId,
+    required String customerId,
+  }) => throw UnimplementedError();
 }

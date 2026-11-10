@@ -2,6 +2,7 @@ import '../../../../core/errors/failures.dart';
 import '../../../../core/result/result.dart';
 import '../../../cart/domain/entities/cart.dart';
 import '../../domain/entities/order.dart';
+import '../../domain/entities/order_delivery_method.dart';
 import '../../domain/entities/order_item.dart';
 import '../../domain/entities/order_status.dart';
 import '../../domain/repositories/order_repository.dart';
@@ -10,12 +11,14 @@ class CreateOrderInput {
   final String customerId;
   final String deliveryAddress;
   final Cart cart;
+  final OrderDeliveryMethod deliveryMethod;
   final double missingContainersFee;
 
   const CreateOrderInput({
     required this.customerId,
     required this.deliveryAddress,
     required this.cart,
+    required this.deliveryMethod,
     this.missingContainersFee = 0,
   });
 
@@ -24,6 +27,7 @@ class CreateOrderInput {
     required String customerId,
     required String deliveryAddress,
     required Cart cart,
+    required OrderDeliveryMethod deliveryMethod,
     int returnedContainers = 0,
   }) {
     final calc = cart.calculateTotals(returnedContainers: returnedContainers);
@@ -31,6 +35,7 @@ class CreateOrderInput {
       customerId: customerId,
       deliveryAddress: deliveryAddress,
       cart: cart,
+      deliveryMethod: deliveryMethod,
       missingContainersFee: calc.missingContainersFee,
     );
   }
@@ -79,6 +84,7 @@ class CreateOrderUseCase {
           )
           .toList(growable: false),
       status: OrderStatus.created,
+      deliveryMethod: input.deliveryMethod,
       deliveryAddress: input.deliveryAddress.trim(),
       missingContainersFee: input.missingContainersFee,
       createdAt: _now(),

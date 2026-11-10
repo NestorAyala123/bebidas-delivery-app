@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../../../core/result/result.dart';
 import '../../../auth/domain/entities/user_session.dart';
+import '../../application/use_cases/cancel_order_use_case.dart';
 import '../../application/use_cases/get_customer_orders_use_case.dart';
 import '../../domain/entities/order.dart';
+import '../../domain/entities/order_delivery_method.dart';
 import '../../domain/entities/order_status.dart';
 
 /// Screen displaying the customer's initial order history, showing pending status
@@ -12,11 +14,13 @@ import '../../domain/entities/order_status.dart';
 class OrdersHistoryPage extends StatefulWidget {
   final UserSession session;
   final GetCustomerOrdersUseCase? getCustomerOrdersUseCase;
+  final CancelOrderUseCase? cancelOrderUseCase;
 
   const OrdersHistoryPage({
     super.key,
     required this.session,
     this.getCustomerOrdersUseCase,
+    this.cancelOrderUseCase,
   });
 
   @override
@@ -33,6 +37,12 @@ class _OrdersHistoryPageState extends State<OrdersHistoryPage> {
       (sl.isRegistered<GetCustomerOrdersUseCase>()
           ? sl.get<GetCustomerOrdersUseCase>()
           : throw Exception('GetCustomerOrdersUseCase no registrado'));
+
+  CancelOrderUseCase get _cancelUseCase =>
+      widget.cancelOrderUseCase ??
+      (sl.isRegistered<CancelOrderUseCase>()
+          ? sl.get<CancelOrderUseCase>()
+          : throw Exception('CancelOrderUseCase no registrado'));
 
   @override
   void initState() {
@@ -61,6 +71,41 @@ class _OrdersHistoryPageState extends State<OrdersHistoryPage> {
           _error = failure.message;
           _isLoading = false;
         });
+    }
+  }
+
+  Future<void> _cancelOrder(Order order) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Cancelar pedido'),
+        content: Text('¿Deseas cancelar el pedido ${order.id}?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Volver'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Cancelar pedido'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    final result = await _cancelUseCase(
+      orderId: order.id,
+      customerId: widget.session.userId,
+    );
+    if (!mounted) return;
+    switch (result) {
+      case Success():
+        await _fetchOrders();
+      case FailureResult(:final failure):
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(failure.message)));
     }
   }
 
@@ -203,6 +248,45 @@ class _OrdersHistoryPageState extends State<OrdersHistoryPage> {
                 ),
               ],
             ),
+            Row(
+              children: [
+                const Icon(Icons.local_shipping_outlined, size: 16, color: Colors.grey),
+                const SizedBox(width: 6),
+                Text(
+                  _deliveryMethodLabel(order.deliveryMethod),
+                  style: const TextStyle(fontSize: 13),
+                ),
+              ],
+            ),
+            if (order.rejectionReason != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 6),
+                child: Text(
+                  'Motivo del rechazo: ${order.rejectionReason}',
+                  style: const TextStyle(color: Colors.red),
+                ),
+              ),
+            const SizedBox(height: 8),
+            const Text(
+              'Seguimiento',
+              style: TextStyle(fontWeight: FontWeight.w600),
+            ),
+            ...order.timeline.map(
+              (change) => Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Row(
+                  children: [
+                    const Icon(Icons.circle, size: 8, color: Colors.blueGrey),
+                    const SizedBox(width: 8),
+                    Expanded(child: Text(change.status.displayName)),
+                    Text(
+                      _formatDate(change.changedAt),
+                      style: const TextStyle(fontSize: 11, color: Colors.grey),
+                    ),
+                  ],
+                ),
+              ),
+            ),
             const Divider(height: 20),
 
             // Order Items with Frozen Unit Prices
@@ -292,16 +376,37 @@ class _OrdersHistoryPageState extends State<OrdersHistoryPage> {
                 ),
               ],
             ),
+            if (order.canCancel) ...[
+              const SizedBox(height: 10),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton.icon(
+                  onPressed: () => _cancelOrder(order),
+                  icon: const Icon(Icons.cancel_outlined),
+                  label: const Text('Cancelar pedido'),
+                ),
+              ),
+            ],
           ],
         ),
       ),
     );
   }
 
+  String _deliveryMethodLabel(OrderDeliveryMethod method) => switch (method) {
+    OrderDeliveryMethod.pickup => 'Retiro en el local',
+    OrderDeliveryMethod.storeDelivery => 'Delivery propio',
+    OrderDeliveryMethod.externalDelivery => 'Repartidor externo',
+  };
+
   Color _statusColor(OrderStatus status) => switch (status) {
         OrderStatus.created => Colors.orange.shade800,
         OrderStatus.confirmed => Colors.teal.shade700,
         OrderStatus.rejected => Colors.red.shade700,
+        OrderStatus.preparing => Colors.amber.shade800,
+        OrderStatus.readyForPickup => Colors.green.shade700,
+        OrderStatus.pickedUp => Colors.teal.shade800,
+        OrderStatus.readyForDelivery => Colors.teal.shade700,
         OrderStatus.lookingForDriver => Colors.purple.shade700,
         OrderStatus.driverAssigned => Colors.indigo.shade700,
         OrderStatus.inDelivery => Colors.blue.shade700,
@@ -313,6 +418,10 @@ class _OrdersHistoryPageState extends State<OrdersHistoryPage> {
         OrderStatus.created => Icons.hourglass_top,
         OrderStatus.confirmed => Icons.check_circle_outline,
         OrderStatus.rejected => Icons.cancel_outlined,
+        OrderStatus.preparing => Icons.restaurant,
+        OrderStatus.readyForPickup => Icons.storefront,
+        OrderStatus.pickedUp => Icons.shopping_bag,
+        OrderStatus.readyForDelivery => Icons.inventory_2,
         OrderStatus.lookingForDriver => Icons.search,
         OrderStatus.driverAssigned => Icons.two_wheeler,
         OrderStatus.inDelivery => Icons.local_shipping,
