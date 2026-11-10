@@ -61,6 +61,7 @@ class Order {
         'No se puede cambiar el estado del pedido de $status a $newStatus.',
       );
     }
+
     if (newStatus == OrderStatus.rejected &&
         (rejectionReason == null || rejectionReason.trim().isEmpty)) {
       throw const DomainException(
@@ -68,13 +69,10 @@ class Order {
       );
     }
 
+    final timestamp = changedAt ?? DateTime.now();
+
     final history = List<OrderStatusChange>.of(timeline)
-      ..add(
-        OrderStatusChange(
-          status: newStatus,
-          changedAt: changedAt ?? DateTime.now(),
-        ),
-      );
+      ..add(OrderStatusChange(status: newStatus, changedAt: timestamp));
 
     return Order(
       id: id,
@@ -87,7 +85,7 @@ class Order {
       missingContainersFee: missingContainersFee,
       createdAt: createdAt,
       confirmedAt: newStatus == OrderStatus.confirmed
-          ? confirmedAt
+          ? (confirmedAt ?? timestamp)
           : this.confirmedAt,
       rejectionReason: newStatus == OrderStatus.rejected
           ? rejectionReason!.trim()

@@ -36,6 +36,8 @@ void main() {
       final confirmedOrder = order.copyWithStatus(OrderStatus.confirmed);
       expect(confirmedOrder.canRequestDriver, isTrue);
       expect(confirmedOrder.status.canSearchDriver, isTrue);
+      expect(confirmedOrder.confirmedAt, isNotNull);
+      expect(confirmedOrder.confirmedAt!.isAfter(order.createdAt), isTrue);
     });
 
     test('Only valid order status transitions are allowed', () {

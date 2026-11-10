@@ -23,6 +23,8 @@ class OrderDeliveryInfo {
 
   final int totalItemsCount;
   final double orderTotal;
+  final List<String> availableDeliveryModes;
+  final Map<String, String> storeOpeningHours;
 
   const OrderDeliveryInfo({
     required this.orderId,
@@ -35,6 +37,8 @@ class OrderDeliveryInfo {
     this.distanceInKm,
     required this.totalItemsCount,
     required this.orderTotal,
+    this.availableDeliveryModes = const [],
+    this.storeOpeningHours = const {},
   });
 
   /// Derived property: true only when order explicitly specifies external delivery.

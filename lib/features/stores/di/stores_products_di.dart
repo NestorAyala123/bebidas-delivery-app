@@ -8,6 +8,8 @@ import '../../products/application/use_cases/get_store_catalog_use_case.dart';
 import '../../products/application/use_cases/update_product_availability_use_case.dart';
 import '../../products/domain/repositories/product_repository.dart';
 import '../../products/infrastructure/repositories/in_memory_product_repository.dart';
+import '../../orders/domain/repositories/order_repository.dart';
+import '../../orders/infrastructure/repositories/in_memory_order_repository.dart';
 import '../application/use_cases/save_store_use_case.dart';
 import '../application/use_cases/update_store_status_use_case.dart';
 import '../domain/repositories/store_repository.dart';
@@ -16,6 +18,11 @@ import '../infrastructure/repositories/in_memory_store_repository.dart';
 class StoresProductsDi implements FeatureDiModule {
   @override
   void registerDependencies(ServiceLocator locator) {
+    if (!locator.isRegistered<OrderRepository>()) {
+      locator.registerLazySingleton<OrderRepository>(
+        InMemoryOrderRepository.new,
+      );
+    }
     if (!locator.isRegistered<StoreRepository>()) {
       locator.registerLazySingleton<StoreRepository>(
         InMemoryStoreRepository.new,

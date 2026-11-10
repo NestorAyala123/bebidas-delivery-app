@@ -12,6 +12,7 @@ import '../../application/use_cases/save_store_use_case.dart';
 import '../../application/use_cases/update_store_status_use_case.dart';
 import '../../domain/entities/store.dart';
 import '../../domain/repositories/store_repository.dart';
+import '../routes/stores_routes.dart';
 
 class StoreManagementPage extends StatefulWidget {
   const StoreManagementPage({super.key});
@@ -31,6 +32,9 @@ class _StoreManagementPageState extends State<StoreManagementPage> {
   final _tierQuantityController = TextEditingController();
   final _tierPriceController = TextEditingController();
   final _depositController = TextEditingController();
+  final Map<String, TextEditingController> _openingHourControllers = {
+    for (final day in _weekdays) day: TextEditingController(),
+  };
   final _storeRepository = sl.get<StoreRepository>();
   final _productRepository = sl.get<ProductRepository>();
   late final SaveStoreUseCase _saveStore;
@@ -44,6 +48,26 @@ class _StoreManagementPageState extends State<StoreManagementPage> {
   bool _hasOwnDelivery = false;
   bool _allowsExternalDelivery = true;
   bool _allowsPickup = true;
+
+  static const _weekdays = <String>[
+    'monday',
+    'tuesday',
+    'wednesday',
+    'thursday',
+    'friday',
+    'saturday',
+    'sunday',
+  ];
+
+  static const _weekdayLabels = <String, String>{
+    'monday': 'Lunes',
+    'tuesday': 'Martes',
+    'wednesday': 'Miércoles',
+    'thursday': 'Jueves',
+    'friday': 'Viernes',
+    'saturday': 'Sábado',
+    'sunday': 'Domingo',
+  };
 
   @override
   void initState() {
@@ -69,6 +93,9 @@ class _StoreManagementPageState extends State<StoreManagementPage> {
       _tierPriceController,
       _depositController,
     ]) {
+      controller.dispose();
+    }
+    for (final controller in _openingHourControllers.values) {
       controller.dispose();
     }
     super.dispose();
@@ -99,6 +126,9 @@ class _StoreManagementPageState extends State<StoreManagementPage> {
     _hasOwnDelivery = store.hasOwnDelivery;
     _allowsExternalDelivery = store.allowsExternalDelivery;
     _allowsPickup = store.allowsPickup;
+    for (final day in _weekdays) {
+      _openingHourControllers[day]!.text = store.openingHours[day] ?? '';
+    }
   }
 
   Future<void> _loadProducts() async {
@@ -129,6 +159,11 @@ class _StoreManagementPageState extends State<StoreManagementPage> {
       hasOwnDelivery: _hasOwnDelivery,
       allowsExternalDelivery: _allowsExternalDelivery,
       allowsPickup: _allowsPickup,
+      openingHours: {
+        for (final day in _weekdays)
+          if (_openingHourControllers[day]!.text.trim().isNotEmpty)
+            day: _openingHourControllers[day]!.text.trim(),
+      },
     );
     final result = await _saveStore(store);
     if (!mounted) return;
@@ -274,6 +309,12 @@ class _StoreManagementPageState extends State<StoreManagementPage> {
         children: [
           _buildStoreForm(),
           const SizedBox(height: 24),
+          FilledButton.tonalIcon(
+            onPressed: () => Navigator.pushNamed(context, StoresRoutes.orders),
+            icon: const Icon(Icons.receipt_long),
+            label: const Text('Revisar pedidos'),
+          ),
+          const SizedBox(height: 24),
           _buildProductForm(),
           const SizedBox(height: 16),
           ..._products.map(_buildProductTile),
@@ -324,6 +365,17 @@ class _StoreManagementPageState extends State<StoreManagementPage> {
               onChanged: (value) =>
                   setState(() => _allowsPickup = value ?? false),
             ),
+            const SizedBox(height: 8),
+            const Text(
+              'Horarios de atención',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+            for (final day in _weekdays)
+              _field(
+                _openingHourControllers[day]!,
+                _weekdayLabels[day]!,
+                hintText: '09:00-22:00',
+              ),
             FilledButton(
               onPressed: _saveStoreForm,
               child: const Text('Guardar comercio'),
@@ -414,7 +466,17 @@ class _StoreManagementPageState extends State<StoreManagementPage> {
               fit: BoxFit.cover,
             ),
       title: Text(product.name),
-      subtitle: Text('\$${product.basePrice.toStringAsFixed(2)}'),
+      subtitle: Text(
+        product.isAvailable
+            ? '\$${product.basePrice.toStringAsFixed(2)} · Disponible'
+            : 'Agotado',
+        style: TextStyle(
+          color: product.isAvailable
+              ? Theme.of(context).colorScheme.onSurfaceVariant
+              : Theme.of(context).colorScheme.error,
+          fontWeight: product.isAvailable ? null : FontWeight.bold,
+        ),
+      ),
       trailing: Switch(
         value: product.isAvailable,
         onChanged: (value) => _toggleProduct(product, value),
@@ -426,6 +488,7 @@ class _StoreManagementPageState extends State<StoreManagementPage> {
     TextEditingController controller,
     String label, {
     TextInputType? keyboardType,
+    String? hintText,
   }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
@@ -434,6 +497,7 @@ class _StoreManagementPageState extends State<StoreManagementPage> {
         keyboardType: keyboardType,
         decoration: InputDecoration(
           labelText: label,
+          hintText: hintText,
           border: const OutlineInputBorder(),
         ),
       ),
