@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/di/service_locator.dart';
+import '../../../chat/presentation/widgets/chat_inbox_button.dart';
 import '../../domain/entities/consulta_servicio.dart';
 import '../../domain/usecases/crear_consulta_servicio_use_case.dart';
 import '../../domain/usecases/obtener_consultas_servicio_use_case.dart';
@@ -132,6 +133,8 @@ class _MisConsultasPageState extends State<MisConsultasPage> {
         backgroundColor: colorScheme.primary,
         foregroundColor: colorScheme.onPrimary,
         actions: [
+          // Acceso al chat desde servicios (módulo chat).
+          const ChatInboxButton(),
           IconButton(
             icon: const Icon(Icons.refresh),
             tooltip: 'Actualizar historial',

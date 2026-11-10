@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/di/service_locator.dart';
+import '../../../chat/presentation/widgets/chat_inbox_button.dart';
 import '../../../auth/presentation/state/current_identity.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../pricing/domain/entities/price_rule.dart';
@@ -305,7 +306,11 @@ class _StoreManagementPageState extends State<StoreManagementPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Mis comercios y productos')),
+      appBar: AppBar(
+        title: const Text('Mis comercios y productos'),
+        // Acceso al chat desde el comercio (módulo chat).
+        actions: const [ChatInboxButton()],
+      ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
