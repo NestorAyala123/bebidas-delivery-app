@@ -1,7 +1,8 @@
+import '../../../../core/errors/exceptions.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/result/result.dart';
-import '../../../../core/errors/exceptions.dart';
 import '../domain/entities/order.dart';
+import '../domain/entities/order_delivery_method.dart';
 import '../domain/entities/order_status.dart';
 import '../domain/repositories/order_repository.dart';
 
@@ -144,6 +145,33 @@ class InMemoryOrderRepository implements OrderRepository {
       );
       _orders[cancelled.id] = cancelled;
       return Success(cancelled);
+    } on DomainException catch (error) {
+      return FailureResult(BusinessRuleFailure(error.message));
+    }
+  }
+
+  @override
+  Future<Result<Order, Failure>> changeDeliveryMethodAfterNoDrivers({
+    required String orderId,
+    required String customerId,
+    required OrderDeliveryMethod deliveryMethod,
+  }) async {
+    final order = _orders[orderId.trim()];
+    if (order == null) {
+      return const FailureResult(NotFoundFailure('Pedido no encontrado.'));
+    }
+    if (order.customerId != customerId.trim()) {
+      return const FailureResult(
+        UnauthorizedFailure('No autorizado para modificar este pedido.'),
+      );
+    }
+    try {
+      final updated = order.useAlternativeDeliveryMethod(
+        deliveryMethod,
+        changedAt: _now(),
+      );
+      _orders[updated.id] = updated;
+      return Success(updated);
     } on DomainException catch (error) {
       return FailureResult(BusinessRuleFailure(error.message));
     }

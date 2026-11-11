@@ -1,7 +1,8 @@
-import 'order_item.dart';
-import 'order_delivery_method.dart';
-import 'order_status.dart';
 import '../../../../core/errors/exceptions.dart';
+import 'order_delivery_method.dart';
+import 'order_item.dart';
+import 'order_status.dart';
+import 'order_payment_method.dart';
 
 /// Core Order domain entity.
 /// Enforces RN01, RN07, RN08.
@@ -12,6 +13,7 @@ class Order {
   final List<OrderItem> items;
   final OrderStatus status;
   final OrderDeliveryMethod deliveryMethod;
+  final OrderPaymentMethod paymentMethod;
   final String deliveryAddress;
   final double missingContainersFee;
   final DateTime createdAt;
@@ -26,6 +28,7 @@ class Order {
     required this.items,
     required this.status,
     required this.deliveryMethod,
+    this.paymentMethod = OrderPaymentMethod.cash,
     required this.deliveryAddress,
     this.missingContainersFee = 0.0,
     required this.createdAt,
@@ -83,6 +86,7 @@ class Order {
       items: items,
       status: newStatus,
       deliveryMethod: deliveryMethod,
+      paymentMethod: paymentMethod,
       deliveryAddress: deliveryAddress,
       missingContainersFee: missingContainersFee,
       createdAt: createdAt,
@@ -93,6 +97,39 @@ class Order {
           ? rejectionReason!.trim()
           : this.rejectionReason,
       statusHistory: history,
+    );
+  }
+
+  Order useAlternativeDeliveryMethod(
+    OrderDeliveryMethod newMethod, {
+    DateTime? changedAt,
+  }) {
+    if (status != OrderStatus.noDriversAvailable ||
+        newMethod == OrderDeliveryMethod.externalDelivery ||
+        newMethod == deliveryMethod) {
+      throw const DomainException(
+        'La alternativa de entrega no es válida para este pedido.',
+      );
+    }
+
+    final timestamp = changedAt ?? DateTime.now();
+    return Order(
+      id: id,
+      customerId: customerId,
+      storeId: storeId,
+      items: items,
+      status: OrderStatus.preparing,
+      deliveryMethod: newMethod,
+      paymentMethod: paymentMethod,
+      deliveryAddress: deliveryAddress,
+      missingContainersFee: missingContainersFee,
+      createdAt: createdAt,
+      confirmedAt: confirmedAt,
+      rejectionReason: rejectionReason,
+      statusHistory: [
+        ...timeline,
+        OrderStatusChange(status: OrderStatus.preparing, changedAt: timestamp),
+      ],
     );
   }
 
@@ -123,8 +160,12 @@ class Order {
       OrderStatus.readyForDelivery => newStatus == OrderStatus.inDelivery,
       OrderStatus.lookingForDriver =>
         deliveryMethod == OrderDeliveryMethod.externalDelivery &&
-            (newStatus == OrderStatus.driverAssigned ||
+            (newStatus == OrderStatus.noDriversAvailable ||
+                newStatus == OrderStatus.driverAssigned ||
                 newStatus == OrderStatus.cancelled),
+      OrderStatus.noDriversAvailable =>
+        newStatus == OrderStatus.lookingForDriver ||
+            newStatus == OrderStatus.cancelled,
       OrderStatus.driverAssigned =>
         deliveryMethod == OrderDeliveryMethod.externalDelivery &&
             newStatus == OrderStatus.inDelivery,

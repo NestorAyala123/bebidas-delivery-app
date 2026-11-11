@@ -5,6 +5,7 @@ import '../../domain/entities/order.dart';
 import '../../domain/entities/order_delivery_method.dart';
 import '../../domain/entities/order_item.dart';
 import '../../domain/entities/order_status.dart';
+import '../../domain/entities/order_payment_method.dart';
 import '../../domain/repositories/order_repository.dart';
 
 class CreateOrderInput {
@@ -12,6 +13,7 @@ class CreateOrderInput {
   final String deliveryAddress;
   final Cart cart;
   final OrderDeliveryMethod deliveryMethod;
+  final OrderPaymentMethod paymentMethod;
   final double missingContainersFee;
 
   const CreateOrderInput({
@@ -19,6 +21,7 @@ class CreateOrderInput {
     required this.deliveryAddress,
     required this.cart,
     required this.deliveryMethod,
+    required this.paymentMethod,
     this.missingContainersFee = 0,
   });
 
@@ -28,6 +31,7 @@ class CreateOrderInput {
     required String deliveryAddress,
     required Cart cart,
     required OrderDeliveryMethod deliveryMethod,
+    required OrderPaymentMethod paymentMethod,
     int returnedContainers = 0,
   }) {
     final calc = cart.calculateTotals(returnedContainers: returnedContainers);
@@ -36,6 +40,7 @@ class CreateOrderInput {
       deliveryAddress: deliveryAddress,
       cart: cart,
       deliveryMethod: deliveryMethod,
+      paymentMethod: paymentMethod,
       missingContainersFee: calc.missingContainersFee,
     );
   }
@@ -85,6 +90,7 @@ class CreateOrderUseCase {
           .toList(growable: false),
       status: OrderStatus.created,
       deliveryMethod: input.deliveryMethod,
+      paymentMethod: input.paymentMethod,
       deliveryAddress: input.deliveryAddress.trim(),
       missingContainersFee: input.missingContainersFee,
       createdAt: _now(),

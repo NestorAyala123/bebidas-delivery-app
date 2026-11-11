@@ -10,6 +10,7 @@ import '../../../cart/domain/repositories/cart_repository.dart';
 import '../../../pricing/domain/entities/quantity_pricing_tier.dart';
 import '../../application/use_cases/create_order_use_case.dart';
 import '../../domain/entities/order_delivery_method.dart';
+import '../../domain/entities/order_payment_method.dart';
 import 'orders_history_page.dart';
 
 /// Screen that presents the cart summary, volume discount tier calculation (RN04),
@@ -38,6 +39,7 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
   bool _isLoading = false;
   Cart _cart = const Cart();
   OrderDeliveryMethod _deliveryMethod = OrderDeliveryMethod.externalDelivery;
+  OrderPaymentMethod _paymentMethod = OrderPaymentMethod.cash;
 
   CartRepository get _cartRepo =>
       widget.cartRepository ??
@@ -141,6 +143,7 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
       deliveryAddress: address,
       cart: _cart,
       deliveryMethod: _deliveryMethod,
+      paymentMethod: _paymentMethod,
       returnedContainers: _returnedContainers,
     );
 
@@ -361,6 +364,30 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
                               },
                       ),
                     ),
+                  ),
+                  const SizedBox(height: 12),
+
+                  DropdownButtonFormField<OrderPaymentMethod>(
+                    initialValue: _paymentMethod,
+                    decoration: const InputDecoration(
+                      labelText: 'Método de pago',
+                      border: OutlineInputBorder(),
+                    ),
+                    items: OrderPaymentMethod.values
+                        .map(
+                          (method) => DropdownMenuItem(
+                            value: method,
+                            child: Text(method.displayName),
+                          ),
+                        )
+                        .toList(growable: false),
+                    onChanged: _isLoading
+                        ? null
+                        : (method) {
+                            if (method != null) {
+                              setState(() => _paymentMethod = method);
+                            }
+                          },
                   ),
                   const SizedBox(height: 12),
 

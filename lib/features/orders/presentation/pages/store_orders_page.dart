@@ -221,6 +221,7 @@ class _StoreOrdersPageState extends State<StoreOrdersPage> {
             const SizedBox(height: 4),
             Text('Estado: ${order.status.displayName}'),
             Text('Modalidad: ${_methodLabel(order.deliveryMethod)}'),
+            Text('Pago: ${order.paymentMethod.displayName}'),
             Text('Cliente: ${order.customerId}'),
             Text('Dirección: ${order.deliveryAddress}'),
             Text('Total: \$${order.total.toStringAsFixed(2)}'),

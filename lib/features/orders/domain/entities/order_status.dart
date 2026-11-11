@@ -8,6 +8,7 @@ enum OrderStatus {
   pickedUp,
   readyForDelivery,
   lookingForDriver,
+  noDriversAvailable,
   driverAssigned,
   inDelivery,
   delivered,
@@ -27,7 +28,8 @@ enum OrderStatus {
       this == OrderStatus.preparing ||
       this == OrderStatus.readyForPickup ||
       this == OrderStatus.readyForDelivery ||
-      this == OrderStatus.lookingForDriver;
+      this == OrderStatus.lookingForDriver ||
+      this == OrderStatus.noDriversAvailable;
 
   /// Indica si el pedido está en estado inicial pendiente de confirmación
   bool get isPending => this == OrderStatus.created;
@@ -42,6 +44,7 @@ enum OrderStatus {
         OrderStatus.pickedUp => 'Retirado',
         OrderStatus.readyForDelivery => 'Listo para entrega',
         OrderStatus.lookingForDriver => 'Buscando Repartidor',
+        OrderStatus.noDriversAvailable => 'Sin repartidores disponibles',
         OrderStatus.driverAssigned => 'Repartidor Asignado',
         OrderStatus.inDelivery => 'En Camino',
         OrderStatus.delivered => 'Entregado',

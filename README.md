@@ -153,6 +153,8 @@ flutter analyze
 
 El prototipo usa almacenamiento en memoria: los datos se pierden al cerrar la aplicación. Para la demo, el ID de sesión del comercio debe coincidir con el `storeId` de los pedidos.
 
+Para Semana 5, cada pedido conserva el método de pago elegido (efectivo o transferencia). Si el seguimiento marca **Sin repartidores disponibles**, el cliente puede retomar la búsqueda, cancelar o elegir retiro/delivery propio solo si el comercio está abierto y ofrece esa modalidad. El aumento de tarifa se delega al flujo de negociación de delivery.
+
 ## 💻 Puesta en Marcha Local
 
 ```bash

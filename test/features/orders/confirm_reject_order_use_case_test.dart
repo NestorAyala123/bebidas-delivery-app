@@ -5,6 +5,7 @@ import 'package:bebidas_delivery_app/features/orders/application/use_cases/confi
 import 'package:bebidas_delivery_app/features/orders/application/use_cases/reject_order_use_case.dart';
 import 'package:bebidas_delivery_app/features/orders/domain/entities/order.dart';
 import 'package:bebidas_delivery_app/features/orders/domain/entities/order_delivery_method.dart';
+import 'package:bebidas_delivery_app/features/orders/domain/entities/order_payment_method.dart';
 import 'package:bebidas_delivery_app/features/orders/domain/entities/order_item.dart';
 import 'package:bebidas_delivery_app/features/orders/domain/entities/order_status.dart';
 import 'package:bebidas_delivery_app/features/orders/domain/repositories/order_repository.dart';
@@ -123,6 +124,7 @@ class _MockOrderRepository implements OrderRepository {
       storeId: storeId,
       status: OrderStatus.created,
       deliveryMethod: OrderDeliveryMethod.externalDelivery,
+      paymentMethod: OrderPaymentMethod.cash,
       deliveryAddress: 'Av. Flavio Reyes',
       createdAt: DateTime.now(),
       items: const [
@@ -194,5 +196,12 @@ class _MockOrderRepository implements OrderRepository {
   Future<Result<Order, Failure>> cancelOrder({
     required String orderId,
     required String customerId,
+  }) => throw UnimplementedError();
+
+  @override
+  Future<Result<Order, Failure>> changeDeliveryMethodAfterNoDrivers({
+    required String orderId,
+    required String customerId,
+    required OrderDeliveryMethod deliveryMethod,
   }) => throw UnimplementedError();
 }

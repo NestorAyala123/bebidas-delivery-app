@@ -13,6 +13,7 @@ import 'package:bebidas_delivery_app/features/orders/application/use_cases/updat
 import 'package:bebidas_delivery_app/features/orders/domain/entities/order.dart';
 import 'package:bebidas_delivery_app/features/orders/domain/entities/order_delivery_method.dart';
 import 'package:bebidas_delivery_app/features/orders/domain/entities/order_item.dart';
+import 'package:bebidas_delivery_app/features/orders/domain/entities/order_payment_method.dart';
 import 'package:bebidas_delivery_app/features/orders/domain/entities/order_status.dart';
 import 'package:bebidas_delivery_app/features/orders/infrastructure/in_memory_order_repository.dart';
 import 'package:bebidas_delivery_app/features/orders/presentation/pages/order_summary_page.dart';
@@ -100,6 +101,13 @@ void main() {
         expect(find.text('Precio por Rango'), findsOneWidget);
         expect(find.text('Envases Retornables (RN05)'), findsOneWidget);
 
+        final paymentMethod = find.text('Efectivo');
+        await tester.ensureVisible(paymentMethod);
+        await tester.tap(paymentMethod);
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Transferencia').last);
+        await tester.pumpAndSettle();
+
         // Tap confirm button
         final confirmButton = find.text(
           'Confirmar Pedido (Crear como Pendiente)',
@@ -113,6 +121,11 @@ void main() {
         expect(find.text('¡Pedido Creado!'), findsOneWidget);
         expect(find.text('ID del Pedido: ORD-TEST-99'), findsOneWidget);
         expect(find.text('Pendiente'), findsWidgets);
+        final orders = await orderRepo.getOrdersByCustomer(testSession.userId);
+        expect(
+          orders.dataOrNull?.single.paymentMethod,
+          OrderPaymentMethod.bankTransfer,
+        );
       },
     );
   });

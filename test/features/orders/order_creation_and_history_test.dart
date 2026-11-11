@@ -4,6 +4,7 @@ import 'package:bebidas_delivery_app/features/cart/domain/entities/cart_item.dar
 import 'package:bebidas_delivery_app/features/orders/application/use_cases/create_order_use_case.dart';
 import 'package:bebidas_delivery_app/features/orders/application/use_cases/get_customer_orders_use_case.dart';
 import 'package:bebidas_delivery_app/features/orders/domain/entities/order_delivery_method.dart';
+import 'package:bebidas_delivery_app/features/orders/domain/entities/order_payment_method.dart';
 import 'package:bebidas_delivery_app/features/orders/domain/entities/order_status.dart';
 import 'package:bebidas_delivery_app/features/orders/infrastructure/in_memory_order_repository.dart';
 import 'package:bebidas_delivery_app/features/pricing/domain/entities/quantity_pricing_tier.dart';
@@ -120,6 +121,7 @@ void main() {
           deliveryAddress: 'Av. Flavio Reyes 456, Manta',
           cart: cart,
           deliveryMethod: OrderDeliveryMethod.externalDelivery,
+          paymentMethod: OrderPaymentMethod.cash,
           returnedContainers: 0,
         ),
       );
@@ -153,6 +155,7 @@ void main() {
           deliveryAddress: 'Calle 13 y Av. 2',
           cart: cart,
           deliveryMethod: OrderDeliveryMethod.externalDelivery,
+          paymentMethod: OrderPaymentMethod.cash,
           missingContainersFee: 0.0,
         ),
       );
@@ -201,12 +204,14 @@ void main() {
         deliveryAddress: 'Dir 1',
         cart: cart1,
         deliveryMethod: OrderDeliveryMethod.externalDelivery,
+        paymentMethod: OrderPaymentMethod.cash,
       ));
       await useCaseWithCounter(CreateOrderInput.fromCart(
         customerId: 'cust-david-01',
         deliveryAddress: 'Dir 2',
         cart: cart2,
         deliveryMethod: OrderDeliveryMethod.externalDelivery,
+        paymentMethod: OrderPaymentMethod.cash,
       ));
 
       final historyResult = await getCustomerOrdersUseCase('cust-david-01');
