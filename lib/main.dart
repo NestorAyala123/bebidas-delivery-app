@@ -11,6 +11,8 @@ import 'features/event_services/di/event_services_di.dart';
 import 'features/event_services/presentation/routes/event_services_routes.dart';
 import 'features/location/di/location_di.dart';
 import 'features/location/presentation/routes/location_routes.dart';
+import 'features/orders/di/orders_di.dart';
+import 'features/orders/presentation/routes/orders_routes.dart';
 import 'features/pricing/di/pricing_di.dart';
 
 void main() async {
@@ -22,6 +24,7 @@ void main() async {
     LocationRoutes(),
     EventServicesRoutes(),
     ChatRoutes(),
+    OrdersRoutes(),
   ]);
 
   // Register modular dependency injection modules
@@ -31,6 +34,7 @@ void main() async {
     EventServicesDi(),
     ChatDi(),
     PricingDi(),
+    OrdersDi(),
   ]);
 
   runApp(const BebidasDeliveryApp());
