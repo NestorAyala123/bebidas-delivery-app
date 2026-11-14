@@ -11,6 +11,7 @@ import 'features/event_services/di/event_services_di.dart';
 import 'features/event_services/presentation/routes/event_services_routes.dart';
 import 'features/location/di/location_di.dart';
 import 'features/location/presentation/routes/location_routes.dart';
+import 'features/pricing/di/pricing_di.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -29,6 +30,7 @@ void main() async {
     LocationDi(),
     EventServicesDi(),
     ChatDi(),
+    PricingDi(),
   ]);
 
   runApp(const BebidasDeliveryApp());
