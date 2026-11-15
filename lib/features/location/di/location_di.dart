@@ -3,6 +3,7 @@ import '../domain/repositories/location_repository.dart';
 import '../domain/usecases/calcular_distancia_entrega_use_case.dart';
 import '../domain/usecases/obtener_comercios_cercanos_use_case.dart';
 import '../domain/usecases/obtener_ubicacion_actual_use_case.dart';
+import '../domain/usecases/obtener_ubicacion_precisa_use_case.dart';
 import '../infrastructure/repositories/geolocator_location_repository.dart';
 import '../presentation/controllers/location_map_controller.dart';
 
@@ -33,6 +34,12 @@ class LocationDi implements FeatureDiModule {
     if (!locator.isRegistered<CalcularDistanciaEntregaUseCase>()) {
       locator.registerFactory<CalcularDistanciaEntregaUseCase>(
         () => const CalcularDistanciaEntregaUseCase(),
+      );
+    }
+
+    if (!locator.isRegistered<ObtenerUbicacionPrecisaUseCase>()) {
+      locator.registerFactory<ObtenerUbicacionPrecisaUseCase>(
+        () => ObtenerUbicacionPrecisaUseCase(locator.get<LocationRepository>()),
       );
     }
 

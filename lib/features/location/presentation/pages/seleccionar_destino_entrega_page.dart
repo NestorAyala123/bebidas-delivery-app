@@ -10,6 +10,7 @@ import '../../domain/entities/delivery_destination.dart';
 import '../../domain/entities/geo_coordinates.dart';
 import '../../domain/usecases/calcular_distancia_entrega_use_case.dart';
 import '../../domain/usecases/obtener_ubicacion_actual_use_case.dart';
+import '../../domain/usecases/obtener_ubicacion_precisa_use_case.dart';
 
 /// Pantalla para que el cliente seleccione o ajuste su dirección y punto de entrega.
 ///
@@ -64,6 +65,9 @@ class _SeleccionarDestinoEntregaPageState
   bool _isLoadingGps = false;
   Failure? _gpsFailure;
 
+  /// Margen de error reportado por el último GPS utilizado (0 = desconocido).
+  double _accuracyMeters = 0;
+
   final CalcularDistanciaEntregaUseCase _calcularDistanciaUseCase =
       const CalcularDistanciaEntregaUseCase();
 
@@ -97,7 +101,11 @@ class _SeleccionarDestinoEntregaPageState
         latitude: _selectedLatLng.latitude,
         longitude: _selectedLatLng.longitude,
       );
-      final res = _calcularDistanciaUseCase(origin: origin, destination: dest);
+      final res = _calcularDistanciaUseCase(
+        origin: origin,
+        destination: dest,
+        accuracyMeters: _accuracyMeters,
+      );
       setState(() {
         _deliveryEstimate = res.dataOrNull;
       });
@@ -111,12 +119,17 @@ class _SeleccionarDestinoEntregaPageState
     });
 
     try {
-      final useCase =
-          ServiceLocator.instance.isRegistered<ObtenerUbicacionActualUseCase>()
-          ? ServiceLocator.instance.get<ObtenerUbicacionActualUseCase>()
+      final locator = ServiceLocator.instance;
+      final preciseUseCase =
+          locator.isRegistered<ObtenerUbicacionPrecisaUseCase>()
+          ? locator.get<ObtenerUbicacionPrecisaUseCase>()
+          : null;
+      final basicUseCase =
+          locator.isRegistered<ObtenerUbicacionActualUseCase>()
+          ? locator.get<ObtenerUbicacionActualUseCase>()
           : null;
 
-      if (useCase == null) {
+      if (preciseUseCase == null && basicUseCase == null) {
         setState(() {
           _gpsFailure = const ValidationFailure(
             'El servicio de ubicación no está disponible. Puedes ingresar la dirección manualmente.',
@@ -125,24 +138,46 @@ class _SeleccionarDestinoEntregaPageState
         return;
       }
 
-      final result = await useCase();
+      GeoCoordinates? coordinates;
+      double accuracyMeters = 0;
 
-      switch (result) {
-        case Success(:final data):
-          final newLatLng = LatLng(data.latitude, data.longitude);
-          setState(() {
-            _selectedLatLng = newLatLng;
-            _gpsFailure = null;
-          });
-          try {
-            _mapController.move(newLatLng, 16.0);
-          } catch (_) {
-            // El mapa aún no está montado; las coordenadas ya quedaron fijadas.
-          }
-          _recalculateEstimate();
-        case FailureResult(:final failure):
-          setState(() => _gpsFailure = failure);
+      if (preciseUseCase != null) {
+        final result = await preciseUseCase();
+        switch (result) {
+          case Success(:final data):
+            coordinates = data.coordinates;
+            accuracyMeters = data.accuracyMeters;
+          case FailureResult(:final failure):
+            setState(() => _gpsFailure = failure);
+            return;
+        }
+      } else {
+        final result = await basicUseCase!();
+        switch (result) {
+          case Success(:final data):
+            coordinates = data;
+          case FailureResult(:final failure):
+            setState(() => _gpsFailure = failure);
+            return;
+        }
       }
+
+      final resolved = coordinates;
+      final newLatLng = LatLng(
+        resolved.latitude,
+        resolved.longitude,
+      );
+      setState(() {
+        _selectedLatLng = newLatLng;
+        _accuracyMeters = accuracyMeters;
+        _gpsFailure = null;
+      });
+      try {
+        _mapController.move(newLatLng, 16.0);
+      } catch (_) {
+        // El mapa aún no está montado; las coordenadas ya quedaron fijadas.
+      }
+      _recalculateEstimate();
     } catch (e) {
       setState(() {
         _gpsFailure = LocationUnavailableFailure(
@@ -160,6 +195,7 @@ class _SeleccionarDestinoEntregaPageState
   void _useTestCoordinates() {
     setState(() {
       _selectedLatLng = _defaultLatLng;
+      _accuracyMeters = 0;
       _gpsFailure = null;
     });
     try {
@@ -195,6 +231,7 @@ class _SeleccionarDestinoEntregaPageState
   void _setSelectedPoint(LatLng point) {
     setState(() {
       _selectedLatLng = point;
+      _accuracyMeters = 0;
       _gpsFailure = null;
     });
     _recalculateEstimate();
@@ -531,6 +568,16 @@ class _SeleccionarDestinoEntregaPageState
                                       color: Colors.grey,
                                     ),
                                   ),
+                                  if (_deliveryEstimate!.accuracyMeters > 0)
+                                    Text(
+                                      _deliveryEstimate!.accuracyLabel,
+                                      style: TextStyle(
+                                        fontSize: 10,
+                                        color: _deliveryEstimate!.isApproximate
+                                            ? Colors.orange.shade800
+                                            : Colors.grey,
+                                      ),
+                                    ),
                                 ],
                               ),
                             ],

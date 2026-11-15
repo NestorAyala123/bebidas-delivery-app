@@ -5,6 +5,7 @@ import 'package:geolocator/geolocator.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/result/result.dart';
 import '../../domain/entities/geo_coordinates.dart';
+import '../../domain/entities/location_fix.dart';
 import '../../domain/entities/nearby_store.dart';
 import '../../domain/repositories/location_repository.dart';
 import '../../domain/usecases/obtener_ubicacion_actual_use_case.dart';
@@ -119,6 +120,36 @@ class GeolocatorLocationRepository implements LocationRepository {
 
   @override
   Future<Result<GeoCoordinates, Failure>> getCurrentPosition() async {
+    final result = await _obtainPosition();
+    return result.fold(
+      onSuccess: (position) => Success(
+        GeoCoordinates(
+          latitude: position.latitude,
+          longitude: position.longitude,
+        ),
+      ),
+      onFailure: (failure) => FailureResult(failure),
+    );
+  }
+
+  @override
+  Future<Result<LocationFix, Failure>> getCurrentFix() async {
+    final result = await _obtainPosition();
+    return result.fold(
+      onSuccess: (position) => Success(
+        LocationFix(
+          coordinates: GeoCoordinates(
+            latitude: position.latitude,
+            longitude: position.longitude,
+          ),
+          accuracyMeters: position.accuracy,
+        ),
+      ),
+      onFailure: (failure) => FailureResult(failure),
+    );
+  }
+
+  Future<Result<Position, Failure>> _obtainPosition() async {
     try {
       final serviceEnabled = await Geolocator.isLocationServiceEnabled();
       if (!serviceEnabled) {
@@ -156,12 +187,7 @@ class GeolocatorLocationRepository implements LocationRepository {
         ),
       );
 
-      return Success(
-        GeoCoordinates(
-          latitude: position.latitude,
-          longitude: position.longitude,
-        ),
-      );
+      return Success(position);
     } on TimeoutException {
       return const FailureResult(
         LocationTimeoutFailure(

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/di/service_locator.dart';
+import '../../../chat/domain/entities/chat_conversation.dart';
+import '../../../chat/presentation/chat_launcher.dart';
 import '../../domain/entities/consulta_servicio.dart';
 import '../../domain/usecases/crear_consulta_servicio_use_case.dart';
 import '../../domain/usecases/obtener_consultas_servicio_use_case.dart';
@@ -276,13 +278,19 @@ class _MisConsultasPageState extends State<MisConsultasPage> {
     BuildContext context,
     ConsultaServicio consulta,
   ) async {
-    await showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    await ChatLauncher.open(
+      context,
+      counterpartId: consulta.providerId,
+      counterpartName: 'Proveedor ${consulta.providerId}',
+      role: ChatPeerRole.eventProvider,
+      contextId: consulta.serviceId,
+      contextLabel: consulta.serviceTitle,
+      initialMessage: ChatLauncher.buildConsultationMessage(
+        serviceTitle: consulta.serviceTitle,
+        eventDate: consulta.eventDate,
+        guestCount: consulta.guestCount,
+        location: consulta.location,
       ),
-      builder: (_) => _ConsultaChatSheet(consulta: consulta),
     );
   }
 }
@@ -462,211 +470,4 @@ class _InfoItem extends StatelessWidget {
       ],
     );
   }
-}
-
-/// Canal de chat local de la consulta.
-///
-/// Sirve como enlace directo al módulo de chat de Nibia: muestra el contexto
-/// de la solicitud y permite enviar mensajes de coordinación sin salir del
-/// seguimiento de la consulta.
-class _ConsultaChatSheet extends StatefulWidget {
-  final ConsultaServicio consulta;
-
-  const _ConsultaChatSheet({required this.consulta});
-
-  @override
-  State<_ConsultaChatSheet> createState() => _ConsultaChatSheetState();
-}
-
-class _ConsultaChatSheetState extends State<_ConsultaChatSheet> {
-  final _messageController = TextEditingController();
-  final _scrollController = ScrollController();
-  final List<_LocalChatMessage> _messages = [];
-
-  @override
-  void initState() {
-    super.initState();
-    _messages.add(
-      _LocalChatMessage(
-        text:
-            'Hola, recibimos tu consulta para "${widget.consulta.serviceTitle}". '
-            'Un asesor revisará los detalles y te enviará una cotización.',
-        isProvider: true,
-      ),
-    );
-  }
-
-  @override
-  void dispose() {
-    _messageController.dispose();
-    _scrollController.dispose();
-    super.dispose();
-  }
-
-  void _sendMessage() {
-    final text = _messageController.text.trim();
-    if (text.isEmpty) return;
-
-    setState(() {
-      _messages.add(_LocalChatMessage(text: text, isProvider: false));
-      _messageController.clear();
-    });
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_scrollController.hasClients) {
-        _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 250),
-          curve: Curves.easeOut,
-        );
-      }
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final viewInsets = MediaQuery.viewInsetsOf(context);
-
-    return Padding(
-      padding: EdgeInsets.only(bottom: viewInsets.bottom),
-      child: SizedBox(
-        height: MediaQuery.sizeOf(context).height * 0.78,
-        child: Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.fromLTRB(16, 12, 8, 12),
-              decoration: BoxDecoration(
-                color: colorScheme.primary,
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(20),
-                ),
-              ),
-              child: Row(
-                children: [
-                  CircleAvatar(
-                    backgroundColor: colorScheme.onPrimary,
-                    foregroundColor: colorScheme.primary,
-                    child: const Icon(Icons.support_agent),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Chat con Nibia',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                        ),
-                        Text(
-                          widget.consulta.serviceTitle,
-                          style: const TextStyle(
-                            color: Colors.white70,
-                            fontSize: 12,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.close, color: Colors.white),
-                  ),
-                ],
-              ),
-            ),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              color: Colors.amber.shade50,
-              child: const Text(
-                'Canal de coordinación del evento. Los mensajes se '
-                'sincronizarán con el módulo de chat en tiempo real.',
-                style: TextStyle(fontSize: 11),
-              ),
-            ),
-            Expanded(
-              child: ListView.builder(
-                controller: _scrollController,
-                padding: const EdgeInsets.all(16),
-                itemCount: _messages.length,
-                itemBuilder: (context, index) {
-                  final message = _messages[index];
-                  return Align(
-                    alignment: message.isProvider
-                        ? Alignment.centerLeft
-                        : Alignment.centerRight,
-                    child: Container(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
-                      constraints: const BoxConstraints(maxWidth: 280),
-                      decoration: BoxDecoration(
-                        color: message.isProvider
-                            ? Colors.grey.shade200
-                            : colorScheme.primaryContainer,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        message.text,
-                        style: const TextStyle(fontSize: 13, height: 1.35),
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-            SafeArea(
-              top: false,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(12, 6, 12, 12),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: _messageController,
-                        textInputAction: TextInputAction.send,
-                        onSubmitted: (_) => _sendMessage(),
-                        decoration: InputDecoration(
-                          hintText: 'Escribe un mensaje...',
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 10,
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(24),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    IconButton.filled(
-                      onPressed: _sendMessage,
-                      icon: const Icon(Icons.send),
-                      tooltip: 'Enviar mensaje',
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _LocalChatMessage {
-  final String text;
-  final bool isProvider;
-
-  const _LocalChatMessage({required this.text, required this.isProvider});
 }

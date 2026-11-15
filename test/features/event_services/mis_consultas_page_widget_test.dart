@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:bebidas_delivery_app/features/chat/presentation/pages/chat_page.dart';
 import 'package:bebidas_delivery_app/features/event_services/domain/entities/consulta_servicio.dart';
 import 'package:bebidas_delivery_app/features/event_services/domain/usecases/crear_consulta_servicio_use_case.dart';
 import 'package:bebidas_delivery_app/features/event_services/domain/usecases/obtener_consultas_servicio_use_case.dart';
@@ -75,11 +76,10 @@ void main() {
     await tester.tap(find.text('Chat con Nibia'));
     await tester.pumpAndSettle();
 
-    expect(
-      find.textContaining('Canal de coordinación del evento'),
-      findsOneWidget,
-    );
-    expect(find.text('Chat con Nibia'), findsWidgets);
+    expect(find.byType(ChatPage), findsOneWidget);
+    expect(find.text('Proveedor de eventos'), findsOneWidget);
+    expect(find.text('DJ & Equipo de Sonido JBL'), findsWidgets);
+    expect(find.textContaining('envié una consulta'), findsOneWidget);
 
     await tester.enterText(find.byType(TextField), '¿Incluye luces robóticas?');
     await tester.tap(find.byIcon(Icons.send));

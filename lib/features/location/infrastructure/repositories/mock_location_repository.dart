@@ -1,6 +1,7 @@
 import '../../../../core/errors/failures.dart';
 import '../../../../core/result/result.dart';
 import '../../domain/entities/geo_coordinates.dart';
+import '../../domain/entities/location_fix.dart';
 import '../../domain/entities/nearby_store.dart';
 import '../../domain/repositories/location_repository.dart';
 import '../../domain/usecases/obtener_ubicacion_actual_use_case.dart';
@@ -13,6 +14,7 @@ class MockLocationRepository implements LocationRepository {
   bool isServiceEnabled;
   bool isTimeout;
   GeoCoordinates simulatedPosition;
+  double accuracyMeters;
   List<NearbyStore> mockStores;
 
   MockLocationRepository({
@@ -20,6 +22,7 @@ class MockLocationRepository implements LocationRepository {
     this.isPermanentlyDenied = false,
     this.isServiceEnabled = true,
     this.isTimeout = false,
+    this.accuracyMeters = 35,
     this.simulatedPosition = const GeoCoordinates(
       latitude: -0.9676534,
       longitude: -80.7088841, // Manta, Manabí
@@ -134,6 +137,20 @@ class MockLocationRepository implements LocationRepository {
       );
     }
     return Success(simulatedPosition);
+  }
+
+  @override
+  Future<Result<LocationFix, Failure>> getCurrentFix() async {
+    final result = await getCurrentPosition();
+    return result.fold(
+      onSuccess: (coordinates) => Success(
+        LocationFix(
+          coordinates: coordinates,
+          accuracyMeters: accuracyMeters,
+        ),
+      ),
+      onFailure: (failure) => FailureResult(failure),
+    );
   }
 
   @override
