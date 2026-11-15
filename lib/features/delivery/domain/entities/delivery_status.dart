@@ -31,6 +31,16 @@ enum DeliveryStatus {
       this == DeliveryStatus.arrivedAtStore ||
       this == DeliveryStatus.pickedUp ||
       this == DeliveryStatus.onTheWay;
+
+  String get label => switch (this) {
+    DeliveryStatus.pendingOffer => 'Buscando repartidor',
+    DeliveryStatus.driverAssigned => 'Repartidor asignado',
+    DeliveryStatus.arrivedAtStore => 'En el comercio',
+    DeliveryStatus.pickedUp => 'Pedido retirado',
+    DeliveryStatus.onTheWay => 'En camino',
+    DeliveryStatus.delivered => 'Entregado',
+    DeliveryStatus.cancelled => 'Cancelado',
+  };
 }
 
 /// Backwards compatibility alias for existing code
