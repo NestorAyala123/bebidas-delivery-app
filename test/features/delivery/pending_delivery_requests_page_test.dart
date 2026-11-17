@@ -14,6 +14,9 @@ import 'package:bebidas_delivery_app/features/delivery/presentation/pages/pendin
 /// Repositorio doble de prueba para simular fallas en la consulta
 class FakeErrorDeliveryRepository implements DeliveryRepository {
   @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+
+  @override
   Future<Result<List<DeliveryRequest>, Failure>> getPendingDeliveryRequests() async {
     return const FailureResult(
       ServerFailure('Error al cargar solicitudes pendientes'),

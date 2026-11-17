@@ -8,19 +8,39 @@ void main() {
   group('DeliveryRequest Domain Entity Tests', () {
     final testDate = DateTime(2026, 9, 23, 12, 0);
 
-    test('Creates valid DeliveryRequest with all required fields', () {
-      final request = DeliveryRequest(
-        id: 'del-001',
-        orderId: 'ord-100',
-        customerId: 'usr-1',
-        storeId: 'store-1',
-        originAddress: 'Av. Larco 456, Miraflores',
-        destinationAddress: 'Calle Berlin 123, Miraflores',
-        distanceInKm: 2.5,
-        referenceFare: 12.0,
-        isOrderConfirmedByStore: true,
+    DeliveryRequest createSampleRequest({
+      String id = 'del-001',
+      String orderId = 'ord-100',
+      String customerId = 'usr-1',
+      String storeId = 'store-1',
+      String originAddress = 'Av. Larco 456, Miraflores',
+      String destinationAddress = 'Calle Berlin 123, Miraflores',
+      double? distanceInKm = 2.5,
+      double referenceFare = 12.0,
+      DeliveryStatus status = DeliveryStatus.pendingOffer,
+      String? assignedDriverId,
+      int? agreedFareInCents,
+      bool isOrderConfirmedByStore = true,
+    }) {
+      return DeliveryRequest(
+        id: id,
+        orderId: orderId,
+        customerId: customerId,
+        storeId: storeId,
+        originAddress: originAddress,
+        destinationAddress: destinationAddress,
+        distanceInKm: distanceInKm,
+        referenceFare: referenceFare,
+        status: status,
+        assignedDriverId: assignedDriverId,
+        agreedFareInCents: agreedFareInCents,
+        isOrderConfirmedByStore: isOrderConfirmedByStore,
         createdAt: testDate,
       );
+    }
+
+    test('Creates valid DeliveryRequest with all required fields', () {
+      final request = createSampleRequest();
 
       expect(request.id, equals('del-001'));
       expect(request.orderId, equals('ord-100'));
@@ -39,21 +59,12 @@ void main() {
       expect(request.status.isActive, isTrue);
       expect(request.status.isTerminal, isFalse);
       expect(request.assignedDriverId, isNull);
+      expect(request.agreedFareInCents, isNull);
+      expect(request.agreedFare, isNull);
     });
 
     test('Transitions status through delivery lifecycle', () {
-      final request = DeliveryRequest(
-        id: 'del-001',
-        orderId: 'ord-100',
-        customerId: 'usr-1',
-        storeId: 'store-1',
-        originAddress: 'Av. Larco 456',
-        destinationAddress: 'Calle Berlin 123',
-        distanceInKm: 3.0,
-        referenceFare: 15.0,
-        isOrderConfirmedByStore: true,
-        createdAt: testDate,
-      );
+      final request = createSampleRequest(distanceInKm: 3.0, referenceFare: 15.0);
 
       // Driver assigned
       final assigned = request.copyWithAssignedDriver(driverId: 'drv-777');
@@ -101,49 +112,112 @@ void main() {
 
     test('Throws AssertionError when origin or destination is empty or fee negative', () {
       expect(
-        () => DeliveryRequest(
-          id: 'del-003',
-          orderId: 'ord-300',
-          customerId: 'usr-1',
-          storeId: 'store-1',
-          originAddress: '',
-          destinationAddress: 'Calle 1',
-          referenceFare: 10.0,
-          isOrderConfirmedByStore: true,
-          createdAt: testDate,
-        ),
+        () => createSampleRequest(originAddress: ''),
         throwsA(isA<AssertionError>()),
       );
 
       expect(
-        () => DeliveryRequest(
-          id: 'del-003',
-          orderId: 'ord-300',
-          customerId: 'usr-1',
-          storeId: 'store-1',
-          originAddress: 'Av. 1',
-          destinationAddress: '',
-          referenceFare: 10.0,
-          isOrderConfirmedByStore: true,
-          createdAt: testDate,
-        ),
+        () => createSampleRequest(destinationAddress: ''),
         throwsA(isA<AssertionError>()),
       );
 
       expect(
-        () => DeliveryRequest(
-          id: 'del-003',
-          orderId: 'ord-300',
-          customerId: 'usr-1',
-          storeId: 'store-1',
-          originAddress: 'Av. 1',
-          destinationAddress: 'Calle 2',
-          referenceFare: -5.0,
-          isOrderConfirmedByStore: true,
-          createdAt: testDate,
-        ),
+        () => createSampleRequest(referenceFare: -5.0),
         throwsA(isA<AssertionError>()),
       );
+    });
+
+    group('Negociación de entrega: assignDriver y agreedFareInCents (Semana 5)', () {
+      test('assignDriver asigna exitosamente el repartidor y la tarifa acordada', () {
+        final request = createSampleRequest();
+
+        final assigned = request.assignDriver(
+          driverId: 'drv-888',
+          agreedFareInCents: 450, // $4.50
+        );
+
+        expect(assigned.status, equals(DeliveryStatus.driverAssigned));
+        expect(assigned.assignedDriverId, equals('drv-888'));
+        expect(assigned.agreedFareInCents, equals(450));
+        expect(assigned.agreedFare, equals(4.50));
+        expect(assigned.status.isAssigned, isTrue);
+      });
+
+      test('assignDriver rechaza repartidor con id vacío', () {
+        final request = createSampleRequest();
+
+        expect(
+          () => request.assignDriver(driverId: '  ', agreedFareInCents: 450),
+          throwsA(isA<DomainException>()),
+        );
+      });
+
+      test('assignDriver rechaza asignación si la solicitud no está en pendingOffer (RN-NEG-01)', () {
+        final assignedRequest = createSampleRequest(
+          status: DeliveryStatus.driverAssigned,
+          assignedDriverId: 'drv-existing',
+        );
+
+        expect(
+          () => assignedRequest.assignDriver(driverId: 'drv-new', agreedFareInCents: 450),
+          throwsA(isA<DomainException>()),
+        );
+
+        final cancelledRequest = createSampleRequest(status: DeliveryStatus.cancelled);
+        expect(
+          () => cancelledRequest.assignDriver(driverId: 'drv-new', agreedFareInCents: 450),
+          throwsA(isA<DomainException>()),
+        );
+      });
+
+      test('assignDriver rechaza tarifas acordadas <= 0 o > 10.000.000 centavos (RN-NEG-03)', () {
+        final request = createSampleRequest();
+
+        expect(
+          () => request.assignDriver(driverId: 'drv-1', agreedFareInCents: 0),
+          throwsA(isA<DomainException>()),
+        );
+        expect(
+          () => request.assignDriver(driverId: 'drv-1', agreedFareInCents: -100),
+          throwsA(isA<DomainException>()),
+        );
+        expect(
+          () => request.assignDriver(driverId: 'drv-1', agreedFareInCents: 10000001),
+          throwsA(isA<DomainException>()),
+        );
+      });
+
+      test('Constructor valida agreedFareInCents si se proporciona', () {
+        expect(
+          () => createSampleRequest(agreedFareInCents: 0),
+          throwsA(isA<DomainException>()),
+        );
+        expect(
+          () => createSampleRequest(agreedFareInCents: -50),
+          throwsA(isA<DomainException>()),
+        );
+        expect(
+          () => createSampleRequest(agreedFareInCents: 10000001),
+          throwsA(isA<DomainException>()),
+        );
+
+        final valid = createSampleRequest(agreedFareInCents: 525);
+        expect(valid.agreedFareInCents, equals(525));
+        expect(valid.agreedFare, equals(5.25));
+      });
+
+      test('copyWith preserva agreedFareInCents', () {
+        final request = createSampleRequest().assignDriver(
+          driverId: 'drv-1',
+          agreedFareInCents: 350,
+        );
+
+        final copied = request.copyWith(destinationAddress: 'Nueva dirección');
+        expect(copied.destinationAddress, equals('Nueva dirección'));
+        expect(copied.assignedDriverId, equals('drv-1'));
+        expect(copied.agreedFareInCents, equals(350));
+        expect(copied.agreedFare, equals(3.50));
+      });
     });
   });
 }
