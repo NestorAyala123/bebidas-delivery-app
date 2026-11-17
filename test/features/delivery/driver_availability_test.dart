@@ -49,4 +49,36 @@ void main() {
       expect(find.text('Cambiar a Ocupado'), findsOneWidget);
     },
   );
+
+  testWidgets(
+    'DriverAvailabilityPage muestra Desconectado para el repartidor demo y permite activarlo',
+    (WidgetTester tester) async {
+      final repository = MockDeliveryRepository(
+        latency: Duration.zero,
+        seedTime: DateTime(2026, 1, 15),
+      );
+      final getUseCase = GetDriverAvailabilityUseCase(repository);
+      final setUseCase = SetDriverAvailabilityUseCase(repository);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: DriverAvailabilityPage(
+            driverId: 'seed-driver',
+            getAvailabilityUseCase: getUseCase,
+            setAvailabilityUseCase: setUseCase,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Desconectado'), findsOneWidget);
+      expect(find.text('Cambiar a Disponible'), findsOneWidget);
+
+      await tester.tap(find.text('Cambiar a Disponible'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Disponible'), findsOneWidget);
+      expect(find.text('Cambiar a Ocupado'), findsOneWidget);
+    },
+  );
 }

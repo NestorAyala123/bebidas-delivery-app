@@ -32,9 +32,11 @@ class Driver {
   bool get canAcceptDeliveries => status.isAvailable;
 
   /// RN02: Evaluates if the driver can take a specific delivery request.
-  /// Driver must be available and the request must be in pendingOffer status.
+  /// Driver must be available, request must be in pendingOffer and have no assigned driver.
   bool canTakeDeliveryRequest(DeliveryRequest request) {
-    return canAcceptDeliveries && request.status == DeliveryStatus.pendingOffer;
+    return canAcceptDeliveries &&
+        request.status == DeliveryStatus.pendingOffer &&
+        request.assignedDriverId == null;
   }
 
   /// Returns a copy of the driver with an updated operational status.

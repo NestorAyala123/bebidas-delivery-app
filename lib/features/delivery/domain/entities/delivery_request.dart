@@ -18,6 +18,7 @@ class DeliveryRequest {
   final DeliveryStatus status;
   final double? initialCustomerOffer;
   final String? assignedDriverId;
+  final int? agreedFareInCents;
   final DateTime createdAt;
 
   DeliveryRequest({
@@ -34,6 +35,7 @@ class DeliveryRequest {
     this.initialCustomerOffer,
     required bool isOrderConfirmedByStore, // RN01
     this.assignedDriverId,
+    this.agreedFareInCents,
     required this.createdAt,
   }) {
     assert(id.trim().isNotEmpty, 'El id no puede estar vacío');
@@ -48,6 +50,14 @@ class DeliveryRequest {
       assert(distanceInKm! >= 0, 'La distancia no puede ser negativa');
     }
 
+    if (agreedFareInCents != null) {
+      if (agreedFareInCents! <= 0 || agreedFareInCents! > 10000000) {
+        throw const DomainException(
+          'RN-NEG-03: La tarifa acordada en centavos debe ser mayor a 0 y no exceder 10.000.000.',
+        );
+      }
+    }
+
     // RN01 Enforcement:
     if (!isOrderConfirmedByStore &&
         deliveryMode == DeliveryMode.externalDriver) {
@@ -60,8 +70,30 @@ class DeliveryRequest {
   /// Backwards compatibility getter for suggested fee
   double get suggestedFee => referenceFare;
 
-  /// Returns a copy of the request with an assigned driver
-  DeliveryRequest copyWithAssignedDriver({required String driverId}) {
+  /// Tarifa final acordada tras la negociación expresada en double (solo lectura).
+  double? get agreedFare =>
+      agreedFareInCents != null ? agreedFareInCents! / 100.0 : null;
+
+  /// Asigna un repartidor y fija la tarifa acordada en centavos a la solicitud.
+  /// Enforces RN-NEG-01: La solicitud debe estar en pendingOffer y no tener repartidor asignado.
+  /// Enforces RN-NEG-03: La tarifa acordada debe ser mayor a 0 y no exceder 10.000.000 centavos.
+  DeliveryRequest assignDriver({
+    required String driverId,
+    required int agreedFareInCents,
+  }) {
+    if (driverId.trim().isEmpty) {
+      throw const DomainException('El id del repartidor no puede estar vacío.');
+    }
+    if (status != DeliveryStatus.pendingOffer || assignedDriverId != null) {
+      throw const DomainException(
+        'RN-NEG-01: Solo se puede asignar repartidor a solicitudes pendientes sin asignación previa.',
+      );
+    }
+    if (agreedFareInCents <= 0 || agreedFareInCents > 10000000) {
+      throw const DomainException(
+        'RN-NEG-03: La tarifa acordada en centavos debe ser mayor a 0 y no exceder el máximo permitido.',
+      );
+    }
     return DeliveryRequest(
       id: id,
       orderId: orderId,
@@ -76,6 +108,31 @@ class DeliveryRequest {
       initialCustomerOffer: initialCustomerOffer,
       isOrderConfirmedByStore: true,
       assignedDriverId: driverId,
+      agreedFareInCents: agreedFareInCents,
+      createdAt: createdAt,
+    );
+  }
+
+  /// Returns a copy of the request with an assigned driver
+  DeliveryRequest copyWithAssignedDriver({
+    required String driverId,
+    int? agreedFareInCents,
+  }) {
+    return DeliveryRequest(
+      id: id,
+      orderId: orderId,
+      customerId: customerId,
+      storeId: storeId,
+      originAddress: originAddress,
+      destinationAddress: destinationAddress,
+      distanceInKm: distanceInKm,
+      referenceFare: referenceFare,
+      deliveryMode: deliveryMode,
+      status: DeliveryStatus.driverAssigned,
+      initialCustomerOffer: initialCustomerOffer,
+      isOrderConfirmedByStore: true,
+      assignedDriverId: driverId,
+      agreedFareInCents: agreedFareInCents ?? this.agreedFareInCents,
       createdAt: createdAt,
     );
   }
@@ -116,6 +173,7 @@ class DeliveryRequest {
       initialCustomerOffer: initialCustomerOffer,
       isOrderConfirmedByStore: true,
       assignedDriverId: assignedDriverId,
+      agreedFareInCents: agreedFareInCents,
       createdAt: createdAt,
     );
   }
@@ -134,6 +192,7 @@ class DeliveryRequest {
     DeliveryStatus? status,
     double? initialCustomerOffer,
     String? assignedDriverId,
+    int? agreedFareInCents,
     DateTime? createdAt,
   }) {
     return DeliveryRequest(
@@ -150,6 +209,7 @@ class DeliveryRequest {
       initialCustomerOffer: initialCustomerOffer ?? this.initialCustomerOffer,
       isOrderConfirmedByStore: true, // La entidad ya superó RN01 al construirse
       assignedDriverId: assignedDriverId ?? this.assignedDriverId,
+      agreedFareInCents: agreedFareInCents ?? this.agreedFareInCents,
       createdAt: createdAt ?? this.createdAt,
     );
   }

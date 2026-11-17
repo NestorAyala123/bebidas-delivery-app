@@ -133,15 +133,21 @@ class _DriverAvailabilityPageState extends State<DriverAvailabilityPage> {
                 const CircularProgressIndicator()
               else ...[
                 Text(
-                  _currentStatus == DriverStatus.available
-                      ? 'Disponible'
-                      : 'Ocupado',
+                  switch (_currentStatus) {
+                    DriverStatus.available => 'Disponible',
+                    DriverStatus.busy => 'Ocupado',
+                    DriverStatus.offline => 'Desconectado',
+                    null => 'Desconocido',
+                  },
                   style: TextStyle(
                     fontSize: 26,
                     fontWeight: FontWeight.bold,
-                    color: _currentStatus == DriverStatus.available
-                        ? Colors.green.shade700
-                        : Colors.orange.shade800,
+                    color: switch (_currentStatus) {
+                      DriverStatus.available => Colors.green.shade700,
+                      DriverStatus.busy => Colors.orange.shade800,
+                      DriverStatus.offline => Colors.grey.shade700,
+                      null => Colors.grey,
+                    },
                   ),
                 ),
                 const SizedBox(height: 24),

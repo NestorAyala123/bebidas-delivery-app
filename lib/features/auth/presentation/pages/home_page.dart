@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../chat/presentation/chat_launcher.dart';
 import '../../../chat/presentation/widgets/chat_inbox_button.dart';
+import '../../../delivery/presentation/routes/delivery_routes.dart';
 import '../../../event_services/presentation/pages/listado_servicios_page.dart';
 import '../../../location/presentation/pages/mapa_proximo_page.dart';
 import '../../../orders/presentation/pages/order_summary_page.dart';
@@ -222,16 +223,10 @@ class HomePage extends StatelessWidget {
               ),
               title: const Text('Módulo de Delivery'),
               subtitle: const Text(
-                'Estado de repartos y entregas colaborativas',
+                'Ofertas, contraofertas y asignación de repartidor',
               ),
               trailing: const Icon(Icons.chevron_right),
-              onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Módulo de entregas activado para tu rol.'),
-                  ),
-                );
-              },
+              onTap: () => Navigator.pushNamed(context, DeliveryRoutes.offers),
             ),
             const SizedBox(height: 32),
             OutlinedButton.icon(
