@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../../../../core/di/service_locator.dart';
@@ -8,6 +10,7 @@ import '../../../users/domain/entities/identity_contract.dart';
 import '../../application/dtos/chat_dtos.dart';
 import '../../application/use_cases/create_conversation_use_case.dart';
 import '../../application/use_cases/list_conversations_use_case.dart';
+import '../../application/use_cases/watch_unread_messages_use_case.dart';
 import '../../domain/entities/conversation.dart';
 import '../../domain/services/conversation_policy.dart';
 import '../routes/chat_routes.dart';
@@ -33,16 +36,37 @@ class _ConversationsView extends StatefulWidget {
 }
 
 class _ConversationsViewState extends State<_ConversationsView> {
-  late Future<List<ConversationSummary>> _conversations = _load();
+  List<ConversationSummary>? _items;
+  bool _failed = false;
+  StreamSubscription<UnreadMessages>? _changes;
 
-  Future<List<ConversationSummary>> _load() async {
+  @override
+  void initState() {
+    super.initState();
+    _reload();
+    // New messages or reads elsewhere refresh the inbox in place.
+    _changes = sl
+        .get<WatchUnreadMessagesUseCase>()(requester: widget.requester)
+        .dataOrNull
+        ?.skip(1)
+        .listen((_) => _reload());
+  }
+
+  @override
+  void dispose() {
+    _changes?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _reload() async {
     final result = await sl.get<ListConversationsUseCase>()(
       requester: widget.requester,
     );
-    return result.fold(
-      onSuccess: (items) => items,
-      onFailure: (failure) => throw failure,
-    );
+    if (!mounted) return;
+    setState(() {
+      _items = result.dataOrNull ?? _items;
+      _failed = result.isFailure;
+    });
   }
 
   Future<void> _openRoom(String conversationId, String title) async {
@@ -54,7 +78,7 @@ class _ConversationsViewState extends State<_ConversationsView> {
         title: title,
       ),
     );
-    if (mounted) setState(() => _conversations = _load());
+    if (mounted) _reload();
   }
 
   Future<void> _startConversation() async {
@@ -133,40 +157,85 @@ class _ConversationsViewState extends State<_ConversationsView> {
         icon: const Icon(Icons.add_comment_outlined),
         label: const Text('Nueva conversación'),
       ),
-      body: FutureBuilder<List<ConversationSummary>>(
-        future: _conversations,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState != ConnectionState.done) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError) {
-            return const Center(child: Text('No se pudo cargar tus mensajes'));
-          }
-          final items = snapshot.data ?? const [];
-          if (items.isEmpty) {
-            return const Center(
-              child: Text('Aún no tienes conversaciones. Inicia una.'),
-            );
-          }
-          return ListView.separated(
-            itemCount: items.length,
-            separatorBuilder: (_, _) => const Divider(height: 1),
-            itemBuilder: (context, index) {
-              final item = items[index];
-              return ListTile(
-                leading: CircleAvatar(
-                  child: Icon(_kindIcon(item.conversation.type)),
-                ),
-                title: Text(item.title),
-                subtitle: Text(item.kindLabel),
-                onTap: () => _openRoom(item.conversation.id, item.title),
-              );
-            },
-          );
-        },
+      body: _buildBody(context),
+    );
+  }
+
+  Widget _buildBody(BuildContext context) {
+    final items = _items;
+    if (items == null) {
+      return _failed
+          ? const Center(child: Text('No se pudo cargar tus mensajes'))
+          : const Center(child: CircularProgressIndicator());
+    }
+    if (items.isEmpty) {
+      return const Center(
+        child: Text('Aún no tienes conversaciones. Inicia una.'),
+      );
+    }
+    return ListView.separated(
+      itemCount: items.length,
+      separatorBuilder: (_, _) => const Divider(height: 1),
+      itemBuilder: (context, index) => _ConversationTile(
+        item: items[index],
+        myId: widget.requester.id,
+        onTap: () =>
+            _openRoom(items[index].conversation.id, items[index].title),
       ),
     );
   }
+}
+
+class _ConversationTile extends StatelessWidget {
+  final ConversationSummary item;
+  final String myId;
+  final VoidCallback onTap;
+
+  const _ConversationTile({
+    required this.item,
+    required this.myId,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final unread = item.unreadCount;
+    final last = item.lastMessage;
+    final preview = last == null
+        ? item.kindLabel
+        : '${last.senderId == myId ? 'Tú: ' : ''}${last.text}';
+    return ListTile(
+      leading: CircleAvatar(child: Icon(_kindIcon(item.conversation.type))),
+      title: Text(
+        item.title,
+        style: unread > 0 ? const TextStyle(fontWeight: FontWeight.bold) : null,
+      ),
+      subtitle: Text(preview, maxLines: 1, overflow: TextOverflow.ellipsis),
+      trailing: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          if (last != null)
+            Text(_shortTime(last.sentAt), style: theme.textTheme.labelSmall),
+          if (unread > 0) ...[
+            const SizedBox(height: 4),
+            Semantics(
+              label: '$unread sin leer',
+              child: Badge(label: Text('$unread')),
+            ),
+          ],
+        ],
+      ),
+      onTap: onTap,
+    );
+  }
+}
+
+String _shortTime(DateTime value) {
+  final local = value.toLocal();
+  String two(int n) => n.toString().padLeft(2, '0');
+  return '${two(local.hour)}:${two(local.minute)}';
 }
 
 IconData _kindIcon(ConversationType type) => switch (type) {

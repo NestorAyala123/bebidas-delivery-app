@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/di/service_locator.dart';
+import '../../../chat/presentation/widgets/chat_inbox_button.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/result/result.dart';
 import '../../../auth/domain/entities/user_session.dart';
@@ -172,6 +173,8 @@ class _StoreOrdersPageState extends State<StoreOrdersPage> {
       appBar: AppBar(
         title: const Text('Pedidos del comercio'),
         actions: [
+          // Acceso al chat desde el comercio (módulo chat).
+          const ChatInboxButton(),
           IconButton(
             tooltip: 'Actualizar',
             onPressed: _loading ? null : _loadOrders,

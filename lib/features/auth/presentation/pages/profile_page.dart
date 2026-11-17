@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/di/service_locator.dart';
 import '../../../chat/presentation/routes/chat_routes.dart';
+import '../../../chat/presentation/widgets/chat_inbox_button.dart';
 import '../../../users/domain/entities/app_user.dart';
 import '../state/auth_controller.dart';
 import 'edit_profile_page.dart';
+import 'home_page.dart';
 import 'login_page.dart';
 
 class ProfilePage extends StatelessWidget {
@@ -35,6 +37,7 @@ class ProfilePage extends StatelessWidget {
           appBar: AppBar(
             title: const Text('Mi perfil'),
             actions: [
+              const ChatInboxButton(),
               IconButton(
                 onPressed: () async {
                   await controller.logout();
@@ -81,6 +84,18 @@ class ProfilePage extends StatelessWidget {
                           Navigator.pushNamed(context, ChatRoutes.conversations),
                       icon: const Icon(Icons.chat_bubble_outline),
                       label: const Text('Mensajes'),
+                    ),
+                    const SizedBox(height: 8),
+                    // Role panel: store orders, services, map and chat.
+                    OutlinedButton.icon(
+                      onPressed: () => Navigator.push(
+                        context,
+                        MaterialPageRoute<void>(
+                          builder: (_) => HomePage(session: session),
+                        ),
+                      ),
+                      icon: const Icon(Icons.dashboard_outlined),
+                      label: const Text('Mi panel'),
                     ),
                   ],
                 ),

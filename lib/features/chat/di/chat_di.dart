@@ -4,6 +4,8 @@ import '../../stores/domain/repositories/store_repository.dart';
 import '../../users/application/use_cases/get_profile_use_case.dart';
 import '../application/use_cases/create_conversation_use_case.dart';
 import '../application/use_cases/list_conversations_use_case.dart';
+import '../application/use_cases/mark_conversation_read_use_case.dart';
+import '../application/use_cases/watch_unread_messages_use_case.dart';
 import '../application/use_cases/open_inquiry_chat_use_case.dart';
 import '../application/use_cases/send_message_use_case.dart';
 import '../application/use_cases/watch_messages_use_case.dart';
@@ -49,6 +51,12 @@ class ChatDi implements FeatureDiModule {
     );
     locator.registerFactory<WatchMessagesUseCase>(
       () => WatchMessagesUseCase(locator.get<ChatRepository>()),
+    );
+    locator.registerFactory<MarkConversationReadUseCase>(
+      () => MarkConversationReadUseCase(locator.get<ChatRepository>()),
+    );
+    locator.registerFactory<WatchUnreadMessagesUseCase>(
+      () => WatchUnreadMessagesUseCase(locator.get<ChatRepository>()),
     );
   }
 }

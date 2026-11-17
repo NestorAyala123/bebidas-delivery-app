@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../chat/presentation/chat_launcher.dart';
+import '../../../chat/presentation/widgets/chat_inbox_button.dart';
 import '../../../event_services/presentation/pages/listado_servicios_page.dart';
 import '../../../location/presentation/pages/mapa_proximo_page.dart';
 import '../../../orders/presentation/pages/order_summary_page.dart';
@@ -28,6 +30,7 @@ class HomePage extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Bebidas Delivery - Panel'),
         actions: [
+          const ChatInboxButton(),
           IconButton(
             icon: const Icon(Icons.logout),
             tooltip: 'Cerrar Sesión',
@@ -138,6 +141,19 @@ class HomePage extends StatelessWidget {
                   ),
                 );
               },
+            ),
+            const Divider(),
+
+            // Chat: available to every role, with the unread count.
+            ListTile(
+              leading: const CircleAvatar(
+                backgroundColor: Color(0xFFFCE4EC),
+                child: Icon(Icons.forum_outlined, color: Colors.pink),
+              ),
+              title: const Text('Mensajes'),
+              subtitle: const Text('Chats con clientes, comercios y proveedores'),
+              trailing: const ChatInboxButton(notify: false),
+              onTap: () => ChatLauncher.openInbox(context),
             ),
             const Divider(),
 

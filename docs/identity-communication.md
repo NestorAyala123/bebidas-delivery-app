@@ -214,6 +214,57 @@ Pruebas: `test/features/chat/inquiry_chat_test.dart` (política, apertura,
 idempotencia, roles, intrusos) y `test/features/chat/chat_session_states_test.dart`
 (logout, cambio de cuenta, bandeja con asunto).
 
+## 7. Semana 5: chat completo, acceso desde comercio y servicios, avisos
+
+Leídos y no leídos:
+
+- `ChatRepository` guarda hasta cuándo leyó cada participante
+  (`markAsRead` / `lastReadAt`) y publica `changes` cuando se envía o se lee
+  un mensaje.
+- `MarkConversationReadUseCase`: solo un participante puede marcar como leído.
+  `ChatPage` lo llama al abrir el chat y con cada mensaje que ve.
+- `ListConversationsUseCase` devuelve el último mensaje (`lastMessage`) y los
+  no leídos (`unreadCount`). Los mensajes propios nunca cuentan como no leídos.
+- La bandeja (`/chat`) se actualiza sola: muestra vista previa ("Tú: …"), hora,
+  título en negrita y contador cuando hay mensajes sin leer.
+
+Aviso de mensajes nuevos dentro de la app (sin notificaciones push):
+
+- `WatchUnreadMessagesUseCase`: flujo en vivo con el total de no leídos y el
+  mensaje más reciente, calculado **solo** con las conversaciones del usuario.
+- `ChatInboxButton`: ícono "Mensajes" con contador para cualquier barra
+  superior. Si su pantalla es la visible y llega un mensaje nuevo, muestra
+  "Nuevo mensaje: …" con la acción **Ver**. Al cerrar sesión el contador se
+  limpia; si el módulo de chat no está registrado (pruebas aisladas de otros
+  módulos) no se dibuja.
+
+Acceso desde comercio y servicios:
+
+| Pantalla | Módulo | Cambio |
+| --- | --- | --- |
+| `orders/.../store_orders_page.dart` (Pedidos del comercio) | Pedidos | `ChatInboxButton` en la barra |
+| `stores/.../store_management_page.dart` (Mis comercios) | Comercios | `ChatInboxButton` en la barra |
+| `event_services/.../mis_consultas_page.dart` (Mis consultas) | Servicios | `ChatInboxButton` en la barra |
+| `auth/.../profile_page.dart`, `home_page.dart` | Identidad | Botón con contador, opción "Mensajes" y botón "Mi panel" en el perfil |
+
+- `OpenInquiryChatUseCase.forServiceCustomer` / `ChatLauncher.openServiceCustomerChat`:
+  el proveedor abre el chat con el cliente de una consulta. Solo si el
+  servicio es suyo, y reutiliza la conversación que abrió el cliente.
+
+Pendiente de coordinar con Adriano: la tarjeta de "Mis consultas" abre
+`_ConsultaChatSheet`, un chat local de demostración ("Chat con Nibia") cuyos
+mensajes no se guardan ni pasan por el control de participantes. Para usar el
+chat real basta reemplazar `_openChat` por
+`ChatLauncher.openServiceChat(context, serviceId: consulta.serviceId, serviceTitle: consulta.serviceTitle)`
+(cliente) u `openServiceCustomerChat(...)` (proveedor), y ajustar su prueba de
+widget. Además, `customerId` usa por defecto `'customer-demo'`, que no es una
+cuenta real.
+
+Pruebas: `test/features/chat/unread_messages_test.dart` (no leídos, lectura
+solo por participantes, aviso en vivo, proveedor → cliente) y
+`test/features/chat/chat_inbox_button_test.dart` (contador, aviso, cierre de
+sesión, sin módulo de chat).
+
 ## Evidencia sugerida para el PR
 
 ```bash

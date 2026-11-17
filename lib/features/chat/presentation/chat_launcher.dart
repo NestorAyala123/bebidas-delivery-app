@@ -49,6 +49,28 @@ class ChatLauncher {
     ),
   );
 
+  /// Proveedor → cliente de una consulta (desde "Mis consultas").
+  static Future<void> openServiceCustomerChat(
+    BuildContext context, {
+    required String serviceId,
+    required String serviceTitle,
+    required String customerId,
+    required String customerName,
+  }) => _launch(
+    context,
+    title: '$serviceTitle · $customerName',
+    open: (useCase, identity) => useCase.forServiceCustomer(
+      serviceId: serviceId,
+      serviceTitle: serviceTitle,
+      customerId: customerId,
+      requester: identity,
+    ),
+  );
+
+  /// Opens the signed-in user's inbox.
+  static Future<void> openInbox(BuildContext context) =>
+      Navigator.pushNamed(context, ChatRoutes.conversations);
+
   static Future<void> _launch(
     BuildContext context, {
     required String title,

@@ -12,6 +12,8 @@ class InMemoryChatRepository implements ChatRepository {
   final Map<String, Conversation> _conversations = {};
   final Map<String, List<ChatMessage>> _messages = {};
   final Map<String, StreamController<List<ChatMessage>>> _changes = {};
+  final Map<String, Map<String, DateTime>> _reads = {};
+  final StreamController<void> _anyChange = StreamController<void>.broadcast();
 
   InMemoryChatRepository({DateTime Function()? now})
     : _now = now ?? DateTime.now;
@@ -68,6 +70,7 @@ class InMemoryChatRepository implements ChatRepository {
       updatedAt: message.sentAt,
     );
     _changes[message.conversationId]?.add(_snapshot(message.conversationId));
+    _anyChange.add(null);
     return const Success(null);
   }
 
@@ -88,6 +91,44 @@ class InMemoryChatRepository implements ChatRepository {
     );
     return controller.stream;
   }
+
+  @override
+  Future<Result<List<ChatMessage>, Failure>> getMessages(
+    String conversationId,
+  ) async {
+    if (!_conversations.containsKey(conversationId)) {
+      return const FailureResult(NotFoundFailure('Conversación no encontrada'));
+    }
+    return Success(_snapshot(conversationId));
+  }
+
+  @override
+  Future<Result<void, Failure>> markAsRead({
+    required String conversationId,
+    required String userId,
+    required DateTime readAt,
+  }) async {
+    if (!_conversations.containsKey(conversationId)) {
+      return const FailureResult(NotFoundFailure('Conversación no encontrada'));
+    }
+    final reads = _reads.putIfAbsent(conversationId, () => {});
+    final previous = reads[userId];
+    // Reading never moves backwards.
+    if (previous == null || readAt.isAfter(previous)) {
+      reads[userId] = readAt;
+      _anyChange.add(null);
+    }
+    return const Success(null);
+  }
+
+  @override
+  Future<Result<DateTime?, Failure>> lastReadAt({
+    required String conversationId,
+    required String userId,
+  }) async => Success(_reads[conversationId]?[userId]);
+
+  @override
+  Stream<void> get changes => _anyChange.stream;
 
   List<ChatMessage> _snapshot(String conversationId) =>
       List.unmodifiable(_messages[conversationId] ?? const []);
