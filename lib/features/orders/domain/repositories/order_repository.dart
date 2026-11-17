@@ -1,6 +1,7 @@
 import '../../../../core/errors/failures.dart';
 import '../../../../core/result/result.dart';
 import '../entities/order.dart';
+import '../entities/order_delivery_method.dart';
 import '../entities/order_status.dart';
 
 abstract class OrderRepository {
@@ -23,6 +24,11 @@ abstract class OrderRepository {
   Future<Result<Order, Failure>> cancelOrder({
     required String orderId,
     required String customerId,
+  });
+  Future<Result<Order, Failure>> changeDeliveryMethodAfterNoDrivers({
+    required String orderId,
+    required String customerId,
+    required OrderDeliveryMethod deliveryMethod,
   });
   Future<Result<List<Order>, Failure>> getOrdersByCustomer(String customerId);
   Future<Result<List<Order>, Failure>> getOrdersByStore(String storeId);

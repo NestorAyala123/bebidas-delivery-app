@@ -5,9 +5,12 @@ import '../../../../core/result/result.dart';
 import '../../../auth/domain/entities/user_session.dart';
 import '../../application/use_cases/cancel_order_use_case.dart';
 import '../../application/use_cases/get_customer_orders_use_case.dart';
+import '../../application/use_cases/order_delivery_alternatives_use_case.dart';
 import '../../domain/entities/order.dart';
 import '../../domain/entities/order_delivery_method.dart';
 import '../../domain/entities/order_status.dart';
+
+enum _NoDriversSelection { wait, increaseOffer, pickup, ownDelivery, cancel }
 
 /// Screen displaying the customer's initial order history, showing pending status
 /// and immutable frozen historical prices (RN08).
@@ -15,12 +18,16 @@ class OrdersHistoryPage extends StatefulWidget {
   final UserSession session;
   final GetCustomerOrdersUseCase? getCustomerOrdersUseCase;
   final CancelOrderUseCase? cancelOrderUseCase;
+  final OrderDeliveryAlternativesUseCase? deliveryAlternativesUseCase;
+  final Future<void> Function(Order order)? onIncreaseDeliveryOffer;
 
   const OrdersHistoryPage({
     super.key,
     required this.session,
     this.getCustomerOrdersUseCase,
     this.cancelOrderUseCase,
+    this.deliveryAlternativesUseCase,
+    this.onIncreaseDeliveryOffer,
   });
 
   @override
@@ -43,6 +50,10 @@ class _OrdersHistoryPageState extends State<OrdersHistoryPage> {
       (sl.isRegistered<CancelOrderUseCase>()
           ? sl.get<CancelOrderUseCase>()
           : throw Exception('CancelOrderUseCase no registrado'));
+
+  OrderDeliveryAlternativesUseCase get _alternativesUseCase =>
+      widget.deliveryAlternativesUseCase ??
+      sl.get<OrderDeliveryAlternativesUseCase>();
 
   @override
   void initState() {
@@ -106,6 +117,129 @@ class _OrdersHistoryPageState extends State<OrdersHistoryPage> {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text(failure.message)));
+    }
+  }
+
+  Future<void> _showDeliveryAlternatives(Order order) async {
+    final result = await _alternativesUseCase.availableFor(
+      order: order,
+      customerId: widget.session.userId,
+    );
+    if (!mounted) return;
+
+    switch (result) {
+      case FailureResult(:final failure):
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(failure.message)));
+      case Success(:final data):
+        final selected = await showModalBottomSheet<_NoDriversSelection>(
+          context: context,
+          builder: (context) => SafeArea(
+            child: ListView(
+              shrinkWrap: true,
+              padding: const EdgeInsets.all(16),
+              children: [
+                Text(
+                  'No hay repartidores disponibles',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Puedes volver a intentar la búsqueda o elegir una alternativa disponible.',
+                ),
+                ListTile(
+                  leading: const Icon(Icons.hourglass_top),
+                  title: const Text('Esperar más repartidores'),
+                  onTap: () =>
+                      Navigator.pop(context, _NoDriversSelection.wait),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.price_change),
+                  title: const Text('Aumentar tarifa ofrecida'),
+                  onTap: () => Navigator.pop(
+                    context,
+                    _NoDriversSelection.increaseOffer,
+                  ),
+                ),
+                for (final method in data)
+                  ListTile(
+                    leading: Icon(
+                      method == OrderDeliveryMethod.pickup
+                          ? Icons.storefront
+                          : Icons.delivery_dining,
+                    ),
+                    title: Text(_deliveryMethodLabel(method)),
+                    onTap: () => Navigator.pop(
+                      context,
+                      method == OrderDeliveryMethod.pickup
+                          ? _NoDriversSelection.pickup
+                          : _NoDriversSelection.ownDelivery,
+                    ),
+                  ),
+                ListTile(
+                  leading: const Icon(Icons.cancel_outlined, color: Colors.red),
+                  title: const Text('Cancelar pedido'),
+                  onTap: () =>
+                      Navigator.pop(context, _NoDriversSelection.cancel),
+                ),
+              ],
+            ),
+          ),
+        );
+        if (!mounted || selected == null) return;
+        if (selected == _NoDriversSelection.wait) {
+          final waitResult = await _alternativesUseCase.waitForAvailableDrivers(
+            order: order,
+            customerId: widget.session.userId,
+          );
+          if (!mounted) return;
+          switch (waitResult) {
+            case Success():
+              await _fetchOrders();
+            case FailureResult(:final failure):
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text(failure.message)));
+          }
+          return;
+        }
+        if (selected == _NoDriversSelection.increaseOffer) {
+          final onIncrease = widget.onIncreaseDeliveryOffer;
+          if (onIncrease == null) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text(
+                  'La negociación de tarifa se gestiona desde el módulo de delivery.',
+                ),
+              ),
+            );
+          } else {
+            await onIncrease(order);
+          }
+          return;
+        }
+        if (selected == _NoDriversSelection.cancel) {
+          await _cancelOrder(order);
+          return;
+        }
+
+        final changeResult = await _alternativesUseCase.select(
+          order: order,
+          customerId: widget.session.userId,
+          deliveryMethod: selected == _NoDriversSelection.pickup
+              ? OrderDeliveryMethod.pickup
+              : OrderDeliveryMethod.storeDelivery,
+        );
+        if (!mounted) return;
+        switch (changeResult) {
+          case Success():
+            await _fetchOrders();
+          case FailureResult(:final failure):
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text(failure.message)));
+        }
     }
   }
 
@@ -258,6 +392,16 @@ class _OrdersHistoryPageState extends State<OrdersHistoryPage> {
                 ),
               ],
             ),
+            Row(
+              children: [
+                const Icon(Icons.payments_outlined, size: 16, color: Colors.grey),
+                const SizedBox(width: 6),
+                Text(
+                  'Pago: ${order.paymentMethod.displayName}',
+                  style: const TextStyle(fontSize: 13),
+                ),
+              ],
+            ),
             if (order.rejectionReason != null)
               Padding(
                 padding: const EdgeInsets.only(top: 6),
@@ -267,6 +411,14 @@ class _OrdersHistoryPageState extends State<OrdersHistoryPage> {
                 ),
               ),
             const SizedBox(height: 8),
+            if (order.status == OrderStatus.noDriversAvailable) ...[
+              const SizedBox(height: 8),
+              OutlinedButton.icon(
+                onPressed: () => _showDeliveryAlternatives(order),
+                icon: const Icon(Icons.alt_route),
+                label: const Text('Ver alternativas de entrega'),
+              ),
+            ],
             const Text(
               'Seguimiento',
               style: TextStyle(fontWeight: FontWeight.w600),
@@ -408,6 +560,7 @@ class _OrdersHistoryPageState extends State<OrdersHistoryPage> {
         OrderStatus.pickedUp => Colors.teal.shade800,
         OrderStatus.readyForDelivery => Colors.teal.shade700,
         OrderStatus.lookingForDriver => Colors.purple.shade700,
+        OrderStatus.noDriversAvailable => Colors.deepOrange.shade700,
         OrderStatus.driverAssigned => Colors.indigo.shade700,
         OrderStatus.inDelivery => Colors.blue.shade700,
         OrderStatus.delivered => Colors.green.shade700,
@@ -423,6 +576,7 @@ class _OrdersHistoryPageState extends State<OrdersHistoryPage> {
         OrderStatus.pickedUp => Icons.shopping_bag,
         OrderStatus.readyForDelivery => Icons.inventory_2,
         OrderStatus.lookingForDriver => Icons.search,
+        OrderStatus.noDriversAvailable => Icons.person_search,
         OrderStatus.driverAssigned => Icons.two_wheeler,
         OrderStatus.inDelivery => Icons.local_shipping,
         OrderStatus.delivered => Icons.done_all,

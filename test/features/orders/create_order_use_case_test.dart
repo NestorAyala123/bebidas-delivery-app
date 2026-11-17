@@ -5,6 +5,7 @@ import 'package:bebidas_delivery_app/features/cart/domain/entities/cart_item.dar
 import 'package:bebidas_delivery_app/features/orders/application/use_cases/create_order_use_case.dart';
 import 'package:bebidas_delivery_app/features/orders/domain/entities/order.dart';
 import 'package:bebidas_delivery_app/features/orders/domain/entities/order_delivery_method.dart';
+import 'package:bebidas_delivery_app/features/orders/domain/entities/order_payment_method.dart';
 import 'package:bebidas_delivery_app/features/orders/domain/entities/order_status.dart';
 import 'package:bebidas_delivery_app/features/orders/domain/repositories/order_repository.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -39,6 +40,7 @@ void main() {
           deliveryAddress: 'Manta',
           cart: cart,
           deliveryMethod: OrderDeliveryMethod.externalDelivery,
+          paymentMethod: OrderPaymentMethod.bankTransfer,
           missingContainersFee: 1.25,
         ),
       );
@@ -46,6 +48,7 @@ void main() {
 
       expect(repository.savedOrder, same(order));
       expect(order.status, OrderStatus.created);
+      expect(order.paymentMethod, OrderPaymentMethod.bankTransfer);
       expect(order.createdAt, createdAt);
       expect(order.items.single.frozenUnitPrice, 2.5);
       expect(order.items.single.containerDepositPrice, 0.5);
@@ -66,6 +69,7 @@ void main() {
           deliveryAddress: 'Manta',
           cart: Cart(),
           deliveryMethod: OrderDeliveryMethod.externalDelivery,
+          paymentMethod: OrderPaymentMethod.cash,
         ),
       );
 
@@ -108,6 +112,13 @@ class _FakeOrderRepository implements OrderRepository {
   Future<Result<Order, Failure>> cancelOrder({
     required String orderId,
     required String customerId,
+  }) => throw UnimplementedError();
+
+  @override
+  Future<Result<Order, Failure>> changeDeliveryMethodAfterNoDrivers({
+    required String orderId,
+    required String customerId,
+    required OrderDeliveryMethod deliveryMethod,
   }) => throw UnimplementedError();
 
   @override
