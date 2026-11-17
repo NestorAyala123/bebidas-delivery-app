@@ -72,5 +72,16 @@ void main() {
         throwsAssertionError,
       );
     });
+
+    test('Rejects a negative required-container count', () {
+      expect(
+        () => calculator.calculateMissingFee(
+          requiredContainers: -1,
+          returnedContainers: 0,
+          depositPerContainer: 1,
+        ),
+        throwsAssertionError,
+      );
+    });
   });
 }

@@ -68,5 +68,16 @@ void main() {
       expect(product.getUnitPriceForQuantity(5), equals(10.0));
       expect(product.getUnitPriceForQuantity(6), equals(9.0));
     });
+
+    test('rejects a non-positive purchase quantity', () {
+      const product = Product(
+        id: 'prod-1',
+        storeId: 'store-1',
+        name: 'Cerveza',
+        basePrice: 10,
+      );
+
+      expect(() => product.getUnitPriceForQuantity(0), throwsAssertionError);
+    });
   });
 }

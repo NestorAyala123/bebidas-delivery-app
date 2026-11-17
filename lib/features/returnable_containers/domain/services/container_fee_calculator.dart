@@ -13,11 +13,41 @@ class ContainerFeeCalculator {
     required double depositPerContainer,
   }) {
     assert(
+      requiredContainers >= 0,
+      'La cantidad de envases requeridos no puede ser negativa',
+    );
+    assert(
       returnedContainers >= 0,
       'La cantidad de envases devueltos no puede ser negativa',
     );
+    assert(
+      depositPerContainer >= 0,
+      'La garantía por envase no puede ser negativa',
+    );
 
-    if (requiredContainers <= 0 || depositPerContainer <= 0) {
+    if (requiredContainers < 0) {
+      throw ArgumentError.value(
+        requiredContainers,
+        'requiredContainers',
+        'La cantidad de envases requeridos no puede ser negativa',
+      );
+    }
+    if (returnedContainers < 0) {
+      throw ArgumentError.value(
+        returnedContainers,
+        'returnedContainers',
+        'La cantidad de envases devueltos no puede ser negativa',
+      );
+    }
+    if (!depositPerContainer.isFinite || depositPerContainer < 0) {
+      throw ArgumentError.value(
+        depositPerContainer,
+        'depositPerContainer',
+        'La garantía por envase no puede ser negativa',
+      );
+    }
+
+    if (requiredContainers == 0 || depositPerContainer == 0) {
       return 0.0;
     }
 
