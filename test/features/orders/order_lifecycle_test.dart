@@ -10,87 +10,95 @@ void main() {
   group('Order lifecycle', () {
     final now = DateTime(2026, 11, 6, 12);
 
-    test('pickup follows confirmation, preparation, pickup, and delivery', () async {
-      final repository = InMemoryOrderRepository(null, () => now);
-      await repository.createOrder(_order(OrderDeliveryMethod.pickup));
+    test(
+      'pickup follows confirmation, preparation, pickup, and delivery',
+      () async {
+        final repository = InMemoryOrderRepository(null, () => now);
+        await repository.createOrder(_order(OrderDeliveryMethod.pickup));
 
-      final confirmed = await repository.confirmOrder(
-        orderId: 'order-1',
-        storeId: 'store-1',
-      );
-      expect(confirmed.dataOrNull?.status, OrderStatus.confirmed);
+        final confirmed = await repository.confirmOrder(
+          orderId: 'order-1',
+          storeId: 'store-1',
+        );
+        expect(confirmed.dataOrNull?.status, OrderStatus.confirmed);
 
-      final preparing = await repository.updateOrderStatus(
-        orderId: 'order-1',
-        storeId: 'store-1',
-        status: OrderStatus.preparing,
-      );
-      expect(preparing.dataOrNull?.status, OrderStatus.preparing);
+        final preparing = await repository.updateOrderStatus(
+          orderId: 'order-1',
+          storeId: 'store-1',
+          status: OrderStatus.preparing,
+        );
+        expect(preparing.dataOrNull?.status, OrderStatus.preparing);
 
-      final ready = await repository.updateOrderStatus(
-        orderId: 'order-1',
-        storeId: 'store-1',
-        status: OrderStatus.readyForPickup,
-      );
-      expect(ready.dataOrNull?.status, OrderStatus.readyForPickup);
+        final ready = await repository.updateOrderStatus(
+          orderId: 'order-1',
+          storeId: 'store-1',
+          status: OrderStatus.readyForPickup,
+        );
+        expect(ready.dataOrNull?.status, OrderStatus.readyForPickup);
 
-      final pickedUp = await repository.updateOrderStatus(
-        orderId: 'order-1',
-        storeId: 'store-1',
-        status: OrderStatus.pickedUp,
-      );
-      expect(pickedUp.dataOrNull?.status, OrderStatus.pickedUp);
+        final pickedUp = await repository.updateOrderStatus(
+          orderId: 'order-1',
+          storeId: 'store-1',
+          status: OrderStatus.pickedUp,
+        );
+        expect(pickedUp.dataOrNull?.status, OrderStatus.pickedUp);
 
-      final delivered = await repository.updateOrderStatus(
-        orderId: 'order-1',
-        storeId: 'store-1',
-        status: OrderStatus.delivered,
-      );
-      final order = delivered.dataOrNull!;
-      expect(order.status, OrderStatus.delivered);
-      expect(order.timeline.map((change) => change.status), [
-        OrderStatus.created,
-        OrderStatus.confirmed,
-        OrderStatus.preparing,
-        OrderStatus.readyForPickup,
-        OrderStatus.pickedUp,
-        OrderStatus.delivered,
-      ]);
-    });
+        final delivered = await repository.updateOrderStatus(
+          orderId: 'order-1',
+          storeId: 'store-1',
+          status: OrderStatus.delivered,
+        );
+        final order = delivered.dataOrNull!;
+        expect(order.status, OrderStatus.delivered);
+        expect(order.timeline.map((change) => change.status), [
+          OrderStatus.created,
+          OrderStatus.confirmed,
+          OrderStatus.preparing,
+          OrderStatus.readyForPickup,
+          OrderStatus.pickedUp,
+          OrderStatus.delivered,
+        ]);
+      },
+    );
 
-    test('own delivery cannot start before confirmation and can be tracked', () async {
-      final repository = InMemoryOrderRepository(null, () => now);
-      await repository.createOrder(_order(OrderDeliveryMethod.storeDelivery));
+    test(
+      'own delivery cannot start before confirmation and can be tracked',
+      () async {
+        final repository = InMemoryOrderRepository(null, () => now);
+        await repository.createOrder(_order(OrderDeliveryMethod.storeDelivery));
 
-      final prematureDispatch = await repository.updateOrderStatus(
-        orderId: 'order-1',
-        storeId: 'store-1',
-        status: OrderStatus.inDelivery,
-      );
-      expect(prematureDispatch.failureOrNull, isA<BusinessRuleFailure>());
+        final prematureDispatch = await repository.updateOrderStatus(
+          orderId: 'order-1',
+          storeId: 'store-1',
+          status: OrderStatus.inDelivery,
+        );
+        expect(prematureDispatch.failureOrNull, isA<BusinessRuleFailure>());
 
-      await repository.confirmOrder(orderId: 'order-1', storeId: 'store-1');
-      await repository.updateOrderStatus(
-        orderId: 'order-1',
-        storeId: 'store-1',
-        status: OrderStatus.preparing,
-      );
-      await repository.updateOrderStatus(
-        orderId: 'order-1',
-        storeId: 'store-1',
-        status: OrderStatus.readyForDelivery,
-      );
-      final inDelivery = await repository.updateOrderStatus(
-        orderId: 'order-1',
-        storeId: 'store-1',
-        status: OrderStatus.inDelivery,
-      );
-      expect(inDelivery.dataOrNull?.status, OrderStatus.inDelivery);
-    });
+        await repository.confirmOrder(orderId: 'order-1', storeId: 'store-1');
+        await repository.updateOrderStatus(
+          orderId: 'order-1',
+          storeId: 'store-1',
+          status: OrderStatus.preparing,
+        );
+        await repository.updateOrderStatus(
+          orderId: 'order-1',
+          storeId: 'store-1',
+          status: OrderStatus.readyForDelivery,
+        );
+        final inDelivery = await repository.updateOrderStatus(
+          orderId: 'order-1',
+          storeId: 'store-1',
+          status: OrderStatus.inDelivery,
+        );
+        expect(inDelivery.dataOrNull?.status, OrderStatus.inDelivery);
+      },
+    );
 
     test('reject, cancellation, and store ownership are enforced', () async {
       final repository = InMemoryOrderRepository(null, () => now);
-      await repository.createOrder(_order(OrderDeliveryMethod.externalDelivery));
+      await repository.createOrder(
+        _order(OrderDeliveryMethod.externalDelivery),
+      );
 
       final wrongStore = await repository.confirmOrder(
         orderId: 'order-1',

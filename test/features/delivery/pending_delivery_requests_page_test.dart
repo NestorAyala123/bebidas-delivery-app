@@ -14,7 +14,8 @@ import 'package:bebidas_delivery_app/features/delivery/presentation/pages/pendin
 /// Repositorio doble de prueba para simular fallas en la consulta
 class FakeErrorDeliveryRepository implements DeliveryRepository {
   @override
-  Future<Result<List<DeliveryRequest>, Failure>> getPendingDeliveryRequests() async {
+  Future<Result<List<DeliveryRequest>, Failure>>
+  getPendingDeliveryRequests() async {
     return const FailureResult(
       ServerFailure('Error al cargar solicitudes pendientes'),
     );
@@ -23,8 +24,7 @@ class FakeErrorDeliveryRepository implements DeliveryRepository {
   @override
   Future<Result<DeliveryRequest, Failure>> createDeliveryRequest(
     DeliveryRequest request,
-  ) =>
-      throw UnimplementedError();
+  ) => throw UnimplementedError();
 
   @override
   Future<Result<DeliveryRequest, Failure>> getDeliveryRequestById(String id) =>
@@ -35,21 +35,20 @@ class FakeErrorDeliveryRepository implements DeliveryRepository {
       throw UnimplementedError();
 
   @override
-  Future<Result<DriverStatus, Failure>> getDriverAvailability(String driverId) =>
-      throw UnimplementedError();
+  Future<Result<DriverStatus, Failure>> getDriverAvailability(
+    String driverId,
+  ) => throw UnimplementedError();
 
   @override
   Future<Result<void, Failure>> setDriverAvailability(
     String driverId,
     DriverStatus status,
-  ) =>
-      throw UnimplementedError();
+  ) => throw UnimplementedError();
 
   @override
   Future<Result<DeliveryRequest?, Failure>> getActiveDeliveryRequestByOrderId(
     String orderId,
-  ) =>
-      throw UnimplementedError();
+  ) => throw UnimplementedError();
 
   @override
   Future<Result<List<Driver>, Failure>> getRegisteredDrivers() =>
@@ -57,109 +56,118 @@ class FakeErrorDeliveryRepository implements DeliveryRepository {
 }
 
 void main() {
-  group('PendingDeliveryRequestsPage Widget Tests (Semana 3 - Entregable C)', () {
-    // 1. Estado de carga: muestra CircularProgressIndicator mientras consulta
-    testWidgets(
-      '1. Muestra CircularProgressIndicator mientras carga las solicitudes',
-      (tester) async {
-        final repo = MockDeliveryRepository(
-          latency: const Duration(milliseconds: 100),
-        );
-        final useCase = GetPendingDeliveryRequestsUseCase(repo);
+  group(
+    'PendingDeliveryRequestsPage Widget Tests (Semana 3 - Entregable C)',
+    () {
+      // 1. Estado de carga: muestra CircularProgressIndicator mientras consulta
+      testWidgets(
+        '1. Muestra CircularProgressIndicator mientras carga las solicitudes',
+        (tester) async {
+          final repo = MockDeliveryRepository(
+            latency: const Duration(milliseconds: 100),
+          );
+          final useCase = GetPendingDeliveryRequestsUseCase(repo);
 
-        await tester.pumpWidget(
-          MaterialApp(
-            home: PendingDeliveryRequestsPage(
-              getPendingRequestsUseCase: useCase,
+          await tester.pumpWidget(
+            MaterialApp(
+              home: PendingDeliveryRequestsPage(
+                getPendingRequestsUseCase: useCase,
+              ),
             ),
-          ),
-        );
+          );
 
-        // Verificar carga inmediatamente despues de pumpWidget
-        expect(find.byType(CircularProgressIndicator), findsOneWidget);
+          // Verificar carga inmediatamente despues de pumpWidget
+          expect(find.byType(CircularProgressIndicator), findsOneWidget);
 
-        // Avanzar el reloj virtual mas alla de la latencia
-        await tester.pump(const Duration(milliseconds: 100));
-        await tester.pumpAndSettle();
+          // Avanzar el reloj virtual mas alla de la latencia
+          await tester.pump(const Duration(milliseconds: 100));
+          await tester.pumpAndSettle();
 
-        // Ahora debe mostrar datos, no carga
-        expect(find.byType(CircularProgressIndicator), findsNothing);
-      },
-    );
+          // Ahora debe mostrar datos, no carga
+          expect(find.byType(CircularProgressIndicator), findsNothing);
+        },
+      );
 
-    // 2. Estado con datos: muestra solicitud req-001 precargada en MockDeliveryRepository
-    testWidgets(
-      '2. Muestra lista de solicitudes pendientes con datos correctos (req-001)',
-      (tester) async {
-        final repo = MockDeliveryRepository(latency: Duration.zero);
-        final useCase = GetPendingDeliveryRequestsUseCase(repo);
+      // 2. Estado con datos: muestra solicitud req-001 precargada en MockDeliveryRepository
+      testWidgets(
+        '2. Muestra lista de solicitudes pendientes con datos correctos (req-001)',
+        (tester) async {
+          final repo = MockDeliveryRepository(latency: Duration.zero);
+          final useCase = GetPendingDeliveryRequestsUseCase(repo);
 
-        await tester.pumpWidget(
-          MaterialApp(
-            home: PendingDeliveryRequestsPage(
-              getPendingRequestsUseCase: useCase,
+          await tester.pumpWidget(
+            MaterialApp(
+              home: PendingDeliveryRequestsPage(
+                getPendingRequestsUseCase: useCase,
+              ),
             ),
-          ),
-        );
-        await tester.pumpAndSettle();
+          );
+          await tester.pumpAndSettle();
 
-        expect(find.text('Solicitud #req-001'), findsOneWidget);
-        expect(find.text('Origen: Av. 4 de Noviembre, Manta'), findsOneWidget);
-        expect(find.text('Destino: Calle 12 y Av. 24, Manta'), findsOneWidget);
-        expect(find.text('3.5 km'), findsOneWidget);
-        expect(find.text('\$3.25'), findsOneWidget);
-        expect(find.text('Pendiente'), findsOneWidget);
-      },
-    );
+          expect(find.text('Solicitud #req-001'), findsOneWidget);
+          expect(
+            find.text('Origen: Av. 4 de Noviembre, Manta'),
+            findsOneWidget,
+          );
+          expect(
+            find.text('Destino: Calle 12 y Av. 24, Manta'),
+            findsOneWidget,
+          );
+          expect(find.text('3.5 km'), findsOneWidget);
+          expect(find.text('\$3.25'), findsOneWidget);
+          expect(find.text('Pendiente'), findsOneWidget);
+        },
+      );
 
-    // 3. Estado vacio: muestra mensaje cuando no hay solicitudes en pendingOffer
-    testWidgets(
-      '3. Muestra mensaje cuando no hay solicitudes pendientes disponibles',
-      (tester) async {
-        final repo = MockDeliveryRepository(latency: Duration.zero);
-        // Cancelamos la unica solicitud inicial usando DeliveryStatus.cancelled para que no haya pendientes
-        await repo.updateStatus('req-001', DeliveryStatus.cancelled.name);
+      // 3. Estado vacio: muestra mensaje cuando no hay solicitudes en pendingOffer
+      testWidgets(
+        '3. Muestra mensaje cuando no hay solicitudes pendientes disponibles',
+        (tester) async {
+          final repo = MockDeliveryRepository(latency: Duration.zero);
+          // Cancelamos la unica solicitud inicial usando DeliveryStatus.cancelled para que no haya pendientes
+          await repo.updateStatus('req-001', DeliveryStatus.cancelled.name);
 
-        final useCase = GetPendingDeliveryRequestsUseCase(repo);
+          final useCase = GetPendingDeliveryRequestsUseCase(repo);
 
-        await tester.pumpWidget(
-          MaterialApp(
-            home: PendingDeliveryRequestsPage(
-              getPendingRequestsUseCase: useCase,
+          await tester.pumpWidget(
+            MaterialApp(
+              home: PendingDeliveryRequestsPage(
+                getPendingRequestsUseCase: useCase,
+              ),
             ),
-          ),
-        );
-        await tester.pumpAndSettle();
+          );
+          await tester.pumpAndSettle();
 
-        expect(
-          find.text('No hay solicitudes pendientes disponibles'),
-          findsOneWidget,
-        );
-      },
-    );
+          expect(
+            find.text('No hay solicitudes pendientes disponibles'),
+            findsOneWidget,
+          );
+        },
+      );
 
-    // 4. Estado de error: muestra mensaje de falla y boton de reintento
-    testWidgets(
-      '4. Muestra mensaje de error cuando el caso de uso devuelve falla',
-      (tester) async {
-        final repo = FakeErrorDeliveryRepository();
-        final useCase = GetPendingDeliveryRequestsUseCase(repo);
+      // 4. Estado de error: muestra mensaje de falla y boton de reintento
+      testWidgets(
+        '4. Muestra mensaje de error cuando el caso de uso devuelve falla',
+        (tester) async {
+          final repo = FakeErrorDeliveryRepository();
+          final useCase = GetPendingDeliveryRequestsUseCase(repo);
 
-        await tester.pumpWidget(
-          MaterialApp(
-            home: PendingDeliveryRequestsPage(
-              getPendingRequestsUseCase: useCase,
+          await tester.pumpWidget(
+            MaterialApp(
+              home: PendingDeliveryRequestsPage(
+                getPendingRequestsUseCase: useCase,
+              ),
             ),
-          ),
-        );
-        await tester.pumpAndSettle();
+          );
+          await tester.pumpAndSettle();
 
-        expect(
-          find.text('Error al cargar solicitudes pendientes'),
-          findsOneWidget,
-        );
-        expect(find.text('Reintentar'), findsOneWidget);
-      },
-    );
-  });
+          expect(
+            find.text('Error al cargar solicitudes pendientes'),
+            findsOneWidget,
+          );
+          expect(find.text('Reintentar'), findsOneWidget);
+        },
+      );
+    },
+  );
 }

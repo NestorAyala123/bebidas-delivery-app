@@ -11,8 +11,10 @@ class InMemoryOrderRepository implements OrderRepository {
   final Map<String, Order> _orders = {};
   final DateTime Function() _now;
 
-  InMemoryOrderRepository([List<Order>? initialOrders, DateTime Function()? now])
-    : _now = now ?? DateTime.now {
+  InMemoryOrderRepository([
+    List<Order>? initialOrders,
+    DateTime Function()? now,
+  ]) : _now = now ?? DateTime.now {
     if (initialOrders != null) {
       for (final order in initialOrders) {
         _orders[order.id] = order;
@@ -182,20 +184,18 @@ class InMemoryOrderRepository implements OrderRepository {
     String customerId,
   ) async {
     final cleanId = customerId.trim();
-    final customerOrders = _orders.values
-        .where((o) => o.customerId == cleanId)
-        .toList()
-      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    final customerOrders =
+        _orders.values.where((o) => o.customerId == cleanId).toList()
+          ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
     return Success(customerOrders);
   }
 
   @override
   Future<Result<List<Order>, Failure>> getOrdersByStore(String storeId) async {
     final cleanId = storeId.trim();
-    final storeOrders = _orders.values
-        .where((o) => o.storeId == cleanId)
-        .toList()
-      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    final storeOrders =
+        _orders.values.where((o) => o.storeId == cleanId).toList()
+          ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
     return Success(storeOrders);
   }
 }

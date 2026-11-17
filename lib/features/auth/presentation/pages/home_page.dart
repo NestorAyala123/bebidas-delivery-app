@@ -151,7 +151,9 @@ class HomePage extends StatelessWidget {
                 child: Icon(Icons.forum_outlined, color: Colors.pink),
               ),
               title: const Text('Mensajes'),
-              subtitle: const Text('Chats con clientes, comercios y proveedores'),
+              subtitle: const Text(
+                'Chats con clientes, comercios y proveedores',
+              ),
               trailing: const ChatInboxButton(notify: false),
               onTap: () => ChatLauncher.openInbox(context),
             ),

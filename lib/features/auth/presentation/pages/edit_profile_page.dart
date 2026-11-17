@@ -52,9 +52,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
         _auth.refreshProfile(identity);
         Navigator.pop(context);
       },
-      onFailure: (failure) => ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(failure.message))),
+      onFailure: (failure) =>
+          ScaffoldMessenger.of(context)
+              .showSnackBar(SnackBar(content: Text(failure.message))),
     );
   }
 

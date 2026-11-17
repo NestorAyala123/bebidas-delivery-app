@@ -14,38 +14,47 @@ void main() {
   });
 
   group('ObtenerUbicacionActualUseCase Tests', () {
-    test('Devuelve coordenadas exitosas cuando se concede el permiso GPS', () async {
-      repository.shouldGrantPermission = true;
-      repository.isServiceEnabled = true;
+    test(
+      'Devuelve coordenadas exitosas cuando se concede el permiso GPS',
+      () async {
+        repository.shouldGrantPermission = true;
+        repository.isServiceEnabled = true;
 
-      final result = await useCase();
+        final result = await useCase();
 
-      expect(result, isA<Success<GeoCoordinates, dynamic>>());
-      final data = (result as Success<GeoCoordinates, dynamic>).data;
-      expect(data.latitude, equals(-0.9676534));
-      expect(data.longitude, equals(-80.7088841));
-    });
+        expect(result, isA<Success<GeoCoordinates, dynamic>>());
+        final data = (result as Success<GeoCoordinates, dynamic>).data;
+        expect(data.latitude, equals(-0.9676534));
+        expect(data.longitude, equals(-80.7088841));
+      },
+    );
 
-    test('Devuelve PermissionFailure cuando el usuario deniega el permiso GPS', () async {
-      repository.shouldGrantPermission = false;
+    test(
+      'Devuelve PermissionFailure cuando el usuario deniega el permiso GPS',
+      () async {
+        repository.shouldGrantPermission = false;
 
-      final result = await useCase();
+        final result = await useCase();
 
-      expect(result, isA<FailureResult<dynamic, dynamic>>());
-      final failure = (result as FailureResult).failure;
-      expect(failure, isA<PermissionFailure>());
-      expect(failure.message, contains('denegado'));
-    });
+        expect(result, isA<FailureResult<dynamic, dynamic>>());
+        final failure = (result as FailureResult).failure;
+        expect(failure, isA<PermissionFailure>());
+        expect(failure.message, contains('denegado'));
+      },
+    );
 
-    test('Devuelve LocationUnavailableFailure cuando el GPS está desactivado', () async {
-      repository.isServiceEnabled = false;
+    test(
+      'Devuelve LocationUnavailableFailure cuando el GPS está desactivado',
+      () async {
+        repository.isServiceEnabled = false;
 
-      final result = await useCase();
+        final result = await useCase();
 
-      expect(result, isA<FailureResult<dynamic, dynamic>>());
-      final failure = (result as FailureResult).failure;
-      expect(failure, isA<LocationUnavailableFailure>());
-      expect(failure.message, contains('desactivado'));
-    });
+        expect(result, isA<FailureResult<dynamic, dynamic>>());
+        final failure = (result as FailureResult).failure;
+        expect(failure, isA<LocationUnavailableFailure>());
+        expect(failure.message, contains('desactivado'));
+      },
+    );
   });
 }

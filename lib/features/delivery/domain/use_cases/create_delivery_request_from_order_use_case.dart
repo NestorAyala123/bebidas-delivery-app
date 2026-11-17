@@ -56,8 +56,9 @@ class CreateDeliveryRequestFromOrderUseCase {
     }
 
     // 3. Prevención de solicitudes duplicadas activas para el mismo orderId
-    final activeCheck =
-        await repository.getActiveDeliveryRequestByOrderId(orderInfo.orderId);
+    final activeCheck = await repository.getActiveDeliveryRequestByOrderId(
+      orderInfo.orderId,
+    );
     if (activeCheck.isSuccess && activeCheck.dataOrNull != null) {
       return FailureResult(
         BusinessRuleFailure(
@@ -80,7 +81,8 @@ class CreateDeliveryRequestFromOrderUseCase {
     final calculatedFare = feeCalculator.calculate(effectiveDistance);
 
     // 6. Generación de ID de solicitud
-    final requestId = idGenerator?.call() ??
+    final requestId =
+        idGenerator?.call() ??
         'req-${orderInfo.orderId}-${DateTime.now().millisecondsSinceEpoch}';
 
     // 7. Construcción de entidad DeliveryRequest

@@ -283,6 +283,7 @@ class _StoreOrdersPageState extends State<StoreOrdersPage> {
     OrderStatus.pickedUp => 'Retirado',
     OrderStatus.readyForDelivery => 'Listo para entrega',
     OrderStatus.lookingForDriver => 'Buscando repartidor',
+    OrderStatus.noDriversAvailable => 'Sin repartidores disponibles',
     OrderStatus.driverAssigned => 'Repartidor asignado',
     OrderStatus.inDelivery => 'En entrega',
     OrderStatus.delivered => 'Entregado',

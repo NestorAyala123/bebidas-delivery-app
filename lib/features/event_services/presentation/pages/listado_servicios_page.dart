@@ -41,10 +41,12 @@ class _ListadoServiciosPageState extends State<ListadoServiciosPage> {
       _controller = widget.controller!;
     } else {
       _isControllerInternal = true;
-      final obtener = ServiceLocator.instance.isRegistered<ObtenerServiciosUseCase>()
+      final obtener =
+          ServiceLocator.instance.isRegistered<ObtenerServiciosUseCase>()
           ? ServiceLocator.instance.get<ObtenerServiciosUseCase>()
           : null;
-      final publicar = ServiceLocator.instance.isRegistered<PublicarFichaUseCase>()
+      final publicar =
+          ServiceLocator.instance.isRegistered<PublicarFichaUseCase>()
           ? ServiceLocator.instance.get<PublicarFichaUseCase>()
           : null;
 
@@ -129,7 +131,10 @@ class _ListadoServiciosPageState extends State<ListadoServiciosPage> {
                         },
                       )
                     : null,
-                contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
+                contentPadding: const EdgeInsets.symmetric(
+                  vertical: 0,
+                  horizontal: 16,
+                ),
                 filled: true,
                 fillColor: Colors.white,
                 border: OutlineInputBorder(
@@ -194,7 +199,11 @@ class _ListadoServiciosPageState extends State<ListadoServiciosPage> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                      const Icon(
+                        Icons.error_outline,
+                        size: 48,
+                        color: Colors.red,
+                      ),
                       const SizedBox(height: 12),
                       Text(
                         _controller.errorMessage!,
@@ -218,7 +227,11 @@ class _ListadoServiciosPageState extends State<ListadoServiciosPage> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.event_busy, size: 56, color: Colors.grey.shade400),
+                    Icon(
+                      Icons.event_busy,
+                      size: 56,
+                      color: Colors.grey.shade400,
+                    ),
                     const SizedBox(height: 12),
                     const Text(
                       'No se encontraron fichas para este criterio',
@@ -268,18 +281,14 @@ class _ListadoServiciosPageState extends State<ListadoServiciosPage> {
   void _navigateToDetail(FichaServicio ficha) {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (_) => DetalleFichaPage(ficha: ficha),
-      ),
+      MaterialPageRoute(builder: (_) => DetalleFichaPage(ficha: ficha)),
     );
   }
 
   void _navigateToMisConsultas() {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (_) => const MisConsultasPage(),
-      ),
+      MaterialPageRoute(builder: (_) => const MisConsultasPage()),
     );
   }
 
@@ -297,12 +306,12 @@ class _ListadoServiciosPageState extends State<ListadoServiciosPage> {
   }
 
   static String _typeLabel(EventServiceType type) => switch (type) {
-        EventServiceType.bartender => 'Bartender',
-        EventServiceType.iceAndCoolers => 'Hielo & Enfriadores',
-        EventServiceType.soundAndDj => 'Sonido & DJ',
-        EventServiceType.customCocktailBar => 'Barra de Cocteles',
-        EventServiceType.other => 'Otro',
-      };
+    EventServiceType.bartender => 'Bartender',
+    EventServiceType.iceAndCoolers => 'Hielo & Enfriadores',
+    EventServiceType.soundAndDj => 'Sonido & DJ',
+    EventServiceType.customCocktailBar => 'Barra de Cocteles',
+    EventServiceType.other => 'Otro',
+  };
 }
 
 // ── FichaCard Widget ─────────────────────────────────────────────────────────

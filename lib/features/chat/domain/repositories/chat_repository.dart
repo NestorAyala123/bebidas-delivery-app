@@ -1,10 +1,14 @@
 import '../../../../core/errors/failures.dart';
 import '../../../../core/result/result.dart';
+import '../entities/chat_conversation.dart';
 import '../entities/chat_message.dart';
+import '../entities/chat_notification.dart';
 import '../entities/conversation.dart';
 
-/// Storage port for chat. It does not authorize: use cases decide who may
-/// read or write before calling it.
+/// Contrato de persistencia y observación del chat.
+///
+/// Soporta tanto el modelo canónico de conversaciones por sesión y participantes
+/// como la observación en tiempo real y notificaciones de la app.
 abstract class ChatRepository {
   Future<Result<Conversation, Failure>> createConversation({
     required ConversationType type,
@@ -18,6 +22,7 @@ abstract class ChatRepository {
     String userId,
   );
   Future<Result<void, Failure>> sendMessage(ChatMessage message);
+
   Stream<List<ChatMessage>> getMessagesStream(String conversationId);
 
   /// Current messages of a conversation, oldest first.
@@ -38,4 +43,20 @@ abstract class ChatRepository {
 
   /// Emits whenever any message is sent or any conversation is read.
   Stream<void> get changes;
+
+  /// Conversaciones del usuario ordenadas por último mensaje.
+  Stream<List<ChatConversation>> getConversationsStream(String userId);
+
+  /// Devuelve la conversación existente o la registra si es nueva.
+  Future<Result<ChatConversation, Failure>> ensureConversation(
+    ChatConversation conversation,
+  );
+
+  Future<Result<void, Failure>> markConversationAsRead({
+    required String conversationId,
+    required String userId,
+  });
+
+  /// Avisos en la app generados por mensajes entrantes.
+  Stream<ChatNotification> get notificationsStream;
 }

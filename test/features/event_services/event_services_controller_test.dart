@@ -27,47 +27,71 @@ void main() {
       expect(controller.errorMessage, isNull);
     });
 
-    test('filterByType filtra por categoría y permite toggle para desmarcar', () async {
-      await controller.filterByType(EventServiceType.bartender);
-      expect(controller.selectedType, equals(EventServiceType.bartender));
-      expect(controller.fichas.every((f) => f.serviceType == EventServiceType.bartender), isTrue);
+    test(
+      'filterByType filtra por categoría y permite toggle para desmarcar',
+      () async {
+        await controller.filterByType(EventServiceType.bartender);
+        expect(controller.selectedType, equals(EventServiceType.bartender));
+        expect(
+          controller.fichas.every(
+            (f) => f.serviceType == EventServiceType.bartender,
+          ),
+          isTrue,
+        );
 
-      // Segundo tap toggle off
-      await controller.filterByType(EventServiceType.bartender);
-      expect(controller.selectedType, isNull);
-      expect(controller.fichas.length, greaterThanOrEqualTo(5));
-    });
+        // Segundo tap toggle off
+        await controller.filterByType(EventServiceType.bartender);
+        expect(controller.selectedType, isNull);
+        expect(controller.fichas.length, greaterThanOrEqualTo(5));
+      },
+    );
 
-    test('setSearchQuery filtra localmente las fichas por título o descripción', () async {
-      await controller.loadFichas();
+    test(
+      'setSearchQuery filtra localmente las fichas por título o descripción',
+      () async {
+        await controller.loadFichas();
 
-      controller.setSearchQuery('hielo');
-      expect(controller.filteredFichas.every((f) => f.title.toLowerCase().contains('hielo') || f.description.toLowerCase().contains('hielo')), isTrue);
-      expect(controller.filteredFichas.isNotEmpty, isTrue);
-    });
+        controller.setSearchQuery('hielo');
+        expect(
+          controller.filteredFichas.every(
+            (f) =>
+                f.title.toLowerCase().contains('hielo') ||
+                f.description.toLowerCase().contains('hielo'),
+          ),
+          isTrue,
+        );
+        expect(controller.filteredFichas.isNotEmpty, isTrue);
+      },
+    );
 
-    test('publishFicha publica una ficha y actualiza el listado activo', () async {
-      await controller.loadFichas();
-      final previousCount = controller.fichas.length;
+    test(
+      'publishFicha publica una ficha y actualiza el listado activo',
+      () async {
+        await controller.loadFichas();
+        final previousCount = controller.fichas.length;
 
-      const nuevaFicha = FichaServicio(
-        id: '',
-        providerId: 'prov-controller-test',
-        title: 'Servicio Nuevo Exclusivo',
-        description: 'Descripción completa para prueba de integración de controller.',
-        serviceType: EventServiceType.bartender,
-        estimatedPrice: 190.0,
-        locationLabel: 'Manta',
-        contactPhone: '+593 99 000 1111',
-        createdAt: '',
-      );
+        const nuevaFicha = FichaServicio(
+          id: '',
+          providerId: 'prov-controller-test',
+          title: 'Servicio Nuevo Exclusivo',
+          description:
+              'Descripción completa para prueba de integración de controller.',
+          serviceType: EventServiceType.bartender,
+          estimatedPrice: 190.0,
+          locationLabel: 'Manta',
+          contactPhone: '+593 99 000 1111',
+          createdAt: '',
+        );
 
-      final result = await controller.publishFicha(nuevaFicha);
+        final result = await controller.publishFicha(nuevaFicha);
 
-      expect(result.isSuccess, isTrue);
-      expect(controller.fichas.length, equals(previousCount + 1));
-      expect(controller.fichas.any((f) => f.title == 'Servicio Nuevo Exclusivo'), isTrue);
-    });
+        expect(result.isSuccess, isTrue);
+        expect(controller.fichas.length, equals(previousCount + 1));
+        expect(
+          controller.fichas.any((f) => f.title == 'Servicio Nuevo Exclusivo'),
+          isTrue,
+        );
+      },
+    );
   });
 }
-

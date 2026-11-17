@@ -78,49 +78,53 @@ void main() {
       );
     });
 
-    test('Delivery paths and cancellation rules depend on the selected method', () {
-      final pickupOrder = _order(OrderDeliveryMethod.pickup);
-      expect(
-        pickupOrder.copyWithStatus(OrderStatus.confirmed)
-            .copyWithStatus(OrderStatus.preparing)
-            .copyWithStatus(OrderStatus.readyForPickup)
-            .copyWithStatus(OrderStatus.pickedUp)
-            .copyWithStatus(OrderStatus.delivered)
-            .status,
-        OrderStatus.delivered,
-      );
+    test(
+      'Delivery paths and cancellation rules depend on the selected method',
+      () {
+        final pickupOrder = _order(OrderDeliveryMethod.pickup);
+        expect(
+          pickupOrder
+              .copyWithStatus(OrderStatus.confirmed)
+              .copyWithStatus(OrderStatus.preparing)
+              .copyWithStatus(OrderStatus.readyForPickup)
+              .copyWithStatus(OrderStatus.pickedUp)
+              .copyWithStatus(OrderStatus.delivered)
+              .status,
+          OrderStatus.delivered,
+        );
 
-      final ownDeliveryOrder = _order(OrderDeliveryMethod.storeDelivery);
-      expect(
-        ownDeliveryOrder.copyWithStatus(OrderStatus.confirmed)
-            .copyWithStatus(OrderStatus.preparing)
-            .copyWithStatus(OrderStatus.readyForDelivery)
-            .copyWithStatus(OrderStatus.inDelivery)
-            .copyWithStatus(OrderStatus.delivered)
-            .status,
-        OrderStatus.delivered,
-      );
+        final ownDeliveryOrder = _order(OrderDeliveryMethod.storeDelivery);
+        expect(
+          ownDeliveryOrder
+              .copyWithStatus(OrderStatus.confirmed)
+              .copyWithStatus(OrderStatus.preparing)
+              .copyWithStatus(OrderStatus.readyForDelivery)
+              .copyWithStatus(OrderStatus.inDelivery)
+              .copyWithStatus(OrderStatus.delivered)
+              .status,
+          OrderStatus.delivered,
+        );
 
-      final confirmed = _order(
-        OrderDeliveryMethod.externalDelivery,
-      ).copyWithStatus(OrderStatus.confirmed);
-      expect(confirmed.canRequestDriver, isTrue);
-      expect(confirmed.timeline.map((change) => change.status), [
-        OrderStatus.created,
-        OrderStatus.confirmed,
-      ]);
-      expect(
-        confirmed.copyWithStatus(OrderStatus.cancelled).canCancel,
-        isFalse,
-      );
-      final assigned = confirmed.copyWithStatus(
-        OrderStatus.lookingForDriver,
-      ).copyWithStatus(OrderStatus.driverAssigned);
-      expect(
-        () => assigned.copyWithStatus(OrderStatus.cancelled),
-        throwsA(isA<DomainException>()),
-      );
-    });
+        final confirmed = _order(OrderDeliveryMethod.externalDelivery)
+            .copyWithStatus(OrderStatus.confirmed);
+        expect(confirmed.canRequestDriver, isTrue);
+        expect(confirmed.timeline.map((change) => change.status), [
+          OrderStatus.created,
+          OrderStatus.confirmed,
+        ]);
+        expect(
+          confirmed.copyWithStatus(OrderStatus.cancelled).canCancel,
+          isFalse,
+        );
+        final assigned = confirmed
+            .copyWithStatus(OrderStatus.lookingForDriver)
+            .copyWithStatus(OrderStatus.driverAssigned);
+        expect(
+          () => assigned.copyWithStatus(OrderStatus.cancelled),
+          throwsA(isA<DomainException>()),
+        );
+      },
+    );
 
     test('RN07: Cart throws DomainException when adding items from a different store', () {
       var cart = const Cart();

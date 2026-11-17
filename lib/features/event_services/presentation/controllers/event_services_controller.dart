@@ -82,7 +82,9 @@ class EventServicesController extends ChangeNotifier {
   }
 
   /// Publica una nueva ficha básica y la añade a la lista activa
-  Future<Result<FichaServicio, Object>> publishFicha(FichaServicio ficha) async {
+  Future<Result<FichaServicio, Object>> publishFicha(
+    FichaServicio ficha,
+  ) async {
     _isPublishing = true;
     _errorMessage = null;
     notifyListeners();
@@ -104,4 +106,3 @@ class EventServicesController extends ChangeNotifier {
     }
   }
 }
-

@@ -1,9 +1,5 @@
-enum OrderPaymentMethod {
-  cash,
-  bankTransfer;
+import 'payment_method.dart';
 
-  String get displayName => switch (this) {
-    OrderPaymentMethod.cash => 'Efectivo',
-    OrderPaymentMethod.bankTransfer => 'Transferencia',
-  };
-}
+export 'payment_method.dart' show PaymentMethod;
+
+typedef OrderPaymentMethod = PaymentMethod;

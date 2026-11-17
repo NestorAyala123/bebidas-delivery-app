@@ -153,7 +153,8 @@ class _StoreManagementPageState extends State<StoreManagementPage> {
           _selectedStore?.id ??
           'store-${DateTime.now().microsecondsSinceEpoch}',
       // Contrato Identidad → catálogo: el dueño es el usuario con sesión.
-      ownerId: _selectedStore?.ownerId ?? currentIdentity()?.id ?? 'current-user',
+      ownerId:
+          _selectedStore?.ownerId ?? currentIdentity()?.id ?? 'current-user',
       name: _storeNameController.text,
       description: _storeDescriptionController.text,
       address: _storeAddressController.text,

@@ -193,8 +193,7 @@ class LocationMapController extends ChangeNotifier {
   /// Simula la denegación de permisos para fines de demostración del PR / docente
   void simulatePermissionDenied() {
     _status = LocationStatus.permissionDenied;
-    _errorMessage =
-        'Permiso de ubicación denegado por el usuario. La app no puede consultar el GPS.';
+    _errorMessage = 'Permiso de ubicación denegado por el usuario. La app no puede consultar el GPS.';
     _userPosition = null;
     _nearbyStores = [];
     _selectedStore = null;
@@ -204,8 +203,7 @@ class LocationMapController extends ChangeNotifier {
   /// Simula la denegación permanente de permisos
   void simulatePermissionPermanentlyDenied() {
     _status = LocationStatus.permissionPermanentlyDenied;
-    _errorMessage =
-        'Permiso denegado permanentemente en ajustes. Debes activarlo manualmente en la configuración del teléfono.';
+    _errorMessage = 'Permiso denegado permanentemente en ajustes. Debes activarlo manualmente en la configuración del teléfono.';
     _userPosition = null;
     _nearbyStores = [];
     _selectedStore = null;

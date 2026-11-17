@@ -18,10 +18,10 @@ class EventServicesRoutes implements FeatureRouteModule {
 
   @override
   Map<String, WidgetBuilder> get routes => {
-        listado: (context) => const ListadoServiciosPage(),
-        publicar: (context) => const PublicarFichaPage(),
-        misConsultas: (context) => const MisConsultasPage(),
-      };
+    listado: (context) => const ListadoServiciosPage(),
+    publicar: (context) => const PublicarFichaPage(),
+    misConsultas: (context) => const MisConsultasPage(),
+  };
 
   @override
   Route<dynamic>? onGenerateRoute(RouteSettings settings) {
@@ -48,4 +48,3 @@ class EventServicesRoutes implements FeatureRouteModule {
     return null;
   }
 }
-

@@ -80,8 +80,10 @@ class ProfilePage extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     OutlinedButton.icon(
-                      onPressed: () =>
-                          Navigator.pushNamed(context, ChatRoutes.conversations),
+                      onPressed: () => Navigator.pushNamed(
+                        context,
+                        ChatRoutes.conversations,
+                      ),
                       icon: const Icon(Icons.chat_bubble_outline),
                       label: const Text('Mensajes'),
                     ),

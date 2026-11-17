@@ -41,8 +41,9 @@ class CartCalculation {
       totalContainersRequired,
     );
 
-    final grandTotal = (itemsSubtotal + missingContainersFee + safeDelivery - safeDiscount)
-        .clamp(0.0, double.infinity);
+    final grandTotal =
+        (itemsSubtotal + missingContainersFee + safeDelivery - safeDiscount)
+            .clamp(0.0, double.infinity);
 
     return CartCalculation(
       itemsSubtotal: itemsSubtotal,
@@ -105,16 +106,16 @@ class CartCalculation {
 
   @override
   int get hashCode => Object.hash(
-        itemsSubtotal,
-        totalItemCount,
-        totalContainersRequired,
-        returnedContainers,
-        missingContainers,
-        missingContainersFee,
-        deliveryFee,
-        discount,
-        total,
-      );
+    itemsSubtotal,
+    totalItemCount,
+    totalContainersRequired,
+    returnedContainers,
+    missingContainers,
+    missingContainersFee,
+    deliveryFee,
+    discount,
+    total,
+  );
 
   @override
   String toString() {
@@ -131,4 +132,3 @@ class CartCalculation {
         ')';
   }
 }
-

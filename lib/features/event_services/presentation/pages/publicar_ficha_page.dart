@@ -85,7 +85,8 @@ class _PublicarFichaPageState extends State<PublicarFichaPage> {
       }
     } else {
       // Resolución directa por UseCase si no se inyectó controlador específico
-      final useCase = ServiceLocator.instance.isRegistered<PublicarFichaUseCase>()
+      final useCase =
+          ServiceLocator.instance.isRegistered<PublicarFichaUseCase>()
           ? ServiceLocator.instance.get<PublicarFichaUseCase>()
           : null;
 
@@ -138,9 +139,8 @@ class _PublicarFichaPageState extends State<PublicarFichaPage> {
             children: [
               Text(
                 'Datos de la Ficha Básica',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                style: Theme.of(context).textTheme.titleLarge
+                    ?.copyWith(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 6),
               const Text(
@@ -158,9 +158,14 @@ class _PublicarFichaPageState extends State<PublicarFichaPage> {
               DropdownButtonFormField<EventServiceType>(
                 initialValue: _selectedType,
                 decoration: InputDecoration(
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                   prefixIcon: const Icon(Icons.category),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 14,
+                  ),
                 ),
                 items: const [
                   DropdownMenuItem(
@@ -198,7 +203,9 @@ class _PublicarFichaPageState extends State<PublicarFichaPage> {
                 decoration: InputDecoration(
                   labelText: 'Título del Servicio *',
                   hintText: 'Ej. Bartender Profesional para Bodas',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                   prefixIcon: const Icon(Icons.title),
                 ),
                 validator: (val) {
@@ -213,11 +220,15 @@ class _PublicarFichaPageState extends State<PublicarFichaPage> {
               // Precio Estimado
               TextFormField(
                 controller: _priceController,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
                 decoration: InputDecoration(
                   labelText: 'Precio Estimado (USD) *',
                   hintText: '150.00',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                   prefixIcon: const Icon(Icons.attach_money),
                 ),
                 validator: (val) {
@@ -240,7 +251,9 @@ class _PublicarFichaPageState extends State<PublicarFichaPage> {
                 decoration: InputDecoration(
                   labelText: 'Teléfono / WhatsApp *',
                   hintText: '+593 99 123 4567',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                   prefixIcon: const Icon(Icons.phone),
                 ),
                 validator: (val) {
@@ -258,7 +271,9 @@ class _PublicarFichaPageState extends State<PublicarFichaPage> {
                 decoration: InputDecoration(
                   labelText: 'Zona de Cobertura / Ciudad *',
                   hintText: 'Ej. Manta, Portoviejo, Manabí',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                   prefixIcon: const Icon(Icons.location_on),
                 ),
                 validator: (val) {
@@ -277,7 +292,9 @@ class _PublicarFichaPageState extends State<PublicarFichaPage> {
                 decoration: InputDecoration(
                   labelText: 'Descripción y Alcance *',
                   hintText: 'Detalla lo que incluye tu servicio (horas de atención, equipos, insumos...)',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                   alignLabelWithHint: true,
                 ),
                 validator: (val) {
@@ -298,18 +315,26 @@ class _PublicarFichaPageState extends State<PublicarFichaPage> {
                       ? const SizedBox(
                           width: 20,
                           height: 20,
-                          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
                         )
                       : const Icon(Icons.publish),
                   label: Text(
                     _isSubmitting ? 'Publicando...' : 'Publicar Ficha Básica',
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: colorScheme.primary,
                     foregroundColor: colorScheme.onPrimary,
                     padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                   ),
                 ),
               ),
@@ -320,4 +345,3 @@ class _PublicarFichaPageState extends State<PublicarFichaPage> {
     );
   }
 }
-

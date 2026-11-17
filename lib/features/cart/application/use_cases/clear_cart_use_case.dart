@@ -10,4 +10,3 @@ class ClearCartUseCase {
 
   Future<Result<void, Failure>> call() => repository.clearCart();
 }
-

@@ -91,37 +91,45 @@ void main() {
       );
     });
 
-    test('SingleStoreViolationException carries code RN07 and informative message', () {
-      var cart = const Cart();
-      cart = cart.addItem(targetStoreId: storeA, item: itemStoreA1);
+    test(
+      'SingleStoreViolationException carries code RN07 and informative message',
+      () {
+        var cart = const Cart();
+        cart = cart.addItem(targetStoreId: storeA, item: itemStoreA1);
 
-      try {
-        cart.addItem(targetStoreId: storeB, item: itemStoreB1);
-        fail('Should have thrown SingleStoreViolationException');
-      } on SingleStoreViolationException catch (e) {
-        expect(e.code, equals('RN07'));
+        try {
+          cart.addItem(targetStoreId: storeB, item: itemStoreB1);
+          fail('Should have thrown SingleStoreViolationException');
+        } on SingleStoreViolationException catch (e) {
+          expect(e.code, equals('RN07'));
+          expect(
+            e.message,
+            contains(
+              'RN07: No se pueden agregar productos de diferentes comercios',
+            ),
+          );
+        }
+      },
+    );
+
+    test(
+      'Cart state is immutable and untouched when store mismatch occurs',
+      () {
+        var cart = const Cart();
+        cart = cart.addItem(targetStoreId: storeA, item: itemStoreA1);
+
         expect(
-          e.message,
-          contains('RN07: No se pueden agregar productos de diferentes comercios'),
+          () => cart.addItem(targetStoreId: storeB, item: itemStoreB1),
+          throwsA(isA<SingleStoreViolationException>()),
         );
-      }
-    });
 
-    test('Cart state is immutable and untouched when store mismatch occurs', () {
-      var cart = const Cart();
-      cart = cart.addItem(targetStoreId: storeA, item: itemStoreA1);
-
-      expect(
-        () => cart.addItem(targetStoreId: storeB, item: itemStoreB1),
-        throwsA(isA<SingleStoreViolationException>()),
-      );
-
-      // Verify cart still only has items from Store A
-      expect(cart.storeId, equals(storeA));
-      expect(cart.items.length, equals(1));
-      expect(cart.items.first.productId, equals('p-beer-pilsen'));
-      expect(cart.totalItemCount, equals(6));
-    });
+        // Verify cart still only has items from Store A
+        expect(cart.storeId, equals(storeA));
+        expect(cart.items.length, equals(1));
+        expect(cart.items.first.productId, equals('p-beer-pilsen'));
+        expect(cart.totalItemCount, equals(6));
+      },
+    );
 
     test('Removing all items resets storeId to null and allows adding from another store', () {
       var cart = const Cart();
@@ -165,7 +173,10 @@ void main() {
       expect(cart.items.length, equals(2));
 
       // User confirms switching to Store B
-      cart = cart.replaceStoreAndSetItem(targetStoreId: storeB, item: itemStoreB1);
+      cart = cart.replaceStoreAndSetItem(
+        targetStoreId: storeB,
+        item: itemStoreB1,
+      );
       expect(cart.storeId, equals(storeB));
       expect(cart.items.length, equals(1));
       expect(cart.items.first.productId, equals(itemStoreB1.productId));
@@ -210,7 +221,9 @@ void main() {
 
       test('UseCase returns BusinessRuleFailure(RN07) when adding item from different store without force', () async {
         // Initial item in Store A
-        await useCase(const AddToCartInput(targetStoreId: storeA, item: itemStoreA1));
+        await useCase(
+          const AddToCartInput(targetStoreId: storeA, item: itemStoreA1),
+        );
 
         // Try to add from Store B without forceReplaceStore
         final result = await useCase(
@@ -221,7 +234,10 @@ void main() {
         final failure = result.failureOrNull;
         expect(failure, isA<BusinessRuleFailure>());
         expect(failure?.code, equals('RN07'));
-        expect(failure?.message, contains('RN07: No se pueden agregar productos'));
+        expect(
+          failure?.message,
+          contains('RN07: No se pueden agregar productos'),
+        );
 
         // Verify repository still contains Store A cart
         final repoCart = (await repository.getCart()).dataOrNull!;
@@ -231,7 +247,9 @@ void main() {
 
       test('UseCase replaces store when forceReplaceStore is true', () async {
         // Initial item in Store A
-        await useCase(const AddToCartInput(targetStoreId: storeA, item: itemStoreA1));
+        await useCase(
+          const AddToCartInput(targetStoreId: storeA, item: itemStoreA1),
+        );
 
         // Switch to Store B with forceReplaceStore = true
         final result = await useCase(
@@ -249,15 +267,17 @@ void main() {
         expect(cart.items.first.productId, equals(itemStoreB1.productId));
       });
 
-      test('UseCase rejects empty targetStoreId with ValidationFailure', () async {
-        final result = await useCase(
-          const AddToCartInput(targetStoreId: '  ', item: itemStoreA1),
-        );
+      test(
+        'UseCase rejects empty targetStoreId with ValidationFailure',
+        () async {
+          final result = await useCase(
+            const AddToCartInput(targetStoreId: '  ', item: itemStoreA1),
+          );
 
-        expect(result.isFailure, isTrue);
-        expect(result.failureOrNull, isA<ValidationFailure>());
-      });
+          expect(result.isFailure, isTrue);
+          expect(result.failureOrNull, isA<ValidationFailure>());
+        },
+      );
     });
   });
 }
-

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../../domain/entities/consulta_servicio.dart';
+import '../../../chat/domain/entities/chat_conversation.dart';
 import '../../../chat/presentation/chat_launcher.dart';
+import '../../domain/entities/consulta_servicio.dart';
 import '../../domain/entities/event_service.dart';
 import '../../domain/entities/ficha_servicio.dart';
 import 'solicitar_consulta_page.dart';
@@ -216,10 +217,13 @@ class DetalleFichaPage extends StatelessWidget {
                 const SizedBox(width: 12),
                 Expanded(
                   child: ElevatedButton.icon(
-                    onPressed: () => ChatLauncher.openServiceChat(
+                    onPressed: () => ChatLauncher.open(
                       context,
-                      serviceId: ficha.id,
-                      serviceTitle: ficha.title,
+                      counterpartId: ficha.providerId,
+                      counterpartName: 'Proveedor ${ficha.providerId}',
+                      role: ChatPeerRole.eventProvider,
+                      contextId: ficha.id,
+                      contextLabel: ficha.title,
                     ),
                     icon: const Icon(Icons.chat),
                     label: const Text('Contactar Chat'),

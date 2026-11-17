@@ -13,4 +13,3 @@ abstract class CartRepository {
   /// Clears the active cart.
   Future<Result<void, Failure>> clearCart();
 }
-

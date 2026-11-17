@@ -169,10 +169,7 @@ void main() {
 
     expect(read.isFailure, isTrue);
     expect(write.isFailure, isTrue);
-    expect(
-      (await chat.getMessagesStream(conversation.id).first),
-      isEmpty,
-    );
+    expect((await chat.getMessagesStream(conversation.id).first), isEmpty);
   });
 
   test('cannot send as another user or to a missing conversation', () async {

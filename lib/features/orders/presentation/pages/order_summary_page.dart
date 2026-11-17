@@ -113,8 +113,14 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
     );
 
     var newCart = const Cart();
-    newCart = newCart.addItem(targetStoreId: 'store-licorera-central', item: beerItem);
-    newCart = newCart.addItem(targetStoreId: 'store-licorera-central', item: waterItem);
+    newCart = newCart.addItem(
+      targetStoreId: 'store-licorera-central',
+      item: beerItem,
+    );
+    newCart = newCart.addItem(
+      targetStoreId: 'store-licorera-central',
+      item: waterItem,
+    );
 
     await _cartRepo.saveCart(newCart);
     await _loadCart();
@@ -124,15 +130,17 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
     final address = _addressController.text.trim();
     if (address.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Por favor ingresa una dirección de entrega válida.')),
+        const SnackBar(
+          content: Text('Por favor ingresa una dirección de entrega válida.'),
+        ),
       );
       return;
     }
 
     if (_cart.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('El carrito está vacío.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('El carrito está vacío.')));
       return;
     }
 
@@ -167,13 +175,20 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
             context: context,
             barrierDismissible: false,
             builder: (ctx) => AlertDialog(
-              icon: const Icon(Icons.check_circle, color: Colors.green, size: 52),
+              icon: const Icon(
+                Icons.check_circle,
+                color: Colors.green,
+                size: 52,
+              ),
               title: const Text('¡Pedido Creado!'),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('ID del Pedido: ${data.id}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                  Text(
+                    'ID del Pedido: ${data.id}',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
                   const SizedBox(height: 6),
                   Row(
                     children: [
@@ -181,7 +196,10 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
                       Chip(
                         label: Text(
                           data.status.displayName,
-                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                         backgroundColor: Colors.orange.shade800,
                         padding: EdgeInsets.zero,
@@ -190,7 +208,9 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
                     ],
                   ),
                   const SizedBox(height: 6),
-                  Text('Importe total congelado: \$${data.total.toStringAsFixed(2)}'),
+                  Text(
+                    'Importe total congelado: \$${data.total.toStringAsFixed(2)}',
+                  ),
                   const SizedBox(height: 10),
                   const Text(
                     'Tu pedido está en estado PENDIENTE, esperando confirmación del comercio.',
@@ -205,7 +225,8 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
                     Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => OrdersHistoryPage(session: widget.session),
+                        builder: (_) =>
+                            OrdersHistoryPage(session: widget.session),
                       ),
                     );
                   },
@@ -217,10 +238,7 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
         }
       case FailureResult(:final failure):
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            backgroundColor: Colors.red,
-            content: Text(failure.message),
-          ),
+          SnackBar(backgroundColor: Colors.red, content: Text(failure.message)),
         );
     }
   }
@@ -257,11 +275,17 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.shopping_cart_outlined, size: 72, color: Colors.grey.shade400),
+                    Icon(
+                      Icons.shopping_cart_outlined,
+                      size: 72,
+                      color: Colors.grey.shade400,
+                    ),
                     const SizedBox(height: 16),
                     Text(
                       'Tu carrito está vacío',
-                      style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     const Text(
@@ -287,9 +311,14 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
                   // Store header
                   Card(
                     color: Colors.blue.shade50,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
                       child: Row(
                         children: [
                           Icon(Icons.storefront, color: Colors.blue.shade700),
@@ -316,7 +345,9 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
                   // Items List Header
                   Text(
                     'Artículos en tu Pedido (Precios por Rango)',
-                    style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 8),
 
@@ -393,7 +424,9 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
 
                   Card(
                     elevation: 1,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                     child: Padding(
                       padding: const EdgeInsets.all(16),
                       child: Column(
@@ -415,7 +448,10 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
                             decoration: const InputDecoration(
                               hintText: 'Ingresa calle y número',
                               border: OutlineInputBorder(),
-                              contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                              contentPadding: EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 10,
+                              ),
                             ),
                           ),
                         ],
@@ -435,17 +471,25 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
                     onPressed: _isLoading ? null : _submitOrder,
                     style: FilledButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
                     child: _isLoading
                         ? const SizedBox(
                             height: 20,
                             width: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
                           )
                         : const Text(
                             'Confirmar Pedido (Crear como Pendiente)',
-                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                   ),
                 ],
@@ -472,7 +516,10 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
                     children: [
                       Text(
                         item.productName,
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                        ),
                       ),
                       const SizedBox(height: 4),
                       Row(
@@ -492,13 +539,18 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
                             '\$${item.unitPrice.toStringAsFixed(2)} c/u',
                             style: TextStyle(
                               fontWeight: FontWeight.w600,
-                              color: item.hasTierDiscount ? Colors.green.shade700 : Colors.black87,
+                              color: item.hasTierDiscount
+                                  ? Colors.green.shade700
+                                  : Colors.black87,
                             ),
                           ),
                           if (item.hasTierDiscount) ...[
                             const SizedBox(width: 6),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
                               decoration: BoxDecoration(
                                 color: Colors.green.shade100,
                                 borderRadius: BorderRadius.circular(4),
@@ -519,7 +571,10 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
                         const SizedBox(height: 2),
                         Text(
                           'Envase retornable (Depósito: \$${item.containerDeposit.toStringAsFixed(2)} c/u)',
-                          style: const TextStyle(fontSize: 12, color: Colors.blueGrey),
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.blueGrey,
+                          ),
                         ),
                       ],
                     ],
@@ -527,7 +582,10 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
                 ),
                 Text(
                   '\$${item.subtotal.toStringAsFixed(2)}',
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
                 ),
               ],
             ),
@@ -537,15 +595,20 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
               children: [
                 IconButton(
                   icon: const Icon(Icons.remove_circle_outline),
-                  onPressed: () => _updateItemQuantity(item.productId, item.quantity - 1),
+                  onPressed: () =>
+                      _updateItemQuantity(item.productId, item.quantity - 1),
                 ),
                 Text(
                   '${item.quantity}',
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 IconButton(
                   icon: const Icon(Icons.add_circle_outline),
-                  onPressed: () => _updateItemQuantity(item.productId, item.quantity + 1),
+                  onPressed: () =>
+                      _updateItemQuantity(item.productId, item.quantity + 1),
                 ),
               ],
             ),
@@ -606,11 +669,15 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
                     ),
                     Text(
                       '$_returnedContainers',
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
                     ),
                     IconButton(
                       icon: const Icon(Icons.add),
-                      onPressed: _returnedContainers < _cart.totalReturnableContainers
+                      onPressed:
+                          _returnedContainers < _cart.totalReturnableContainers
                           ? () => setState(() => _returnedContainers++)
                           : null,
                     ),
@@ -683,7 +750,10 @@ class _OrderSummaryPageState extends State<OrderSummaryPage> {
                   const Text('Garantía envases faltantes:'),
                   Text(
                     '+\$${calculation.missingContainersFee.toStringAsFixed(2)}',
-                    style: const TextStyle(color: Colors.deepOrange, fontWeight: FontWeight.w600),
+                    style: const TextStyle(
+                      color: Colors.deepOrange,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ],
               ),

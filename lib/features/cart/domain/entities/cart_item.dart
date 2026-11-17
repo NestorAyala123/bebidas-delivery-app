@@ -21,13 +21,13 @@ class CartItem {
     this.containerDeposit = 0.0,
     double? basePrice,
     this.quantityTiers = const [],
-  })  : basePrice = basePrice ?? unitPrice,
-        assert(quantity > 0, 'La cantidad debe ser mayor a 0'),
-        assert(unitPrice >= 0.0, 'El precio unitario no puede ser negativo'),
-        assert(
-          containerDeposit >= 0.0,
-          'El depósito del envase no puede ser negativo',
-        );
+  }) : basePrice = basePrice ?? unitPrice,
+       assert(quantity > 0, 'La cantidad debe ser mayor a 0'),
+       assert(unitPrice >= 0.0, 'El precio unitario no puede ser negativo'),
+       assert(
+         containerDeposit >= 0.0,
+         'El depósito del envase no puede ser negativo',
+       );
 
   /// Factory constructor to build a [CartItem] directly from a [Product].
   /// Automatically resolves tier pricing according to [quantity].
@@ -96,7 +96,8 @@ class CartItem {
     final newBasePrice = basePrice ?? this.basePrice;
     final newTiers = quantityTiers ?? this.quantityTiers;
 
-    final effectivePrice = unitPrice ??
+    final effectivePrice =
+        unitPrice ??
         (newTiers.isNotEmpty
             ? _resolveTierPrice(newBasePrice, newQuantity, newTiers)
             : this.unitPrice);
@@ -144,14 +145,14 @@ class CartItem {
 
   @override
   int get hashCode => Object.hash(
-        productId,
-        productName,
-        unitPrice,
-        quantity,
-        isReturnable,
-        containerDeposit,
-        basePrice,
-      );
+    productId,
+    productName,
+    unitPrice,
+    quantity,
+    isReturnable,
+    containerDeposit,
+    basePrice,
+  );
 
   @override
   String toString() {

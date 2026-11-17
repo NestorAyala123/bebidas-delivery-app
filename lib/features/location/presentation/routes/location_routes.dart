@@ -13,10 +13,9 @@ class LocationRoutes implements FeatureRouteModule {
 
   @override
   Map<String, WidgetBuilder> get routes => {
-        mapa: (context) => const MapaProximoPage(),
-        seleccionarDestino: (context) =>
-            const SeleccionarDestinoEntregaPage(),
-      };
+    mapa: (context) => const MapaProximoPage(),
+    seleccionarDestino: (context) => const SeleccionarDestinoEntregaPage(),
+  };
 
   @override
   Route<dynamic>? onGenerateRoute(RouteSettings settings) {

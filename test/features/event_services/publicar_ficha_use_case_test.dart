@@ -18,7 +18,8 @@ void main() {
     id: '',
     providerId: 'prov-01',
     title: 'Bartender Profesional Premium',
-    description: 'Servicio de coctelería de autor para bodas y eventos sociales.',
+    description:
+        'Servicio de coctelería de autor para bodas y eventos sociales.',
     serviceType: EventServiceType.bartender,
     estimatedPrice: 150.0,
     locationLabel: 'Manta, Manabí',
@@ -38,15 +39,21 @@ void main() {
       expect(published.title, equals('Bartender Profesional Premium'));
     });
 
-    test('falla con ValidationFailure si el título tiene menos de 3 caracteres', () async {
-      final invalidFicha = validFicha.copyWith(title: 'Ab');
+    test(
+      'falla con ValidationFailure si el título tiene menos de 3 caracteres',
+      () async {
+        final invalidFicha = validFicha.copyWith(title: 'Ab');
 
-      final result = await useCase(invalidFicha);
+        final result = await useCase(invalidFicha);
 
-      expect(result.isFailure, isTrue);
-      expect(result.failureOrNull, isA<ValidationFailure>());
-      expect(result.failureOrNull!.message, contains('al menos 3 caracteres'));
-    });
+        expect(result.isFailure, isTrue);
+        expect(result.failureOrNull, isA<ValidationFailure>());
+        expect(
+          result.failureOrNull!.message,
+          contains('al menos 3 caracteres'),
+        );
+      },
+    );
 
     test('falla con ValidationFailure si la descripción tiene menos de 10 caracteres', () async {
       final invalidFicha = validFicha.copyWith(description: 'Corta');
@@ -58,25 +65,34 @@ void main() {
       expect(result.failureOrNull!.message, contains('al menos 10 caracteres'));
     });
 
-    test('falla con ValidationFailure si el precio estimado es negativo', () async {
-      final invalidFicha = validFicha.copyWith(estimatedPrice: -10.0);
+    test(
+      'falla con ValidationFailure si el precio estimado es negativo',
+      () async {
+        final invalidFicha = validFicha.copyWith(estimatedPrice: -10.0);
 
-      final result = await useCase(invalidFicha);
+        final result = await useCase(invalidFicha);
 
-      expect(result.isFailure, isTrue);
-      expect(result.failureOrNull, isA<ValidationFailure>());
-      expect(result.failureOrNull!.message, contains('no puede ser negativo'));
-    });
+        expect(result.isFailure, isTrue);
+        expect(result.failureOrNull, isA<ValidationFailure>());
+        expect(
+          result.failureOrNull!.message,
+          contains('no puede ser negativo'),
+        );
+      },
+    );
 
-    test('falla con ValidationFailure si el teléfono de contacto está vacío', () async {
-      final invalidFicha = validFicha.copyWith(contactPhone: '   ');
+    test(
+      'falla con ValidationFailure si el teléfono de contacto está vacío',
+      () async {
+        final invalidFicha = validFicha.copyWith(contactPhone: '   ');
 
-      final result = await useCase(invalidFicha);
+        final result = await useCase(invalidFicha);
 
-      expect(result.isFailure, isTrue);
-      expect(result.failureOrNull, isA<ValidationFailure>());
-      expect(result.failureOrNull!.message, contains('teléfono de contacto'));
-    });
+        expect(result.isFailure, isTrue);
+        expect(result.failureOrNull, isA<ValidationFailure>());
+        expect(result.failureOrNull!.message, contains('teléfono de contacto'));
+      },
+    );
 
     test('falla con ValidationFailure si la ubicación está vacía', () async {
       final invalidFicha = validFicha.copyWith(locationLabel: '   ');

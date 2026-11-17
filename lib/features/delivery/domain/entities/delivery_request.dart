@@ -80,6 +80,26 @@ class DeliveryRequest {
     );
   }
 
+  /// Returns a copy of the request with an updated client proposal.
+  DeliveryRequest copyWithInitialCustomerOffer(double offer) {
+    return DeliveryRequest(
+      id: id,
+      orderId: orderId,
+      customerId: customerId,
+      storeId: storeId,
+      originAddress: originAddress,
+      destinationAddress: destinationAddress,
+      distanceInKm: distanceInKm,
+      referenceFare: referenceFare,
+      deliveryMode: deliveryMode,
+      status: status,
+      initialCustomerOffer: offer,
+      isOrderConfirmedByStore: true,
+      assignedDriverId: assignedDriverId,
+      createdAt: createdAt,
+    );
+  }
+
   /// Returns a copy of the request with an updated status
   DeliveryRequest copyWithStatus(DeliveryStatus newStatus) {
     return DeliveryRequest(

@@ -4,11 +4,9 @@ class DeliveryFee {
   final double baseFee;
   final double perKmRate;
 
-  const DeliveryFee({
-    this.baseFee = 1.50,
-    this.perKmRate = 0.50,
-  }) : assert(baseFee >= 0, 'La tarifa base no puede ser negativa'),
-       assert(perKmRate >= 0, 'La tarifa por kilómetro no puede ser negativa');
+  const DeliveryFee({this.baseFee = 1.50, this.perKmRate = 0.50})
+    : assert(baseFee >= 0, 'La tarifa base no puede ser negativa'),
+      assert(perKmRate >= 0, 'La tarifa por kilómetro no puede ser negativa');
 
   /// Calculates the referential fare based on the given [distanceInKm].
   double calculate(double distanceInKm) {

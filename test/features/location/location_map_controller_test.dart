@@ -43,14 +43,17 @@ void main() {
       expect(controller.errorMessage, contains('denegado'));
     });
 
-    test('useSimulatedLocation activa modo simulado con coordenadas válidas', () async {
-      await controller.useSimulatedLocation();
+    test(
+      'useSimulatedLocation activa modo simulado con coordenadas válidas',
+      () async {
+        await controller.useSimulatedLocation();
 
-      expect(controller.status, equals(LocationStatus.success));
-      expect(controller.isSimulatedMode, isTrue);
-      expect(controller.userPosition, isNotNull);
-      expect(controller.nearbyStores, isNotEmpty);
-    });
+        expect(controller.status, equals(LocationStatus.success));
+        expect(controller.isSimulatedMode, isTrue);
+        expect(controller.userPosition, isNotNull);
+        expect(controller.nearbyStores, isNotEmpty);
+      },
+    );
 
     test('simulatePermissionDenied fuerza el estado permissionDenied para demostración', () {
       controller.simulatePermissionDenied();
@@ -60,15 +63,21 @@ void main() {
       expect(controller.nearbyStores, isEmpty);
     });
 
-    test('loadCurrentLocation detecta permiso denegado permanentemente', () async {
-      repository.isPermanentlyDenied = true;
+    test(
+      'loadCurrentLocation detecta permiso denegado permanentemente',
+      () async {
+        repository.isPermanentlyDenied = true;
 
-      await controller.loadCurrentLocation();
+        await controller.loadCurrentLocation();
 
-      expect(controller.status, equals(LocationStatus.permissionPermanentlyDenied));
-      expect(controller.isPermissionPermanentlyDenied, isTrue);
-      expect(controller.errorMessage, contains('permanentemente'));
-    });
+        expect(
+          controller.status,
+          equals(LocationStatus.permissionPermanentlyDenied),
+        );
+        expect(controller.isPermissionPermanentlyDenied, isTrue);
+        expect(controller.errorMessage, contains('permanentemente'));
+      },
+    );
 
     test('loadCurrentLocation detecta timeout o falta de señal GPS', () async {
       repository.isTimeout = true;
@@ -80,12 +89,15 @@ void main() {
       expect(controller.errorMessage, contains('GPS'));
     });
 
-    test('useManualLocation activa fallback con dirección y comercios', () async {
-      await controller.useManualLocation('Av. Flavio Reyes, Manta');
+    test(
+      'useManualLocation activa fallback con dirección y comercios',
+      () async {
+        await controller.useManualLocation('Av. Flavio Reyes, Manta');
 
-      expect(controller.status, equals(LocationStatus.success));
-      expect(controller.manualAddress, equals('Av. Flavio Reyes, Manta'));
-      expect(controller.nearbyStores, isNotEmpty);
-    });
+        expect(controller.status, equals(LocationStatus.success));
+        expect(controller.manualAddress, equals('Av. Flavio Reyes, Manta'));
+        expect(controller.nearbyStores, isNotEmpty);
+      },
+    );
   });
 }

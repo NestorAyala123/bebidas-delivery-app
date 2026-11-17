@@ -35,8 +35,9 @@ class CreateDeliveryRequestUseCase {
     }
 
     // Prevención de duplicados: consultar si ya existe una solicitud activa para el mismo orderId
-    final activeExisting =
-        await repository.getActiveDeliveryRequestByOrderId(request.orderId);
+    final activeExisting = await repository.getActiveDeliveryRequestByOrderId(
+      request.orderId,
+    );
     if (activeExisting.isSuccess && activeExisting.dataOrNull != null) {
       return FailureResult(
         BusinessRuleFailure(

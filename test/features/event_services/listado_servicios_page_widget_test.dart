@@ -7,7 +7,32 @@ import 'package:bebidas_delivery_app/features/event_services/presentation/contro
 import 'package:bebidas_delivery_app/features/event_services/presentation/pages/listado_servicios_page.dart';
 
 void main() {
-  testWidgets('ListadoServiciosPage muestra fichas precargadas y filtros de categoría', (tester) async {
+  testWidgets(
+    'ListadoServiciosPage muestra fichas precargadas y filtros de categoría',
+    (tester) async {
+      final repo = InMemoryFichaServicioRepository();
+      final controller = EventServicesController(
+        obtenerServiciosUseCase: ObtenerServiciosUseCase(repo),
+        publicarFichaUseCase: PublicarFichaUseCase(repo),
+      );
+
+      await tester.pumpWidget(
+        MaterialApp(home: ListadoServiciosPage(controller: controller)),
+      );
+
+      await tester.pumpAndSettle();
+
+      expect(find.text('Servicios para Eventos'), findsOneWidget);
+      expect(find.text('Todos'), findsOneWidget);
+      expect(find.text('Bartender'), findsWidgets);
+      expect(find.text('Hielo & Enfriadores'), findsOneWidget);
+      expect(find.text('Publicar servicio'), findsOneWidget);
+    },
+  );
+
+  testWidgets('Filtrado por categoría actualiza el listado en pantalla', (
+    tester,
+  ) async {
     final repo = InMemoryFichaServicioRepository();
     final controller = EventServicesController(
       obtenerServiciosUseCase: ObtenerServiciosUseCase(repo),
@@ -15,31 +40,7 @@ void main() {
     );
 
     await tester.pumpWidget(
-      MaterialApp(
-        home: ListadoServiciosPage(controller: controller),
-      ),
-    );
-
-    await tester.pumpAndSettle();
-
-    expect(find.text('Servicios para Eventos'), findsOneWidget);
-    expect(find.text('Todos'), findsOneWidget);
-    expect(find.text('Bartender'), findsWidgets);
-    expect(find.text('Hielo & Enfriadores'), findsOneWidget);
-    expect(find.text('Publicar servicio'), findsOneWidget);
-  });
-
-  testWidgets('Filtrado por categoría actualiza el listado en pantalla', (tester) async {
-    final repo = InMemoryFichaServicioRepository();
-    final controller = EventServicesController(
-      obtenerServiciosUseCase: ObtenerServiciosUseCase(repo),
-      publicarFichaUseCase: PublicarFichaUseCase(repo),
-    );
-
-    await tester.pumpWidget(
-      MaterialApp(
-        home: ListadoServiciosPage(controller: controller),
-      ),
+      MaterialApp(home: ListadoServiciosPage(controller: controller)),
     );
 
     await tester.pumpAndSettle();
@@ -51,4 +52,3 @@ void main() {
     expect(find.text('Hielo en Bloque y Enfriadores Express'), findsOneWidget);
   });
 }
-

@@ -18,8 +18,7 @@ class MockAuthRepository implements AuthRepository {
 
   MockAuthRepository({InMemoryUserRepository? users})
     : users =
-          users ??
-          InMemoryUserRepository(MockAccounts.all.map((a) => a.user));
+          users ?? InMemoryUserRepository(MockAccounts.all.map((a) => a.user));
 
   @override
   Future<Result<UserSession, Failure>> login({

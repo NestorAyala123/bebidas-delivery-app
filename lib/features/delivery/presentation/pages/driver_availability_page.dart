@@ -51,7 +51,8 @@ class _DriverAvailabilityPageState extends State<DriverAvailabilityPage> {
     } else {
       setState(() {
         _errorMessage =
-            result.failureOrNull?.message ?? 'Error al consultar disponibilidad';
+            result.failureOrNull?.message ??
+            'Error al consultar disponibilidad';
         _isLoading = false;
       });
     }
@@ -84,7 +85,8 @@ class _DriverAvailabilityPageState extends State<DriverAvailabilityPage> {
     } else {
       setState(() {
         _errorMessage =
-            result.failureOrNull?.message ?? 'Error al actualizar disponibilidad';
+            result.failureOrNull?.message ??
+            'Error al actualizar disponibilidad';
         _isLoading = false;
       });
     }
@@ -93,9 +95,7 @@ class _DriverAvailabilityPageState extends State<DriverAvailabilityPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Disponibilidad del Repartidor'),
-      ),
+      appBar: AppBar(title: const Text('Disponibilidad del Repartidor')),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(24.0),

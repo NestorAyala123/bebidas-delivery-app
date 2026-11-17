@@ -14,7 +14,9 @@ void main() {
     repository = MockLocationRepository();
     controller = LocationMapController(
       obtenerUbicacionActualUseCase: ObtenerUbicacionActualUseCase(repository),
-      obtenerComerciosCercanosUseCase: ObtenerComerciosCercanosUseCase(repository),
+      obtenerComerciosCercanosUseCase: ObtenerComerciosCercanosUseCase(
+        repository,
+      ),
     );
   });
 
@@ -29,22 +31,33 @@ void main() {
       expect(store.phone, isNotEmpty);
       expect(store.formattedDistance, isNotEmpty);
       // RN02: Modalidades de entrega
-      expect(store.allowsExternalDelivery || store.hasOwnDelivery || store.allowsPickup, isTrue);
+      expect(
+        store.allowsExternalDelivery ||
+            store.hasOwnDelivery ||
+            store.allowsPickup,
+        isTrue,
+      );
     });
 
-    test('updateSearchRadius actualiza el radio y recalcula los comercios', () async {
-      await controller.loadCurrentLocation();
+    test(
+      'updateSearchRadius actualiza el radio y recalcula los comercios',
+      () async {
+        await controller.loadCurrentLocation();
 
-      // Cambiar a radio muy estrecho (ej. 0.5 km)
-      await controller.updateSearchRadius(0.5);
-      expect(controller.searchRadiusKm, equals(0.5));
-      expect(controller.nearbyStores.every((s) => s.distanceKm <= 0.5), isTrue);
+        // Cambiar a radio muy estrecho (ej. 0.5 km)
+        await controller.updateSearchRadius(0.5);
+        expect(controller.searchRadiusKm, equals(0.5));
+        expect(
+          controller.nearbyStores.every((s) => s.distanceKm <= 0.5),
+          isTrue,
+        );
 
-      // Cambiar a radio más amplio (ej. 10 km)
-      await controller.updateSearchRadius(10.0);
-      expect(controller.searchRadiusKm, equals(10.0));
-      expect(controller.nearbyStores.length, greaterThanOrEqualTo(5));
-    });
+        // Cambiar a radio más amplio (ej. 10 km)
+        await controller.updateSearchRadius(10.0);
+        expect(controller.searchRadiusKm, equals(10.0));
+        expect(controller.nearbyStores.length, greaterThanOrEqualTo(5));
+      },
+    );
 
     test('setSearchQuery filtra comercios por nombre o dirección', () async {
       await controller.loadCurrentLocation();
@@ -57,23 +70,25 @@ void main() {
       expect(controller.filteredStores, isEmpty);
     });
 
-    test('formattedDistance muestra metros si distancia < 1 km y km si >= 1 km', () {
-      const storeNear = NearbyStore(
-        id: '1',
-        name: 'Cerca',
-        coordinates: GeoCoordinates(latitude: 0, longitude: 0),
-        distanceKm: 0.35,
-      );
-      expect(storeNear.formattedDistance, equals('350 m'));
+    test(
+      'formattedDistance muestra metros si distancia < 1 km y km si >= 1 km',
+      () {
+        const storeNear = NearbyStore(
+          id: '1',
+          name: 'Cerca',
+          coordinates: GeoCoordinates(latitude: 0, longitude: 0),
+          distanceKm: 0.35,
+        );
+        expect(storeNear.formattedDistance, equals('350 m'));
 
-      const storeFar = NearbyStore(
-        id: '2',
-        name: 'Lejos',
-        coordinates: GeoCoordinates(latitude: 0, longitude: 0),
-        distanceKm: 2.456,
-      );
-      expect(storeFar.formattedDistance, equals('2.46 km'));
-    });
+        const storeFar = NearbyStore(
+          id: '2',
+          name: 'Lejos',
+          coordinates: GeoCoordinates(latitude: 0, longitude: 0),
+          distanceKm: 2.456,
+        );
+        expect(storeFar.formattedDistance, equals('2.46 km'));
+      },
+    );
   });
 }
-

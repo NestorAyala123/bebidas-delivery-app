@@ -17,21 +17,25 @@ class UpdateCartQuantityInput {
   });
 
   const UpdateCartQuantityInput.set(String productId, int newQuantity)
-      : this(productId: productId, value: newQuantity, mode: QuantityUpdateMode.set);
+    : this(
+        productId: productId,
+        value: newQuantity,
+        mode: QuantityUpdateMode.set,
+      );
 
   const UpdateCartQuantityInput.increment(String productId, [int amount = 1])
-      : this(
-          productId: productId,
-          value: amount,
-          mode: QuantityUpdateMode.increment,
-        );
+    : this(
+        productId: productId,
+        value: amount,
+        mode: QuantityUpdateMode.increment,
+      );
 
   const UpdateCartQuantityInput.decrement(String productId, [int amount = 1])
-      : this(
-          productId: productId,
-          value: amount,
-          mode: QuantityUpdateMode.decrement,
-        );
+    : this(
+        productId: productId,
+        value: amount,
+        mode: QuantityUpdateMode.decrement,
+      );
 }
 
 /// Use case to update, increment, or decrement item quantity in the cart.
@@ -68,12 +72,18 @@ class UpdateCartQuantityUseCase {
 
     try {
       final updatedCart = switch (input.mode) {
-        QuantityUpdateMode.set =>
-          currentCart.updateQuantity(cleanProductId, input.value),
-        QuantityUpdateMode.increment =>
-          currentCart.incrementQuantity(cleanProductId, input.value),
-        QuantityUpdateMode.decrement =>
-          currentCart.decrementQuantity(cleanProductId, input.value),
+        QuantityUpdateMode.set => currentCart.updateQuantity(
+          cleanProductId,
+          input.value,
+        ),
+        QuantityUpdateMode.increment => currentCart.incrementQuantity(
+          cleanProductId,
+          input.value,
+        ),
+        QuantityUpdateMode.decrement => currentCart.decrementQuantity(
+          cleanProductId,
+          input.value,
+        ),
       };
 
       return await repository.saveCart(updatedCart);
@@ -82,4 +92,3 @@ class UpdateCartQuantityUseCase {
     }
   }
 }
-

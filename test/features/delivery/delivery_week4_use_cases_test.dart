@@ -64,73 +64,90 @@ void main() {
     // Requisito A: Crear solicitudes después de la confirmación (RN01)
     // =========================================================================
     group('A. Solicitudes condicionadas a la confirmación del comercio (RN01)', () {
-      test('1. Un pedido confirmado puede generar una solicitud externa', () async {
-        final orderInfo = makeOrderInfo(isConfirmedByStore: true);
+      test(
+        '1. Un pedido confirmado puede generar una solicitud externa',
+        () async {
+          final orderInfo = makeOrderInfo(isConfirmedByStore: true);
 
-        final result = await createFromOrderUseCase(orderInfo: orderInfo);
+          final result = await createFromOrderUseCase(orderInfo: orderInfo);
 
-        expect(result.isSuccess, isTrue);
-        final request = result.dataOrNull!;
-        expect(request.orderId, equals('ord-201'));
-        expect(request.status, equals(DeliveryStatus.pendingOffer));
-        expect(request.deliveryMode, equals(DeliveryMode.externalDriver));
+          expect(result.isSuccess, isTrue);
+          final request = result.dataOrNull!;
+          expect(request.orderId, equals('ord-201'));
+          expect(request.status, equals(DeliveryStatus.pendingOffer));
+          expect(request.deliveryMode, equals(DeliveryMode.externalDriver));
 
-        // Verificar que fue persistida en el repositorio
-        final persisted = await repository.getDeliveryRequestById(request.id);
-        expect(persisted.isSuccess, isTrue);
-        expect(persisted.dataOrNull!.orderId, equals('ord-201'));
-      });
+          // Verificar que fue persistida en el repositorio
+          final persisted = await repository.getDeliveryRequestById(request.id);
+          expect(persisted.isSuccess, isTrue);
+          expect(persisted.dataOrNull!.orderId, equals('ord-201'));
+        },
+      );
 
-      test('2. Un pedido pendiente no puede generar una solicitud (RN01)', () async {
-        // Pedido no confirmado por el comercio (estado pendiente)
-        final pendingOrder = makeOrderInfo(
-          orderId: 'ord-pending-01',
-          isConfirmedByStore: false,
-        );
+      test(
+        '2. Un pedido pendiente no puede generar una solicitud (RN01)',
+        () async {
+          // Pedido no confirmado por el comercio (estado pendiente)
+          final pendingOrder = makeOrderInfo(
+            orderId: 'ord-pending-01',
+            isConfirmedByStore: false,
+          );
 
-        final result = await createFromOrderUseCase(orderInfo: pendingOrder);
+          final result = await createFromOrderUseCase(orderInfo: pendingOrder);
 
-        expect(result.isFailure, isTrue);
-        expect(result.failureOrNull, isA<BusinessRuleFailure>());
-        expect(
-          result.failureOrNull!.message,
-          contains('RN01: El pedido debe estar confirmado'),
-        );
+          expect(result.isFailure, isTrue);
+          expect(result.failureOrNull, isA<BusinessRuleFailure>());
+          expect(
+            result.failureOrNull!.message,
+            contains('RN01: El pedido debe estar confirmado'),
+          );
 
-        // Verificar que no se persistió ninguna solicitud
-        final activeCheck = await repository.getActiveDeliveryRequestByOrderId('ord-pending-01');
-        expect(activeCheck.dataOrNull, isNull);
-      });
+          // Verificar que no se persistió ninguna solicitud
+          final activeCheck = await repository
+              .getActiveDeliveryRequestByOrderId('ord-pending-01');
+          expect(activeCheck.dataOrNull, isNull);
+        },
+      );
 
-      test('3. Un pedido rechazado no puede generar una solicitud (RN01)', () async {
-        // Pedido rechazado por el comercio (isConfirmedByStore = false)
-        final rejectedOrder = makeOrderInfo(
-          orderId: 'ord-rejected-01',
-          isConfirmedByStore: false,
-        );
+      test(
+        '3. Un pedido rechazado no puede generar una solicitud (RN01)',
+        () async {
+          // Pedido rechazado por el comercio (isConfirmedByStore = false)
+          final rejectedOrder = makeOrderInfo(
+            orderId: 'ord-rejected-01',
+            isConfirmedByStore: false,
+          );
 
-        final result = await createFromOrderUseCase(orderInfo: rejectedOrder);
+          final result = await createFromOrderUseCase(orderInfo: rejectedOrder);
 
-        expect(result.isFailure, isTrue);
-        expect(result.failureOrNull, isA<BusinessRuleFailure>());
-        final activeCheck = await repository.getActiveDeliveryRequestByOrderId('ord-rejected-01');
-        expect(activeCheck.dataOrNull, isNull);
-      });
+          expect(result.isFailure, isTrue);
+          expect(result.failureOrNull, isA<BusinessRuleFailure>());
+          final activeCheck = await repository
+              .getActiveDeliveryRequestByOrderId('ord-rejected-01');
+          expect(activeCheck.dataOrNull, isNull);
+        },
+      );
 
-      test('4. Un pedido cancelado no puede generar una solicitud (RN01)', () async {
-        // Pedido cancelado previo a confirmación (isConfirmedByStore = false)
-        final cancelledOrder = makeOrderInfo(
-          orderId: 'ord-cancelled-01',
-          isConfirmedByStore: false,
-        );
+      test(
+        '4. Un pedido cancelado no puede generar una solicitud (RN01)',
+        () async {
+          // Pedido cancelado previo a confirmación (isConfirmedByStore = false)
+          final cancelledOrder = makeOrderInfo(
+            orderId: 'ord-cancelled-01',
+            isConfirmedByStore: false,
+          );
 
-        final result = await createFromOrderUseCase(orderInfo: cancelledOrder);
+          final result = await createFromOrderUseCase(
+            orderInfo: cancelledOrder,
+          );
 
-        expect(result.isFailure, isTrue);
-        expect(result.failureOrNull, isA<BusinessRuleFailure>());
-        final activeCheck = await repository.getActiveDeliveryRequestByOrderId('ord-cancelled-01');
-        expect(activeCheck.dataOrNull, isNull);
-      });
+          expect(result.isFailure, isTrue);
+          expect(result.failureOrNull, isA<BusinessRuleFailure>());
+          final activeCheck = await repository
+              .getActiveDeliveryRequestByOrderId('ord-cancelled-01');
+          expect(activeCheck.dataOrNull, isNull);
+        },
+      );
 
       test('Pedido confirmado con método pickup o storeDelivery es rechazado por la política', () async {
         final pickupOrder = makeOrderInfo(
@@ -142,8 +159,12 @@ void main() {
           deliveryMethod: OrderDeliveryMethod.storeDelivery,
         );
 
-        final pickupResult = await createFromOrderUseCase(orderInfo: pickupOrder);
-        final storeResult = await createFromOrderUseCase(orderInfo: storeDeliveryOrder);
+        final pickupResult = await createFromOrderUseCase(
+          orderInfo: pickupOrder,
+        );
+        final storeResult = await createFromOrderUseCase(
+          orderInfo: storeDeliveryOrder,
+        );
 
         expect(pickupResult.isFailure, isTrue);
         expect(storeResult.isFailure, isTrue);
@@ -154,22 +175,31 @@ void main() {
     // Prevención de duplicados
     // =========================================================================
     group('Prevención de solicitudes duplicadas', () {
-      test('5. No se pueden generar solicitudes duplicadas para el mismo pedido', () async {
-        final orderInfo = makeOrderInfo(orderId: 'ord-unique-01');
+      test(
+        '5. No se pueden generar solicitudes duplicadas para el mismo pedido',
+        () async {
+          final orderInfo = makeOrderInfo(orderId: 'ord-unique-01');
 
-        // Primera creación: exitosa
-        final firstResult = await createFromOrderUseCase(orderInfo: orderInfo);
-        expect(firstResult.isSuccess, isTrue);
+          // Primera creación: exitosa
+          final firstResult = await createFromOrderUseCase(
+            orderInfo: orderInfo,
+          );
+          expect(firstResult.isSuccess, isTrue);
 
-        // Segunda creación para el mismo pedido: bloqueada
-        final duplicateResult = await createFromOrderUseCase(orderInfo: orderInfo);
-        expect(duplicateResult.isFailure, isTrue);
-        expect(duplicateResult.failureOrNull, isA<BusinessRuleFailure>());
-        expect(
-          duplicateResult.failureOrNull!.message,
-          contains('Ya existe una solicitud de delivery activa para el pedido ord-unique-01'),
-        );
-      });
+          // Segunda creación para el mismo pedido: bloqueada
+          final duplicateResult = await createFromOrderUseCase(
+            orderInfo: orderInfo,
+          );
+          expect(duplicateResult.isFailure, isTrue);
+          expect(duplicateResult.failureOrNull, isA<BusinessRuleFailure>());
+          expect(
+            duplicateResult.failureOrNull!.message,
+            contains(
+              'Ya existe una solicitud de delivery activa para el pedido ord-unique-01',
+            ),
+          );
+        },
+      );
 
       test('Solicitudes anteriores canceladas permiten generar una nueva', () async {
         final orderInfo = makeOrderInfo(orderId: 'ord-retry-01');
@@ -180,7 +210,10 @@ void main() {
         final firstRequest = firstResult.dataOrNull!;
 
         // 2. Cancelar la primera solicitud (pasa a estado terminal)
-        await repository.updateStatus(firstRequest.id, DeliveryStatus.cancelled.name);
+        await repository.updateStatus(
+          firstRequest.id,
+          DeliveryStatus.cancelled.name,
+        );
 
         // 3. Crear una nueva solicitud para el mismo pedido debe ser permitida
         final customUseCase = CreateDeliveryRequestFromOrderUseCase(
@@ -191,7 +224,10 @@ void main() {
         final secondResult = await customUseCase(orderInfo: orderInfo);
         expect(secondResult.isSuccess, isTrue);
         expect(secondResult.dataOrNull!.id, equals('req-test-w4-02'));
-        expect(secondResult.dataOrNull!.status, equals(DeliveryStatus.pendingOffer));
+        expect(
+          secondResult.dataOrNull!.status,
+          equals(DeliveryStatus.pendingOffer),
+        );
       });
 
       test('Solicitudes anteriores entregadas (delivered) permiten generar una nueva', () async {
@@ -203,7 +239,10 @@ void main() {
         final firstRequest = firstResult.dataOrNull!;
 
         // 2. Marcar como entregada (pasa a estado terminal)
-        await repository.updateStatus(firstRequest.id, DeliveryStatus.delivered.name);
+        await repository.updateStatus(
+          firstRequest.id,
+          DeliveryStatus.delivered.name,
+        );
 
         // 3. Crear una nueva solicitud para el mismo pedido debe ser permitida
         final customUseCase = CreateDeliveryRequestFromOrderUseCase(
@@ -214,44 +253,50 @@ void main() {
         final secondResult = await customUseCase(orderInfo: orderInfo);
         expect(secondResult.isSuccess, isTrue);
         expect(secondResult.dataOrNull!.id, equals('req-test-w4-03'));
-        expect(secondResult.dataOrNull!.status, equals(DeliveryStatus.pendingOffer));
+        expect(
+          secondResult.dataOrNull!.status,
+          equals(DeliveryStatus.pendingOffer),
+        );
       });
 
-      test('Protección a nivel de repositorio mock impide duplicados directos', () async {
-        final request1 = DeliveryRequest(
-          id: 'direct-req-1',
-          orderId: 'ord-direct-dup',
-          customerId: 'c1',
-          storeId: 's1',
-          originAddress: 'Origen',
-          destinationAddress: 'Destino',
-          distanceInKm: 2.0,
-          referenceFare: 2.50,
-          isOrderConfirmedByStore: true,
-          status: DeliveryStatus.pendingOffer,
-          createdAt: DateTime.now(),
-        );
-        final request2 = DeliveryRequest(
-          id: 'direct-req-2',
-          orderId: 'ord-direct-dup',
-          customerId: 'c1',
-          storeId: 's1',
-          originAddress: 'Origen',
-          destinationAddress: 'Destino',
-          distanceInKm: 2.0,
-          referenceFare: 2.50,
-          isOrderConfirmedByStore: true,
-          status: DeliveryStatus.pendingOffer,
-          createdAt: DateTime.now(),
-        );
+      test(
+        'Protección a nivel de repositorio mock impide duplicados directos',
+        () async {
+          final request1 = DeliveryRequest(
+            id: 'direct-req-1',
+            orderId: 'ord-direct-dup',
+            customerId: 'c1',
+            storeId: 's1',
+            originAddress: 'Origen',
+            destinationAddress: 'Destino',
+            distanceInKm: 2.0,
+            referenceFare: 2.50,
+            isOrderConfirmedByStore: true,
+            status: DeliveryStatus.pendingOffer,
+            createdAt: DateTime.now(),
+          );
+          final request2 = DeliveryRequest(
+            id: 'direct-req-2',
+            orderId: 'ord-direct-dup',
+            customerId: 'c1',
+            storeId: 's1',
+            originAddress: 'Origen',
+            destinationAddress: 'Destino',
+            distanceInKm: 2.0,
+            referenceFare: 2.50,
+            isOrderConfirmedByStore: true,
+            status: DeliveryStatus.pendingOffer,
+            createdAt: DateTime.now(),
+          );
 
-        final res1 = await repository.createDeliveryRequest(request1);
-        final res2 = await repository.createDeliveryRequest(request2);
+          final res1 = await repository.createDeliveryRequest(request1);
+          final res2 = await repository.createDeliveryRequest(request2);
 
-        expect(res1.isSuccess, isTrue);
-        expect(res2.isFailure, isTrue);
-        expect(res2.failureOrNull, isA<BusinessRuleFailure>());
-      });
+          expect(res1.isSuccess, isTrue);
+          expect(res2.isFailure, isTrue);
+          expect(res2.failureOrNull, isA<BusinessRuleFailure>());
+        },
+      );
     });
 
     // =========================================================================
@@ -275,15 +320,22 @@ void main() {
         expect(availableDrivers.first.canAcceptDeliveries, isTrue);
 
         // Exclusión explícita de busy y offline
-        final hasBusy = availableDrivers.any((d) => d.status == DriverStatus.busy);
-        final hasOffline = availableDrivers.any((d) => d.status == DriverStatus.offline);
+        final hasBusy = availableDrivers.any(
+          (d) => d.status == DriverStatus.busy,
+        );
+        final hasOffline = availableDrivers.any(
+          (d) => d.status == DriverStatus.offline,
+        );
         expect(hasBusy, isFalse);
         expect(hasOffline, isFalse);
       });
 
       test('Cambio dinámico de disponibilidad refleja inmediatamente en el filtrado', () async {
         // Cambiar driver-2 de busy a available
-        await repository.setDriverAvailability('driver-2', DriverStatus.available);
+        await repository.setDriverAvailability(
+          'driver-2',
+          DriverStatus.available,
+        );
 
         final result = await getAvailableDriversUseCase();
         expect(result.isSuccess, isTrue);
@@ -296,9 +348,15 @@ void main() {
       });
 
       test('Si todos los repartidores están desconectados u ocupados, retorna lista vacía exitosamente', () async {
-        await repository.setDriverAvailability('driver-1', DriverStatus.offline);
+        await repository.setDriverAvailability(
+          'driver-1',
+          DriverStatus.offline,
+        );
         await repository.setDriverAvailability('driver-2', DriverStatus.busy);
-        await repository.setDriverAvailability('driver-3', DriverStatus.offline);
+        await repository.setDriverAvailability(
+          'driver-3',
+          DriverStatus.offline,
+        );
 
         final result = await getAvailableDriversUseCase();
         expect(result.isSuccess, isTrue);
@@ -335,40 +393,46 @@ void main() {
         expect(req.createdAt, isNotNull);
       });
 
-      test('9. La tarifa referencial se mantiene correctamente calculada', () async {
-        // Distancia = 5.0 km
-        // Tarifa base = 1.50, Tarifa por km = 0.50
-        // Esperado = 1.50 + (5.0 * 0.50) = 4.00
-        final orderInfo = makeOrderInfo(
-          orderId: 'ord-fare-calc',
-          distanceInKm: 5.0,
-        );
+      test(
+        '9. La tarifa referencial se mantiene correctamente calculada',
+        () async {
+          // Distancia = 5.0 km
+          // Tarifa base = 1.50, Tarifa por km = 0.50
+          // Esperado = 1.50 + (5.0 * 0.50) = 4.00
+          final orderInfo = makeOrderInfo(
+            orderId: 'ord-fare-calc',
+            distanceInKm: 5.0,
+          );
 
-        final result = await createFromOrderUseCase(orderInfo: orderInfo);
+          final result = await createFromOrderUseCase(orderInfo: orderInfo);
 
-        expect(result.isSuccess, isTrue);
-        final req = result.dataOrNull!;
-        expect(req.referenceFare, equals(4.00));
-        expect(req.suggestedFee, equals(4.00));
-      });
+          expect(result.isSuccess, isTrue);
+          final req = result.dataOrNull!;
+          expect(req.referenceFare, equals(4.00));
+          expect(req.suggestedFee, equals(4.00));
+        },
+      );
 
-      test('Falla de validación si no se proporciona distancia en la solicitud', () async {
-        final orderInfoWithoutDistance = makeOrderInfo(
-          orderId: 'ord-no-dist',
-          distanceInKm: null,
-        );
+      test(
+        'Falla de validación si no se proporciona distancia en la solicitud',
+        () async {
+          final orderInfoWithoutDistance = makeOrderInfo(
+            orderId: 'ord-no-dist',
+            distanceInKm: null,
+          );
 
-        final result = await createFromOrderUseCase(
-          orderInfo: orderInfoWithoutDistance,
-        );
+          final result = await createFromOrderUseCase(
+            orderInfo: orderInfoWithoutDistance,
+          );
 
-        expect(result.isFailure, isTrue);
-        expect(result.failureOrNull, isA<ValidationFailure>());
-        expect(
-          result.failureOrNull!.message,
-          contains('La distancia en kilómetros es obligatoria'),
-        );
-      });
+          expect(result.isFailure, isTrue);
+          expect(result.failureOrNull, isA<ValidationFailure>());
+          expect(
+            result.failureOrNull!.message,
+            contains('La distancia en kilómetros es obligatoria'),
+          );
+        },
+      );
     });
   });
 }

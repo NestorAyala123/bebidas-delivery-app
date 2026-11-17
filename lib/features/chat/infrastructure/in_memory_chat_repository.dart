@@ -2,7 +2,9 @@ import 'dart:async';
 
 import '../../../core/errors/failures.dart';
 import '../../../core/result/result.dart';
+import '../domain/entities/chat_conversation.dart';
 import '../domain/entities/chat_message.dart';
+import '../domain/entities/chat_notification.dart';
 import '../domain/entities/conversation.dart';
 import '../domain/repositories/chat_repository.dart';
 
@@ -14,6 +16,9 @@ class InMemoryChatRepository implements ChatRepository {
   final Map<String, StreamController<List<ChatMessage>>> _changes = {};
   final Map<String, Map<String, DateTime>> _reads = {};
   final StreamController<void> _anyChange = StreamController<void>.broadcast();
+  final StreamController<ChatNotification> _notifications =
+      StreamController<ChatNotification>.broadcast();
+  final List<ChatConversation> _chatConversations = [];
 
   InMemoryChatRepository({DateTime Function()? now})
     : _now = now ?? DateTime.now;
@@ -129,6 +134,58 @@ class InMemoryChatRepository implements ChatRepository {
 
   @override
   Stream<void> get changes => _anyChange.stream;
+
+  @override
+  Stream<ChatNotification> get notificationsStream => _notifications.stream;
+
+  @override
+  Stream<List<ChatConversation>> getConversationsStream(String userId) async* {
+    yield _chatConversationsFor(userId);
+    yield* _anyChange.stream.map((_) => _chatConversationsFor(userId));
+  }
+
+  List<ChatConversation> _chatConversationsFor(String userId) {
+    return _chatConversations
+        .where((c) => c.customerId == userId || c.counterpartId == userId)
+        .toList()
+      ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+  }
+
+  @override
+  Future<Result<ChatConversation, Failure>> ensureConversation(
+    ChatConversation conversation,
+  ) async {
+    final existing = _chatConversations.where((c) {
+      return c.customerId == conversation.customerId &&
+          c.counterpartId == conversation.counterpartId &&
+          c.contextId == conversation.contextId;
+    });
+    if (existing.isNotEmpty) {
+      return Success(existing.first);
+    }
+    _chatConversations.add(conversation);
+    _anyChange.add(null);
+    return Success(conversation);
+  }
+
+  @override
+  Future<Result<void, Failure>> markConversationAsRead({
+    required String conversationId,
+    required String userId,
+  }) async {
+    await markAsRead(
+      conversationId: conversationId,
+      userId: userId,
+      readAt: _now(),
+    );
+    final index = _chatConversations.indexWhere((c) => c.id == conversationId);
+    if (index >= 0) {
+      _chatConversations[index] = _chatConversations[index].copyWith(
+        unreadCount: 0,
+      );
+    }
+    return const Success(null);
+  }
 
   List<ChatMessage> _snapshot(String conversationId) =>
       List.unmodifiable(_messages[conversationId] ?? const []);

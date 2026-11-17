@@ -59,7 +59,10 @@ void main() {
       );
       expect(addResult2.isSuccess, isTrue);
       expect(addResult2.dataOrNull?.totalItemCount, equals(3));
-      expect(addResult2.dataOrNull?.subtotal, equals(9.00)); // (2 * 3.50) + (1 * 2.00)
+      expect(
+        addResult2.dataOrNull?.subtotal,
+        equals(9.00),
+      ); // (2 * 3.50) + (1 * 2.00)
 
       // 3. Increment item 1 quantity via UpdateCartQuantityUseCase
       final incResult = await updateCartQuantityUseCase(
@@ -79,7 +82,8 @@ void main() {
       final calcResult = await calculateCartTotalsUseCase(
         CalculateCartTotalsInput(
           cart: decResult.dataOrNull!,
-          returnedContainers: 2, // 4 required, 2 returned -> 2 missing * 0.50 = 1.00 fee
+          returnedContainers:
+              2, // 4 required, 2 returned -> 2 missing * 0.50 = 1.00 fee
           deliveryFee: 2.50,
           discount: 1.00,
         ),
@@ -125,11 +129,14 @@ void main() {
       expect(result.failureOrNull, isA<ValidationFailure>());
     });
 
-    test('RemoveFromCartUseCase rejects empty productId with ValidationFailure', () async {
-      final result = await removeFromCartUseCase('');
-      expect(result.isFailure, isTrue);
-      expect(result.failureOrNull, isA<ValidationFailure>());
-    });
+    test(
+      'RemoveFromCartUseCase rejects empty productId with ValidationFailure',
+      () async {
+        final result = await removeFromCartUseCase('');
+        expect(result.isFailure, isTrue);
+        expect(result.failureOrNull, isA<ValidationFailure>());
+      },
+    );
 
     test('CartDi registers all dependencies properly in ServiceLocator', () {
       final locator = ServiceLocator.instance;
@@ -150,4 +157,3 @@ void main() {
     });
   });
 }
-

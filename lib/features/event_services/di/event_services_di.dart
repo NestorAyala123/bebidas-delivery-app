@@ -43,7 +43,8 @@ class EventServicesDi implements FeatureDiModule {
 
     if (!locator.isRegistered<ObtenerFichaDetalleUseCase>()) {
       locator.registerFactory<ObtenerFichaDetalleUseCase>(
-        () => ObtenerFichaDetalleUseCase(locator.get<FichaServicioRepository>()),
+        () =>
+            ObtenerFichaDetalleUseCase(locator.get<FichaServicioRepository>()),
       );
     }
 
@@ -76,13 +77,12 @@ class EventServicesDi implements FeatureDiModule {
     if (!locator.isRegistered<ConsultasController>()) {
       locator.registerFactory<ConsultasController>(
         () => ConsultasController(
-          crearConsultaServicioUseCase:
-              locator.get<CrearConsultaServicioUseCase>(),
-          obtenerConsultasServicioUseCase:
-              locator.get<ObtenerConsultasServicioUseCase>(),
+          crearConsultaServicioUseCase: locator
+              .get<CrearConsultaServicioUseCase>(),
+          obtenerConsultasServicioUseCase: locator
+              .get<ObtenerConsultasServicioUseCase>(),
         ),
       );
     }
   }
 }
-

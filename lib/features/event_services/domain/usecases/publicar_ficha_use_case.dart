@@ -20,7 +20,9 @@ class PublicarFichaUseCase {
     final title = ficha.title.trim();
     if (title.isEmpty || title.length < 3) {
       return const FailureResult(
-        ValidationFailure('El título del servicio debe tener al menos 3 caracteres'),
+        ValidationFailure(
+          'El título del servicio debe tener al menos 3 caracteres',
+        ),
       );
     }
 
@@ -63,4 +65,3 @@ class PublicarFichaUseCase {
     return _repository.publishFicha(sanitizedFicha);
   }
 }
-

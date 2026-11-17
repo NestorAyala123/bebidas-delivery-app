@@ -8,7 +8,8 @@ import '../domain/repositories/cart_repository.dart';
 class InMemoryCartRepository implements CartRepository {
   Cart _cart;
 
-  InMemoryCartRepository([Cart? initialCart]) : _cart = initialCart ?? const Cart();
+  InMemoryCartRepository([Cart? initialCart])
+    : _cart = initialCart ?? const Cart();
 
   @override
   Future<Result<Cart, Failure>> getCart() async {
@@ -27,4 +28,3 @@ class InMemoryCartRepository implements CartRepository {
     return const Success(null);
   }
 }
-

@@ -119,19 +119,22 @@ void main() {
       );
     });
 
-    test('incrementQuantity with amount <= 0 throws InvalidCartQuantityException', () {
-      var cart = const Cart();
-      cart = cart.addItem(targetStoreId: storeId, item: itemA);
+    test(
+      'incrementQuantity with amount <= 0 throws InvalidCartQuantityException',
+      () {
+        var cart = const Cart();
+        cart = cart.addItem(targetStoreId: storeId, item: itemA);
 
-      expect(
-        () => cart.incrementQuantity('p-a', 0),
-        throwsA(isA<InvalidCartQuantityException>()),
-      );
-      expect(
-        () => cart.incrementQuantity('p-a', -2),
-        throwsA(isA<InvalidCartQuantityException>()),
-      );
-    });
+        expect(
+          () => cart.incrementQuantity('p-a', 0),
+          throwsA(isA<InvalidCartQuantityException>()),
+        );
+        expect(
+          () => cart.incrementQuantity('p-a', -2),
+          throwsA(isA<InvalidCartQuantityException>()),
+        );
+      },
+    );
 
     test('decrementQuantity decreases quantity by 1 by default', () {
       var cart = const Cart();
@@ -163,19 +166,22 @@ void main() {
       );
     });
 
-    test('decrementQuantity with amount <= 0 throws InvalidCartQuantityException', () {
-      var cart = const Cart();
-      cart = cart.addItem(targetStoreId: storeId, item: itemA);
+    test(
+      'decrementQuantity with amount <= 0 throws InvalidCartQuantityException',
+      () {
+        var cart = const Cart();
+        cart = cart.addItem(targetStoreId: storeId, item: itemA);
 
-      expect(
-        () => cart.decrementQuantity('p-a', 0),
-        throwsA(isA<InvalidCartQuantityException>()),
-      );
-      expect(
-        () => cart.decrementQuantity('p-a', -3),
-        throwsA(isA<InvalidCartQuantityException>()),
-      );
-    });
+        expect(
+          () => cart.decrementQuantity('p-a', 0),
+          throwsA(isA<InvalidCartQuantityException>()),
+        );
+        expect(
+          () => cart.decrementQuantity('p-a', -3),
+          throwsA(isA<InvalidCartQuantityException>()),
+        );
+      },
+    );
 
     test('CartItem helper methods increment and decrement', () {
       const item = CartItem(
@@ -195,4 +201,3 @@ void main() {
     });
   });
 }
-

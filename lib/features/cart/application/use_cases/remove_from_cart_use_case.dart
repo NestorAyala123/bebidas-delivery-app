@@ -33,4 +33,3 @@ class RemoveFromCartUseCase {
     return repository.saveCart(updatedCart);
   }
 }
-

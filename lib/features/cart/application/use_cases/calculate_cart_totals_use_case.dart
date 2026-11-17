@@ -51,4 +51,3 @@ class CalculateCartTotalsUseCase {
     return Success(calculation);
   }
 }
-

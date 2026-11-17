@@ -39,81 +39,73 @@ void main() {
       );
     }
 
-    test(
-      '1. Caso exitoso: calcula referenceFare = 1.50 + (3.5 * 0.50) = 3.25 y persiste con la tarifa calculada',
-      () async {
-        final request = makeSampleRequest(distanceInKm: 3.5, referenceFare: 0.0);
+    test('1. Caso exitoso: calcula referenceFare = 1.50 + (3.5 * 0.50) = 3.25 y persiste con la tarifa calculada', () async {
+      final request = makeSampleRequest(distanceInKm: 3.5, referenceFare: 0.0);
 
-        final result = await useCase(request);
+      final result = await useCase(request);
 
-        expect(result.isSuccess, isTrue);
-        final created = result.dataOrNull!;
-        expect(created.referenceFare, equals(3.25));
+      expect(result.isSuccess, isTrue);
+      final created = result.dataOrNull!;
+      expect(created.referenceFare, equals(3.25));
 
-        // Verificar que el repositorio persistió la solicitud con la tarifa calculada
-        final fromRepoResult = await repository.getDeliveryRequestById(request.id);
-        expect(fromRepoResult.isSuccess, isTrue);
-        expect(fromRepoResult.dataOrNull!.referenceFare, equals(3.25));
-      },
-    );
+      // Verificar que el repositorio persistió la solicitud con la tarifa calculada
+      final fromRepoResult = await repository.getDeliveryRequestById(
+        request.id,
+      );
+      expect(fromRepoResult.isSuccess, isTrue);
+      expect(fromRepoResult.dataOrNull!.referenceFare, equals(3.25));
+    });
 
-    test(
-      '2. Caso borde inferior válido (0.0 km): calcula referenceFare = 1.50 + (0 * 0.50) = 1.50 y persiste con la tarifa calculada',
-      () async {
-        final request = makeSampleRequest(distanceInKm: 0.0, referenceFare: 0.0);
+    test('2. Caso borde inferior válido (0.0 km): calcula referenceFare = 1.50 + (0 * 0.50) = 1.50 y persiste con la tarifa calculada', () async {
+      final request = makeSampleRequest(distanceInKm: 0.0, referenceFare: 0.0);
 
-        final result = await useCase(request);
+      final result = await useCase(request);
 
-        expect(result.isSuccess, isTrue);
-        final created = result.dataOrNull!;
-        expect(created.referenceFare, equals(1.50));
+      expect(result.isSuccess, isTrue);
+      final created = result.dataOrNull!;
+      expect(created.referenceFare, equals(1.50));
 
-        // Verificar que el repositorio persistió la solicitud con la tarifa calculada
-        final fromRepoResult = await repository.getDeliveryRequestById(request.id);
-        expect(fromRepoResult.isSuccess, isTrue);
-        expect(fromRepoResult.dataOrNull!.referenceFare, equals(1.50));
-      },
-    );
+      // Verificar que el repositorio persistió la solicitud con la tarifa calculada
+      final fromRepoResult = await repository.getDeliveryRequestById(
+        request.id,
+      );
+      expect(fromRepoResult.isSuccess, isTrue);
+      expect(fromRepoResult.dataOrNull!.referenceFare, equals(1.50));
+    });
 
-    test(
-      '3. Caso distanceInKm es null: retorna ValidationFailure sin tocar repositorio',
-      () async {
-        final request = makeSampleRequest(distanceInKm: null);
+    test('3. Caso distanceInKm es null: retorna ValidationFailure sin tocar repositorio', () async {
+      final request = makeSampleRequest(distanceInKm: null);
 
-        final result = await useCase(request);
+      final result = await useCase(request);
 
-        expect(result.isFailure, isTrue);
-        expect(result.failureOrNull, isA<ValidationFailure>());
-        expect(
-          result.failureOrNull!.message,
-          equals(
-            'La distancia en kilómetros es obligatoria y debe ser mayor o igual a 0',
-          ),
-        );
+      expect(result.isFailure, isTrue);
+      expect(result.failureOrNull, isA<ValidationFailure>());
+      expect(
+        result.failureOrNull!.message,
+        equals(
+          'La distancia en kilómetros es obligatoria y debe ser mayor o igual a 0',
+        ),
+      );
 
-        // Verificación de que el repositorio no fue llamado
-        final repoCheck = await repository.getDeliveryRequestById(request.id);
-        expect(repoCheck.failureOrNull, isA<NotFoundFailure>());
-      },
-    );
+      // Verificación de que el repositorio no fue llamado
+      final repoCheck = await repository.getDeliveryRequestById(request.id);
+      expect(repoCheck.failureOrNull, isA<NotFoundFailure>());
+    });
 
-    test(
-      '4. Regla A1: sobrescribe tarifa manipulada (999.0) con la tarifa calculada correcta',
-      () async {
-        final request = makeSampleRequest(
-          distanceInKm: 3.5,
-          referenceFare: 999.0, // tarifa manipulada arbitraria
-        );
+    test('4. Regla A1: sobrescribe tarifa manipulada (999.0) con la tarifa calculada correcta', () async {
+      final request = makeSampleRequest(
+        distanceInKm: 3.5,
+        referenceFare: 999.0, // tarifa manipulada arbitraria
+      );
 
-        final result = await useCase(request);
+      final result = await useCase(request);
 
-        expect(result.isSuccess, isTrue);
-        expect(result.dataOrNull!.referenceFare, equals(3.25));
+      expect(result.isSuccess, isTrue);
+      expect(result.dataOrNull!.referenceFare, equals(3.25));
 
-        final persisted = (await repository.getDeliveryRequestById(request.id))
-            .dataOrNull!;
-        expect(persisted.referenceFare, equals(3.25));
-      },
-    );
+      final persisted = (await repository.getDeliveryRequestById(request.id))
+          .dataOrNull!;
+      expect(persisted.referenceFare, equals(3.25));
+    });
   });
 }

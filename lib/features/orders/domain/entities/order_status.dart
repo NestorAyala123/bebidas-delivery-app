@@ -36,20 +36,20 @@ enum OrderStatus {
 
   /// Nombre legible para interfaces de usuario
   String get displayName => switch (this) {
-        OrderStatus.created => 'Pendiente',
-        OrderStatus.confirmed => 'Confirmado',
-        OrderStatus.rejected => 'Rechazado',
-        OrderStatus.preparing => 'En preparación',
-        OrderStatus.readyForPickup => 'Listo para retirar',
-        OrderStatus.pickedUp => 'Retirado',
-        OrderStatus.readyForDelivery => 'Listo para entrega',
-        OrderStatus.lookingForDriver => 'Buscando Repartidor',
-        OrderStatus.noDriversAvailable => 'Sin repartidores disponibles',
-        OrderStatus.driverAssigned => 'Repartidor Asignado',
-        OrderStatus.inDelivery => 'En Camino',
-        OrderStatus.delivered => 'Entregado',
-        OrderStatus.cancelled => 'Cancelado',
-      };
+    OrderStatus.created => 'Pendiente',
+    OrderStatus.confirmed => 'Confirmado',
+    OrderStatus.rejected => 'Rechazado',
+    OrderStatus.preparing => 'En preparación',
+    OrderStatus.readyForPickup => 'Listo para retirar',
+    OrderStatus.pickedUp => 'Retirado',
+    OrderStatus.readyForDelivery => 'Listo para entrega',
+    OrderStatus.lookingForDriver => 'Buscando Repartidor',
+    OrderStatus.noDriversAvailable => 'Sin repartidores disponibles',
+    OrderStatus.driverAssigned => 'Repartidor Asignado',
+    OrderStatus.inDelivery => 'En Camino',
+    OrderStatus.delivered => 'Entregado',
+    OrderStatus.cancelled => 'Cancelado',
+  };
 }
 
 class OrderStatusChange {

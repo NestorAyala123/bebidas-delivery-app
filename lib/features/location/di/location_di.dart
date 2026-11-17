@@ -3,6 +3,7 @@ import '../domain/repositories/location_repository.dart';
 import '../domain/usecases/calcular_distancia_entrega_use_case.dart';
 import '../domain/usecases/obtener_comercios_cercanos_use_case.dart';
 import '../domain/usecases/obtener_ubicacion_actual_use_case.dart';
+import '../domain/usecases/obtener_ubicacion_precisa_use_case.dart';
 import '../infrastructure/repositories/geolocator_location_repository.dart';
 import '../presentation/controllers/location_map_controller.dart';
 
@@ -26,7 +27,8 @@ class LocationDi implements FeatureDiModule {
 
     if (!locator.isRegistered<ObtenerComerciosCercanosUseCase>()) {
       locator.registerFactory<ObtenerComerciosCercanosUseCase>(
-        () => ObtenerComerciosCercanosUseCase(locator.get<LocationRepository>()),
+        () =>
+            ObtenerComerciosCercanosUseCase(locator.get<LocationRepository>()),
       );
     }
 
@@ -36,14 +38,20 @@ class LocationDi implements FeatureDiModule {
       );
     }
 
+    if (!locator.isRegistered<ObtenerUbicacionPrecisaUseCase>()) {
+      locator.registerFactory<ObtenerUbicacionPrecisaUseCase>(
+        () => ObtenerUbicacionPrecisaUseCase(locator.get<LocationRepository>()),
+      );
+    }
+
     // 3. Controlador de Presentación
     if (!locator.isRegistered<LocationMapController>()) {
       locator.registerFactory<LocationMapController>(
         () => LocationMapController(
-          obtenerUbicacionActualUseCase:
-              locator.get<ObtenerUbicacionActualUseCase>(),
-          obtenerComerciosCercanosUseCase:
-              locator.get<ObtenerComerciosCercanosUseCase>(),
+          obtenerUbicacionActualUseCase: locator
+              .get<ObtenerUbicacionActualUseCase>(),
+          obtenerComerciosCercanosUseCase: locator
+              .get<ObtenerComerciosCercanosUseCase>(),
         ),
       );
     }

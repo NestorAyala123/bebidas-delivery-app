@@ -4,8 +4,7 @@ import '../../../../core/errors/exceptions.dart';
 /// "Un pedido/carrito solo puede contener productos de un único comercio."
 class SingleStoreViolationException extends DomainException {
   const SingleStoreViolationException([
-    super.message =
-        'RN07: No se pueden agregar productos de diferentes comercios en el mismo carrito.',
+    super.message = 'RN07: No se pueden agregar productos de diferentes comercios en el mismo carrito.',
     super.code = 'RN07',
   ]);
 }
@@ -25,4 +24,3 @@ class InvalidCartQuantityException extends DomainException {
     super.code = 'INVALID_CART_QUANTITY',
   ]);
 }
-

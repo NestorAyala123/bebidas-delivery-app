@@ -72,7 +72,10 @@ void main() {
     );
 
     expect(result.isFailure, isTrue);
-    expect((await users.getUserById(store.id)).dataOrNull?.name, isNot('Hackeado'));
+    expect(
+      (await users.getUserById(store.id)).dataOrNull?.name,
+      isNot('Hackeado'),
+    );
   });
 
   test('validates name length and phone format', () async {
@@ -95,10 +98,7 @@ void main() {
 
   test('other users only see the public identity', () async {
     final own = await GetProfileUseCase(users)(client.id, requester: client);
-    final foreign = await GetProfileUseCase(users)(
-      client.id,
-      requester: store,
-    );
+    final foreign = await GetProfileUseCase(users)(client.id, requester: store);
 
     expect(own.dataOrNull?.email, 'cliente@demo.com');
     expect(foreign.dataOrNull?.displayName, 'Cliente Demo');

@@ -42,10 +42,13 @@ class _MapaProximoPageState extends State<MapaProximoPage> {
     } else {
       _isControllerInternal = true;
       // Resolver dependencias desde el contenedor o instanciar con repositorio
-      final obtenerUbicacion = ServiceLocator.instance.isRegistered<ObtenerUbicacionActualUseCase>()
+      final obtenerUbicacion =
+          ServiceLocator.instance.isRegistered<ObtenerUbicacionActualUseCase>()
           ? ServiceLocator.instance.get<ObtenerUbicacionActualUseCase>()
           : null;
-      final obtenerComercios = ServiceLocator.instance.isRegistered<ObtenerComerciosCercanosUseCase>()
+      final obtenerComercios =
+          ServiceLocator.instance
+              .isRegistered<ObtenerComerciosCercanosUseCase>()
           ? ServiceLocator.instance.get<ObtenerComerciosCercanosUseCase>()
           : null;
 
@@ -175,7 +178,11 @@ class _MapaProximoPageState extends State<MapaProximoPage> {
                 value: 'simulate_success',
                 child: Row(
                   children: [
-                    Icon(Icons.check_circle_outline, size: 20, color: Colors.green),
+                    Icon(
+                      Icons.check_circle_outline,
+                      size: 20,
+                      color: Colors.green,
+                    ),
                     SizedBox(width: 8),
                     Text('Usar Ubicación de Prueba'),
                   ],
@@ -292,9 +299,12 @@ class _MapaProximoPageState extends State<MapaProximoPage> {
             ),
             const SizedBox(height: 12),
             Text(
-              _controller.errorMessage ??
-                  'No es posible mostrar las licorerías y comercios cercanos porque el permiso de GPS fue denegado.',
-              style: const TextStyle(fontSize: 14, color: Colors.black87, height: 1.4),
+              _controller.errorMessage ?? 'No es posible mostrar las licorerías y comercios cercanos porque el permiso de GPS fue denegado.',
+              style: const TextStyle(
+                fontSize: 14,
+                color: Colors.black87,
+                height: 1.4,
+              ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16),
@@ -314,7 +324,10 @@ class _MapaProximoPageState extends State<MapaProximoPage> {
                       isPermanent
                           ? 'El sistema ya no volverá a mostrar el diálogo de permiso. Actívalo manualmente en los ajustes de la aplicación.'
                           : 'Puedes conceder el permiso en cualquier momento o explorar con una ubicación de prueba.',
-                      style: const TextStyle(fontSize: 12, color: Colors.black87),
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Colors.black87,
+                      ),
                     ),
                   ),
                 ],
@@ -396,9 +409,12 @@ class _MapaProximoPageState extends State<MapaProximoPage> {
             ),
             const SizedBox(height: 12),
             Text(
-              _controller.errorMessage ??
-                  'No pudimos obtener tu ubicación a tiempo. Puedes reintentar, usar coordenadas de prueba o ingresar tu dirección manualmente.',
-              style: const TextStyle(fontSize: 14, color: Colors.black87, height: 1.4),
+              _controller.errorMessage ?? 'No pudimos obtener tu ubicación a tiempo. Puedes reintentar, usar coordenadas de prueba o ingresar tu dirección manualmente.',
+              style: const TextStyle(
+                fontSize: 14,
+                color: Colors.black87,
+                height: 1.4,
+              ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
@@ -492,7 +508,8 @@ class _MapaProximoPageState extends State<MapaProximoPage> {
             ),
             const SizedBox(height: 8),
             Text(
-              _controller.errorMessage ?? 'Por favor activa el GPS en tu teléfono.',
+              _controller.errorMessage ??
+                  'Por favor activa el GPS en tu teléfono.',
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 20),
@@ -534,12 +551,19 @@ class _MapaProximoPageState extends State<MapaProximoPage> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
             child: Row(
               children: [
-                const Icon(Icons.edit_location_alt, size: 16, color: Colors.blue),
+                const Icon(
+                  Icons.edit_location_alt,
+                  size: 16,
+                  color: Colors.blue,
+                ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     'Dirección manual: ${_controller.manualAddress}',
-                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -569,7 +593,10 @@ class _MapaProximoPageState extends State<MapaProximoPage> {
                 ),
                 TextButton(
                   onPressed: () => _controller.loadCurrentLocation(),
-                  child: const Text('Usar GPS Real', style: TextStyle(fontSize: 12)),
+                  child: const Text(
+                    'Usar GPS Real',
+                    style: TextStyle(fontSize: 12),
+                  ),
                 ),
               ],
             ),
@@ -591,7 +618,8 @@ class _MapaProximoPageState extends State<MapaProximoPage> {
                 ),
                 children: [
                   TileLayer(
-                    urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                    urlTemplate:
+                        'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                     userAgentPackageName: 'com.example.bebidas_delivery_app',
                   ),
                   MarkerLayer(
@@ -609,7 +637,8 @@ class _MapaProximoPageState extends State<MapaProximoPage> {
                           store.coordinates.latitude,
                           store.coordinates.longitude,
                         );
-                        final isSelected = _controller.selectedStore?.id == store.id;
+                        final isSelected =
+                            _controller.selectedStore?.id == store.id;
 
                         return Marker(
                           point: storeLatLng,
@@ -645,7 +674,10 @@ class _MapaProximoPageState extends State<MapaProximoPage> {
                 top: 12,
                 right: 12,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(16),
@@ -660,7 +692,11 @@ class _MapaProximoPageState extends State<MapaProximoPage> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.storefront, size: 16, color: Colors.deepOrange),
+                      const Icon(
+                        Icons.storefront,
+                        size: 16,
+                        color: Colors.deepOrange,
+                      ),
                       const SizedBox(width: 4),
                       Text(
                         '${_controller.nearbyStores.length} tiendas',
@@ -690,13 +726,15 @@ class _MapaProximoPageState extends State<MapaProximoPage> {
                   children: [
                     Text(
                       'Comercios en tu zona',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                      style: Theme.of(context).textTheme.titleMedium
+                          ?.copyWith(fontWeight: FontWeight.bold),
                     ),
                     Text(
                       'Calculado por Haversine',
-                      style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: Colors.grey.shade600,
+                      ),
                     ),
                   ],
                 ),
@@ -705,20 +743,33 @@ class _MapaProximoPageState extends State<MapaProximoPage> {
               // Selector de radio de búsqueda
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 4,
+                ),
                 child: Row(
                   children: [
-                    const Text('Radio:', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                    const Text(
+                      'Radio:',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                     const SizedBox(width: 8),
                     Wrap(
                       spacing: 6,
                       children: [2.0, 5.0, 10.0].map((radius) {
                         final isSelected = _controller.searchRadiusKm == radius;
                         return ChoiceChip(
-                          label: Text('${radius.toInt()} km', style: const TextStyle(fontSize: 11)),
+                          label: Text(
+                            '${radius.toInt()} km',
+                            style: const TextStyle(fontSize: 11),
+                          ),
                           selected: isSelected,
                           visualDensity: VisualDensity.compact,
-                          onSelected: (_) => _controller.updateSearchRadius(radius),
+                          onSelected: (_) =>
+                              _controller.updateSearchRadius(radius),
                         );
                       }).toList(),
                     ),
@@ -732,7 +783,11 @@ class _MapaProximoPageState extends State<MapaProximoPage> {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.storefront_outlined, size: 40, color: Colors.grey.shade400),
+                            Icon(
+                              Icons.storefront_outlined,
+                              size: 40,
+                              color: Colors.grey.shade400,
+                            ),
                             const SizedBox(height: 8),
                             Text(
                               'No hay comercios en un radio de ${_controller.searchRadiusKm.toInt()} km',
@@ -740,7 +795,8 @@ class _MapaProximoPageState extends State<MapaProximoPage> {
                             ),
                             const SizedBox(height: 12),
                             ElevatedButton.icon(
-                              onPressed: () => _controller.updateSearchRadius(10.0),
+                              onPressed: () =>
+                                  _controller.updateSearchRadius(10.0),
                               icon: const Icon(Icons.zoom_out_map, size: 18),
                               label: const Text('Ampliar radio a 10 km'),
                               style: ElevatedButton.styleFrom(
@@ -751,16 +807,22 @@ class _MapaProximoPageState extends State<MapaProximoPage> {
                         ),
                       )
                     : ListView.separated(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 4,
+                        ),
                         itemCount: _controller.filteredStores.length,
-                        separatorBuilder: (context, index) => const Divider(height: 1),
+                        separatorBuilder: (context, index) =>
+                            const Divider(height: 1),
                         itemBuilder: (context, index) {
                           final store = _controller.filteredStores[index];
-                          final isSelected = _controller.selectedStore?.id == store.id;
+                          final isSelected =
+                              _controller.selectedStore?.id == store.id;
 
                           return ListTile(
                             selected: isSelected,
-                            selectedTileColor: colorScheme.primaryContainer.withAlpha(50),
+                            selectedTileColor: colorScheme.primaryContainer
+                                .withAlpha(50),
                             leading: CircleAvatar(
                               backgroundColor: store.isOpen
                                   ? colorScheme.primaryContainer
@@ -777,11 +839,16 @@ class _MapaProximoPageState extends State<MapaProximoPage> {
                                 Expanded(
                                   child: Text(
                                     store.name,
-                                    style: const TextStyle(fontWeight: FontWeight.w600),
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                    ),
                                   ),
                                 ),
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 6,
+                                    vertical: 2,
+                                  ),
                                   decoration: BoxDecoration(
                                     color: store.isOpen
                                         ? Colors.green.withAlpha(30)
@@ -793,7 +860,9 @@ class _MapaProximoPageState extends State<MapaProximoPage> {
                                     style: TextStyle(
                                       fontSize: 10,
                                       fontWeight: FontWeight.bold,
-                                      color: store.isOpen ? Colors.green.shade800 : Colors.grey.shade700,
+                                      color: store.isOpen
+                                          ? Colors.green.shade800
+                                          : Colors.grey.shade700,
                                     ),
                                   ),
                                 ),
@@ -809,14 +878,20 @@ class _MapaProximoPageState extends State<MapaProximoPage> {
                                 if (store.address.isNotEmpty)
                                   Text(
                                     store.address,
-                                    style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      color: Colors.grey.shade600,
+                                    ),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                   ),
                               ],
                             ),
                             trailing: IconButton(
-                              icon: const Icon(Icons.pin_drop, color: Colors.deepOrange),
+                              icon: const Icon(
+                                Icons.pin_drop,
+                                color: Colors.deepOrange,
+                              ),
                               onPressed: () {
                                 _controller.selectStore(store);
                                 _mapController.move(
@@ -859,7 +934,9 @@ class _MapaProximoPageState extends State<MapaProximoPage> {
               Row(
                 children: [
                   CircleAvatar(
-                    backgroundColor: store.isOpen ? Colors.deepOrange : Colors.grey,
+                    backgroundColor: store.isOpen
+                        ? Colors.deepOrange
+                        : Colors.grey,
                     foregroundColor: Colors.white,
                     child: const Icon(Icons.storefront),
                   ),
@@ -880,11 +957,18 @@ class _MapaProximoPageState extends State<MapaProximoPage> {
                               ),
                             ),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 3,
+                              ),
                               decoration: BoxDecoration(
-                                color: store.isOpen ? Colors.green.shade50 : Colors.red.shade50,
+                                color: store.isOpen
+                                    ? Colors.green.shade50
+                                    : Colors.red.shade50,
                                 border: Border.all(
-                                  color: store.isOpen ? Colors.green : Colors.red,
+                                  color: store.isOpen
+                                      ? Colors.green
+                                      : Colors.red,
                                 ),
                                 borderRadius: BorderRadius.circular(12),
                               ),
@@ -893,7 +977,9 @@ class _MapaProximoPageState extends State<MapaProximoPage> {
                                 style: TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.bold,
-                                  color: store.isOpen ? Colors.green.shade800 : Colors.red.shade800,
+                                  color: store.isOpen
+                                      ? Colors.green.shade800
+                                      : Colors.red.shade800,
                                 ),
                               ),
                             ),
@@ -914,12 +1000,19 @@ class _MapaProximoPageState extends State<MapaProximoPage> {
                   padding: const EdgeInsets.only(bottom: 8.0),
                   child: Text(
                     store.description,
-                    style: const TextStyle(fontSize: 13, fontStyle: FontStyle.italic),
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontStyle: FontStyle.italic,
+                    ),
                   ),
                 ),
               Row(
                 children: [
-                  const Icon(Icons.location_on_outlined, size: 16, color: Colors.grey),
+                  const Icon(
+                    Icons.location_on_outlined,
+                    size: 16,
+                    color: Colors.grey,
+                  ),
                   const SizedBox(width: 6),
                   Expanded(
                     child: Text(
@@ -944,7 +1037,11 @@ class _MapaProximoPageState extends State<MapaProximoPage> {
                 const SizedBox(height: 4),
                 Row(
                   children: [
-                    const Icon(Icons.phone_outlined, size: 16, color: Colors.grey),
+                    const Icon(
+                      Icons.phone_outlined,
+                      size: 16,
+                      color: Colors.grey,
+                    ),
                     const SizedBox(width: 6),
                     Text(
                       'Tel: ${store.phone}',
@@ -1046,7 +1143,11 @@ class _DeliveryBadge extends StatelessWidget {
           const SizedBox(width: 4),
           Text(
             label,
-            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: color),
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
           ),
         ],
       ),
@@ -1084,11 +1185,7 @@ class _UserLocationMarker extends StatelessWidget {
                 ),
               ],
             ),
-            child: const Icon(
-              Icons.my_location,
-              color: Colors.white,
-              size: 20,
-            ),
+            child: const Icon(Icons.my_location, color: Colors.white, size: 20),
           ),
         ),
         Container(
@@ -1117,10 +1214,7 @@ class _StoreMarker extends StatelessWidget {
   final NearbyStore store;
   final bool isSelected;
 
-  const _StoreMarker({
-    required this.store,
-    required this.isSelected,
-  });
+  const _StoreMarker({required this.store, required this.isSelected});
 
   @override
   Widget build(BuildContext context) {
@@ -1182,11 +1276,7 @@ class _CoordinatesChip extends StatelessWidget {
         color: Colors.black.withAlpha(180),
         borderRadius: BorderRadius.circular(20),
         boxShadow: const [
-          BoxShadow(
-            color: Colors.black26,
-            blurRadius: 4,
-            offset: Offset(0, 2),
-          ),
+          BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(0, 2)),
         ],
       ),
       child: Row(

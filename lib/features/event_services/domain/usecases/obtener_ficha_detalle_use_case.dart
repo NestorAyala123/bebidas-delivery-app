@@ -18,4 +18,3 @@ class ObtenerFichaDetalleUseCase {
     return _repository.getFichaById(id);
   }
 }
-

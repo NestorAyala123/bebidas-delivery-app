@@ -5,7 +5,7 @@
   <img src="https://img.shields.io/badge/Dart-3.13+-0175C2?style=for-the-badge&logo=dart&logoColor=white" alt="Dart" />
   <img src="https://img.shields.io/badge/Architecture-Modular_Monolith-success?style=for-the-badge" alt="Architecture" />
   <img src="https://img.shields.io/badge/Team-5_Developers-orange?style=for-the-badge" alt="Team" />
-  <img src="https://img.shields.io/badge/Tests-Passing_55%2F55-brightgreen?style=for-the-badge" alt="Tests" />
+  <img src="https://img.shields.io/badge/Tests-Passing_164%2F164-brightgreen?style=for-the-badge" alt="Tests" />
 </p>
 
 ---
@@ -87,6 +87,65 @@ El desarrollo está organizado para que cada uno de los 5 desarrolladores sea du
 
 ---
 
+## 🗓️ Semana 5 | Negociación y Cierre del Flujo
+
+La Semana 5 conecta los módulos ya existentes en un flujo de compra y entrega completo, con datos en memoria listos para la demostración.
+
+### 💬 Chat de texto y avisos en la app
+* Bandeja de conversaciones (`/chat`) con último mensaje, hora y contador de no leídos.
+* Chat uno a uno (`ChatPage`) para cliente ↔ comercio, cliente ↔ proveedor de eventos y cliente ↔ repartidor.
+* `ChatLauncher` es el punto de entrada compartido: garantiza el hilo del contexto y lo abre desde el comercio, la ficha de servicio o la entrega.
+* Aviso dentro de la app (`ChatNotificationService`) cuando entra un mensaje del interlocutor; los mensajes propios no generan aviso.
+* Los mensajes simulados (`simulateIncoming`) permiten demostrar la notificación sin backend.
+
+### 💲 Validación de precios, envío y disponibilidad
+* Rangos de precio validados: cantidades positivas, escalones sin duplicados, precios mayores a cero y nunca superiores al precio base.
+* Desglose de checkout (`PricingBreakdown`) con subtotal, envío y total; tarifa de envío por distancia con base mínima.
+* Validación al confirmar la compra: comercio abierto, producto disponible, stock suficiente y un solo comercio por pedido (RN07).
+* La validación ocurre en el momento del pago, no solo al agregar al carrito.
+
+### 📦 Modalidad de entrega, estados y pago
+* Modalidades: delivery de la tienda, repartidor externo o retiro en local (RN02). El retiro deja el envío en cero.
+* Métodos de pago: efectivo o transferencia, registrados antes de confirmar el checkout.
+* Ciclo del pedido: creado → confirmado → buscando repartidor → en camino → entregado, con validación de saltos.
+* Alternativas cuando no hay repartidores (RN03): esperar, aumentar la tarifa, retirar en local, usar el delivery propio del comercio (si está disponible) o cancelar.
+* Pantallas `CheckoutPage`, `MisPedidosPage` y `PedidoEstadoPage` con las acciones disponibles según el estado y la modalidad.
+
+### 🗺️ Precisión GPS y chat con proveedores
+* `LocationFix` transporta coordenadas y margen de precisión; las estimaciones marcan si la distancia es aproximada.
+* La pantalla de destino muestra la precisión reportada y ofrece fallback manual ante timeout o falta de señal.
+* Las fichas y consultas de servicios de eventos abren un chat real con el proveedor, con mensaje inicial contextual.
+
+### 🤝 Negociación de ofertas y cierre de entrega
+* El cliente propone una tarifa y el sistema calcula la tarifa referencial por distancia.
+* Los repartidores envían ofertas y contraofertas; la pantalla compara monto, repartidor y estado.
+* Selección única y atómica (RN06): al aceptar una oferta, todas las demás pendientes se cierran en la misma operación.
+* Estados de la entrega: solicitada → asignada → en camino → entregada, además de cancelación.
+* Historial de entregas (`/entregas/historial`) con entregas completadas, canceladas y calificación pendiente.
+* Calificación de 1 a 5 estrellas con comentario opcional, actualizando el promedio del repartidor.
+* Chat directo con el repartidor desde la negociación y desde el historial.
+
+### 🧭 Rutas nuevas de la Semana 5
+
+| Ruta | Pantalla |
+|---|---|
+| `/chat` | Bandeja de conversaciones y avisos |
+| `/pedidos` | Mis pedidos y estados |
+| `/entregas/negociacion` | Negociación de la entrega (requiere `req-demo-01` como argumento) |
+| `/entregas/historial` | Historial y calificaciones |
+
+La pantalla de bienvenida incluye accesos directos a chat, pedidos, negociación e historial para facilitar la demostración.
+
+### 🎬 Guion de demostración
+
+1. **Dos repartidores, una sola asignación:** abrir *Negociar entrega* (`req-demo-01`), registrar o simular dos ofertas, compararlas y aceptar una. Verificar que la otra queda cerrada y que la entrega pasa a asignada.
+2. **Ciclo de la entrega:** avanzar en camino → entregada, abrir el historial y calificar al repartidor con estrellas y comentario.
+3. **Sin repartidores:** en *Mis pedidos*, abrir un pedido confirmado sin repartidor y probar esperar, aumentar tarifa, retiro en local, delivery propio (según disponibilidad) y cancelar (RN03).
+4. **Chat y avisos:** abrir *Chat y avisos*, entrar a una conversación, enviar un mensaje y simular uno entrante para ver el aviso en la app.
+5. **Eventos:** abrir una ficha o una consulta de servicio y usar el botón de chat para conversar con el proveedor.
+
+---
+
 ## 🚀 Flujo de Git y Prevención de Conflictos
 
 ```mermaid
@@ -124,7 +183,7 @@ flutter test
 flutter analyze
 ```
 
-### Cobertura de pruebas (Semana 2):
+### Cobertura de pruebas (Semanas 2 y 5):
 - ✅ `test/features/orders/order_business_rules_test.dart` (RN01, RN07, RN08)
 - ✅ `test/features/products/pricing_rules_test.dart` (RN04)
 - ✅ `test/features/returnable_containers/returnable_container_test.dart` (RN05)
@@ -140,6 +199,21 @@ flutter analyze
 - ✅ `test/features/event_services/event_services_controller_test.dart` (Gestión de estado, filtrado y publicación)
 - ✅ `test/features/event_services/listado_servicios_page_widget_test.dart` (Consulta interactiva de fichas y filtros por categoría)
 - ✅ `test/features/event_services/publicar_ficha_page_widget_test.dart` (Formulario de publicación y validación de campos)
+- ✅ `test/features/chat/chat_controller_test.dart` (Carga, envío, no leídos y aviso de mensaje entrante)
+- ✅ `test/features/chat/in_memory_chat_repository_test.dart` (Hilos por contexto, persistencia y validaciones)
+- ✅ `test/features/chat/chat_notification_service_test.dart` (Avisos solo para mensajes del interlocutor)
+- ✅ `test/features/chat/chat_page_widget_test.dart` (Historial y envío de mensajes de texto)
+- ✅ `test/features/pricing/pricing_checkout_test.dart` (Tarifa de envío y validación de escalones de precio)
+- ✅ `test/features/products/purchase_availability_test.dart` (Comercio abierto, stock y disponibilidad al comprar)
+- ✅ `test/features/orders/order_flow_service_test.dart` (Modalidades, pago, estados y alternativas sin repartidores)
+- ✅ `test/features/orders/order_flow_controller_test.dart` (Checkout y resolución de ausencia de repartidores)
+- ✅ `test/features/location/location_precision_test.dart` (Margen GPS y estimaciones aproximadas)
+- ✅ `test/features/location/seleccionar_destino_entrega_page_widget_test.dart` (Destino, precisión y fallback manual)
+- ✅ `test/features/event_services/event_services_chat_link_test.dart` (Chat real con el proveedor desde la ficha)
+- ✅ `test/features/event_services/mis_consultas_page_widget_test.dart` (Consulta y chat desde la bandeja de eventos)
+- ✅ `test/features/delivery_offers/delivery_negotiation_domain_test.dart` (Comparación de ofertas, estados y selección única)
+- ✅ `test/features/delivery_offers/delivery_negotiation_controller_test.dart` (Propuesta, selección, cancelación, historial y calificación)
+- ✅ `test/features/delivery_offers/negociacion_entrega_page_widget_test.dart` (Dos ofertas, una asignación y cierre de la otra)
 - ✅ `test/widget_test.dart` (Smoke test de arranque de la app)
 
 ---

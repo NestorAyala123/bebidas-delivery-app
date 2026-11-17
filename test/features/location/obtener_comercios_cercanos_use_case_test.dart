@@ -15,22 +15,28 @@ void main() {
   });
 
   group('ObtenerComerciosCercanosUseCase Tests', () {
-    test('Calcula distancias y devuelve comercios ordenados por proximidad', () async {
-      const userOrigin = GeoCoordinates(
-        latitude: -0.9676534,
-        longitude: -80.7088841,
-      );
+    test(
+      'Calcula distancias y devuelve comercios ordenados por proximidad',
+      () async {
+        const userOrigin = GeoCoordinates(
+          latitude: -0.9676534,
+          longitude: -80.7088841,
+        );
 
-      final result = await useCase(origin: userOrigin, radiusKm: 10.0);
+        final result = await useCase(origin: userOrigin, radiusKm: 10.0);
 
-      expect(result, isA<Success<List<NearbyStore>, dynamic>>());
-      final stores = (result as Success<List<NearbyStore>, dynamic>).data;
-      expect(stores, isNotEmpty);
+        expect(result, isA<Success<List<NearbyStore>, dynamic>>());
+        final stores = (result as Success<List<NearbyStore>, dynamic>).data;
+        expect(stores, isNotEmpty);
 
-      // Verificar que están ordenados de menor a mayor distancia
-      for (int i = 0; i < stores.length - 1; i++) {
-        expect(stores[i].distanceKm, lessThanOrEqualTo(stores[i + 1].distanceKm));
-      }
-    });
+        // Verificar que están ordenados de menor a mayor distancia
+        for (int i = 0; i < stores.length - 1; i++) {
+          expect(
+            stores[i].distanceKm,
+            lessThanOrEqualTo(stores[i + 1].distanceKm),
+          );
+        }
+      },
+    );
   });
 }

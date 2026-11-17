@@ -113,7 +113,10 @@ void main() {
         unitPrice: 1.50,
         quantity: 4,
       );
-      final cart = const Cart().addItem(targetStoreId: 'store-central', item: item);
+      final cart = const Cart().addItem(
+        targetStoreId: 'store-central',
+        item: item,
+      );
 
       final result = await createOrderUseCase(
         CreateOrderInput.fromCart(
@@ -132,7 +135,10 @@ void main() {
       expect(order.status, equals(OrderStatus.created));
       expect(order.status.isPending, isTrue);
       expect(order.status.displayName, equals('Pendiente'));
-      expect(order.canRequestDriver, isFalse); // RN01: comercio debe confirmar antes
+      expect(
+        order.canRequestDriver,
+        isFalse,
+      ); // RN01: comercio debe confirmar antes
     });
 
     test('4. PRECIO HISTÓRICO CONGELADO (RN08): Si cambia el catálogo, el pedido mantiene su importe', () async {
@@ -147,7 +153,10 @@ void main() {
 
       // 2. Se agrega al carrito y se crea el pedido congelando precio
       final cartItem = CartItem.fromProduct(catalogProduct, quantity: 6);
-      final cart = const Cart().addItem(targetStoreId: 'store-licores', item: cartItem);
+      final cart = const Cart().addItem(
+        targetStoreId: 'store-licores',
+        item: cartItem,
+      );
 
       final createResult = await createOrderUseCase(
         CreateOrderInput(
@@ -175,7 +184,9 @@ void main() {
       );
 
       // 4. El pedido guardado en el repositorio mantiene su importe original intacto
-      final retrievedOrderResult = await orderRepository.getOrderById(createdOrder.id);
+      final retrievedOrderResult = await orderRepository.getOrderById(
+        createdOrder.id,
+      );
       final persistedOrder = retrievedOrderResult.dataOrNull!;
       expect(persistedOrder.items.first.frozenUnitPrice, equals(8.00));
       expect(persistedOrder.itemsSubtotal, equals(48.00));
@@ -186,11 +197,21 @@ void main() {
       // Creamos dos pedidos para el cliente
       final cart1 = const Cart().addItem(
         targetStoreId: 'store-1',
-        item: const CartItem(productId: 'prod-1', productName: 'Jugo', unitPrice: 2.0, quantity: 1),
+        item: const CartItem(
+          productId: 'prod-1',
+          productName: 'Jugo',
+          unitPrice: 2.0,
+          quantity: 1,
+        ),
       );
       final cart2 = const Cart().addItem(
         targetStoreId: 'store-1',
-        item: const CartItem(productId: 'prod-2', productName: 'Agua', unitPrice: 1.0, quantity: 2),
+        item: const CartItem(
+          productId: 'prod-2',
+          productName: 'Agua',
+          unitPrice: 1.0,
+          quantity: 2,
+        ),
       );
 
       int counter = 0;
@@ -199,20 +220,24 @@ void main() {
         generateOrderId: () => 'ORD-${++counter}',
       );
 
-      await useCaseWithCounter(CreateOrderInput.fromCart(
-        customerId: 'cust-david-01',
-        deliveryAddress: 'Dir 1',
-        cart: cart1,
-        deliveryMethod: OrderDeliveryMethod.externalDelivery,
-        paymentMethod: OrderPaymentMethod.cash,
-      ));
-      await useCaseWithCounter(CreateOrderInput.fromCart(
-        customerId: 'cust-david-01',
-        deliveryAddress: 'Dir 2',
-        cart: cart2,
-        deliveryMethod: OrderDeliveryMethod.externalDelivery,
-        paymentMethod: OrderPaymentMethod.cash,
-      ));
+      await useCaseWithCounter(
+        CreateOrderInput.fromCart(
+          customerId: 'cust-david-01',
+          deliveryAddress: 'Dir 1',
+          cart: cart1,
+          deliveryMethod: OrderDeliveryMethod.externalDelivery,
+          paymentMethod: OrderPaymentMethod.cash,
+        ),
+      );
+      await useCaseWithCounter(
+        CreateOrderInput.fromCart(
+          customerId: 'cust-david-01',
+          deliveryAddress: 'Dir 2',
+          cart: cart2,
+          deliveryMethod: OrderDeliveryMethod.externalDelivery,
+          paymentMethod: OrderPaymentMethod.cash,
+        ),
+      );
 
       final historyResult = await getCustomerOrdersUseCase('cust-david-01');
       expect(historyResult.isSuccess, isTrue);

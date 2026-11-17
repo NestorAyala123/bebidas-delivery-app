@@ -129,17 +129,14 @@ class MockDeliveryRepository implements DeliveryRepository {
   ) async {
     await _simulateLatency();
     final activeRequest = _requests.values.cast<DeliveryRequest?>().firstWhere(
-          (r) => r?.orderId == orderId && r!.status.isActive,
-          orElse: () => null,
-        );
+      (r) => r?.orderId == orderId && r!.status.isActive,
+      orElse: () => null,
+    );
     return Success(activeRequest);
   }
 
   @override
-  Future<Result<void, Failure>> updateStatus(
-    String id,
-    String status,
-  ) async {
+  Future<Result<void, Failure>> updateStatus(String id, String status) async {
     await _simulateLatency();
     final request = _requests[id];
     if (request == null) {
@@ -149,12 +146,10 @@ class MockDeliveryRepository implements DeliveryRepository {
     }
 
     final normalized = status.trim().toLowerCase();
-    final newStatus = DeliveryStatus.values
-        .cast<DeliveryStatus?>()
-        .firstWhere(
-          (s) => s?.name.toLowerCase() == normalized,
-          orElse: () => null,
-        );
+    final newStatus = DeliveryStatus.values.cast<DeliveryStatus?>().firstWhere(
+      (s) => s?.name.toLowerCase() == normalized,
+      orElse: () => null,
+    );
 
     if (newStatus == null) {
       return FailureResult(
@@ -197,7 +192,8 @@ class MockDeliveryRepository implements DeliveryRepository {
   }
 
   @override
-  Future<Result<List<DeliveryRequest>, Failure>> getPendingDeliveryRequests() async {
+  Future<Result<List<DeliveryRequest>, Failure>>
+  getPendingDeliveryRequests() async {
     await _simulateLatency();
     final pending = _requests.values
         .where((r) => r.status == DeliveryStatus.pendingOffer)

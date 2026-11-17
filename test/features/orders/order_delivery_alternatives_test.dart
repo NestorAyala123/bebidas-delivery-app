@@ -65,7 +65,7 @@ void main() {
       final order = result.dataOrNull!;
       expect(order.deliveryMethod, OrderDeliveryMethod.pickup);
       expect(order.status, OrderStatus.preparing);
-      expect(order.paymentMethod.displayName, 'Transferencia');
+      expect(order.paymentMethod?.displayName, 'Transferencia');
       expect(order.timeline.last.status, OrderStatus.preparing);
     });
 

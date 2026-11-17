@@ -67,21 +67,24 @@ void main() {
       expect(calc.hasReturnableContainers, isFalse);
     });
 
-    test('RN05: Charges full deposit when customer returns 0 empty containers', () {
-      var cart = const Cart();
-      cart = cart.addItem(targetStoreId: storeId, item: returnableBeer330);
+    test(
+      'RN05: Charges full deposit when customer returns 0 empty containers',
+      () {
+        var cart = const Cart();
+        cart = cart.addItem(targetStoreId: storeId, item: returnableBeer330);
 
-      final calc = cart.calculateTotals(returnedContainers: 0);
+        final calc = cart.calculateTotals(returnedContainers: 0);
 
-      expect(calc.itemsSubtotal, equals(9.00)); // 6 * 1.50
-      expect(calc.totalContainersRequired, equals(6));
-      expect(calc.returnedContainers, equals(0));
-      expect(calc.missingContainers, equals(6));
-      expect(calc.missingContainersFee, equals(1.50)); // 6 * 0.25
-      expect(calc.total, equals(10.50)); // 9.00 + 1.50
-      expect(calc.hasMissingContainersFee, isTrue);
-      expect(calc.isFullyReturned, isFalse);
-    });
+        expect(calc.itemsSubtotal, equals(9.00)); // 6 * 1.50
+        expect(calc.totalContainersRequired, equals(6));
+        expect(calc.returnedContainers, equals(0));
+        expect(calc.missingContainers, equals(6));
+        expect(calc.missingContainersFee, equals(1.50)); // 6 * 0.25
+        expect(calc.total, equals(10.50)); // 9.00 + 1.50
+        expect(calc.hasMissingContainersFee, isTrue);
+        expect(calc.isFullyReturned, isFalse);
+      },
+    );
 
     test('RN05: Charges 0 container fee when customer returns all required containers', () {
       var cart = const Cart();
@@ -146,8 +149,14 @@ void main() {
 
     test('Complete calculation structure combines subtotal, container fees, delivery and discounts', () {
       var cart = const Cart();
-      cart = cart.addItem(targetStoreId: storeId, item: returnableBeer330); // Subtotal: 9.00, Req: 6 @ 0.25
-      cart = cart.addItem(targetStoreId: storeId, item: nonReturnableItem); // Subtotal: 10.00
+      cart = cart.addItem(
+        targetStoreId: storeId,
+        item: returnableBeer330,
+      ); // Subtotal: 9.00, Req: 6 @ 0.25
+      cart = cart.addItem(
+        targetStoreId: storeId,
+        item: nonReturnableItem,
+      ); // Subtotal: 10.00
 
       // Returned 2 containers -> missing 4 -> missing fee: 4 * 0.25 = 1.00
       // Subtotal = 19.00
@@ -171,13 +180,19 @@ void main() {
       expect(calc.total, equals(21.50));
     });
 
-    test('Grand total does not go below zero when discount exceeds total cost', () {
-      var cart = const Cart();
-      cart = cart.addItem(targetStoreId: storeId, item: nonReturnableItem); // 10.00
+    test(
+      'Grand total does not go below zero when discount exceeds total cost',
+      () {
+        var cart = const Cart();
+        cart = cart.addItem(
+          targetStoreId: storeId,
+          item: nonReturnableItem,
+        ); // 10.00
 
-      final calc = cart.calculateTotals(discount: 50.00);
-      expect(calc.total, equals(0.0));
-    });
+        final calc = cart.calculateTotals(discount: 50.00);
+        expect(calc.total, equals(0.0));
+      },
+    );
 
     test('Negative arguments in calculateTotals are safely clamped', () {
       var cart = const Cart();
@@ -245,4 +260,3 @@ void main() {
     });
   });
 }
-

@@ -1,11 +1,12 @@
 import '../../../../core/errors/exceptions.dart';
+import '../../../delivery/domain/entities/delivery_mode.dart';
 import 'order_delivery_method.dart';
 import 'order_item.dart';
 import 'order_status.dart';
-import 'order_payment_method.dart';
+import 'payment_method.dart';
 
 /// Core Order domain entity.
-/// Enforces RN01, RN07, RN08.
+/// Enforces RN01, RN07, RN08 and stores the checkout decisions of RN02.
 class Order {
   final String id;
   final String customerId;
@@ -13,9 +14,11 @@ class Order {
   final List<OrderItem> items;
   final OrderStatus status;
   final OrderDeliveryMethod deliveryMethod;
-  final OrderPaymentMethod paymentMethod;
+  final DeliveryMode deliveryMode;
+  final PaymentMethod? paymentMethod;
   final String deliveryAddress;
   final double missingContainersFee;
+  final double deliveryFee;
   final DateTime createdAt;
   final DateTime? confirmedAt;
   final String? rejectionReason;
@@ -27,22 +30,39 @@ class Order {
     required this.storeId,
     required this.items,
     required this.status,
-    required this.deliveryMethod,
-    this.paymentMethod = OrderPaymentMethod.cash,
+    OrderDeliveryMethod? deliveryMethod,
+    DeliveryMode? deliveryMode,
+    this.paymentMethod,
     required this.deliveryAddress,
     this.missingContainersFee = 0.0,
+    this.deliveryFee = 0.0,
     required this.createdAt,
     this.confirmedAt,
     this.rejectionReason,
     this.statusHistory = const [],
-  }) : assert(items.length > 0, 'Un pedido debe tener al menos un item');
+  }) : deliveryMethod =
+           deliveryMethod ??
+           (deliveryMode == DeliveryMode.pickupAtStore
+               ? OrderDeliveryMethod.pickup
+               : deliveryMode == DeliveryMode.ownDelivery
+               ? OrderDeliveryMethod.storeDelivery
+               : OrderDeliveryMethod.externalDelivery),
+       deliveryMode =
+           deliveryMode ??
+           (deliveryMethod == OrderDeliveryMethod.pickup
+               ? DeliveryMode.pickupAtStore
+               : deliveryMethod == OrderDeliveryMethod.storeDelivery
+               ? DeliveryMode.ownDelivery
+               : DeliveryMode.externalDriver),
+       assert(items.length > 0, 'Un pedido debe tener al menos un item'),
+       assert(deliveryFee >= 0, 'El costo de envío no puede ser negativo');
 
   /// Subtotal calculated from frozen prices
   double get itemsSubtotal =>
       items.fold(0.0, (acc, item) => acc + item.subtotal);
 
-  /// Final total including missing containers fee
-  double get total => itemsSubtotal + missingContainersFee;
+  /// Final total including missing containers fee and delivery fee
+  double get total => itemsSubtotal + missingContainersFee + deliveryFee;
 
   /// RN01: El establecimiento debe confirmar el pedido antes de buscar repartidor.
   bool get canRequestDriver => status.canSearchDriver;
@@ -51,6 +71,16 @@ class Order {
   List<OrderStatusChange> get timeline => statusHistory.isEmpty
       ? [OrderStatusChange(status: status, changedAt: createdAt)]
       : statusHistory;
+
+  /// Indica si el cliente ya eligió cómo pagar.
+  bool get isPaymentRegistered => paymentMethod != null;
+
+  /// Solo se confirma el checkout con modalidad y pago registrados.
+  bool get isCheckoutReady => isPaymentRegistered;
+
+  /// RN02: modalidad seleccionada por el cliente.
+  bool get isPickup => deliveryMode.isPickup;
+  bool get usesExternalDriver => deliveryMode.requiresExternalDriver;
 
   /// Creates a copy with an updated status
   Order copyWithStatus(
@@ -84,9 +114,11 @@ class Order {
       items: items,
       status: newStatus,
       deliveryMethod: deliveryMethod,
+      deliveryMode: deliveryMode,
       paymentMethod: paymentMethod,
       deliveryAddress: deliveryAddress,
       missingContainersFee: missingContainersFee,
+      deliveryFee: deliveryFee,
       createdAt: createdAt,
       confirmedAt: newStatus == OrderStatus.confirmed
           ? (confirmedAt ?? timestamp)
@@ -95,6 +127,37 @@ class Order {
           ? rejectionReason!.trim()
           : this.rejectionReason,
       statusHistory: history,
+    );
+  }
+
+  /// Crea una copia con las decisiones de checkout actualizadas.
+  Order copyWithCheckout({
+    DeliveryMode? deliveryMode,
+    PaymentMethod? paymentMethod,
+    double? deliveryFee,
+  }) {
+    final newMode = deliveryMode ?? this.deliveryMode;
+    final newMethod = switch (newMode) {
+      DeliveryMode.pickupAtStore => OrderDeliveryMethod.pickup,
+      DeliveryMode.ownDelivery => OrderDeliveryMethod.storeDelivery,
+      DeliveryMode.externalDriver => OrderDeliveryMethod.externalDelivery,
+    };
+    return Order(
+      id: id,
+      customerId: customerId,
+      storeId: storeId,
+      items: items,
+      status: status,
+      deliveryMethod: newMethod,
+      deliveryMode: newMode,
+      paymentMethod: paymentMethod ?? this.paymentMethod,
+      deliveryAddress: deliveryAddress,
+      missingContainersFee: missingContainersFee,
+      deliveryFee: deliveryFee ?? this.deliveryFee,
+      createdAt: createdAt,
+      confirmedAt: confirmedAt,
+      rejectionReason: rejectionReason,
+      statusHistory: statusHistory,
     );
   }
 
@@ -111,6 +174,11 @@ class Order {
     }
 
     final timestamp = changedAt ?? DateTime.now();
+    final newMode = switch (newMethod) {
+      OrderDeliveryMethod.pickup => DeliveryMode.pickupAtStore,
+      OrderDeliveryMethod.storeDelivery => DeliveryMode.ownDelivery,
+      OrderDeliveryMethod.externalDelivery => DeliveryMode.externalDriver,
+    };
     return Order(
       id: id,
       customerId: customerId,
@@ -118,9 +186,11 @@ class Order {
       items: items,
       status: OrderStatus.preparing,
       deliveryMethod: newMethod,
+      deliveryMode: newMode,
       paymentMethod: paymentMethod,
       deliveryAddress: deliveryAddress,
       missingContainersFee: missingContainersFee,
+      deliveryFee: deliveryFee,
       createdAt: createdAt,
       confirmedAt: confirmedAt,
       rejectionReason: rejectionReason,
@@ -139,8 +209,7 @@ class Order {
             newStatus == OrderStatus.cancelled,
       OrderStatus.confirmed =>
         newStatus == OrderStatus.preparing ||
-            (deliveryMethod == OrderDeliveryMethod.externalDelivery &&
-                newStatus == OrderStatus.lookingForDriver) ||
+            newStatus == OrderStatus.lookingForDriver ||
             newStatus == OrderStatus.cancelled,
       OrderStatus.preparing => switch (deliveryMethod) {
         OrderDeliveryMethod.pickup =>
@@ -157,20 +226,18 @@ class Order {
       OrderStatus.pickedUp => newStatus == OrderStatus.delivered,
       OrderStatus.readyForDelivery => newStatus == OrderStatus.inDelivery,
       OrderStatus.lookingForDriver =>
-        deliveryMethod == OrderDeliveryMethod.externalDelivery &&
-            (newStatus == OrderStatus.noDriversAvailable ||
-                newStatus == OrderStatus.driverAssigned ||
-                newStatus == OrderStatus.cancelled),
+        newStatus == OrderStatus.noDriversAvailable ||
+            newStatus == OrderStatus.driverAssigned ||
+            newStatus == OrderStatus.confirmed ||
+            newStatus == OrderStatus.cancelled,
       OrderStatus.noDriversAvailable =>
         newStatus == OrderStatus.lookingForDriver ||
-            newStatus == OrderStatus.cancelled,
+            newStatus == OrderStatus.cancelled ||
+            newStatus == OrderStatus.preparing,
       OrderStatus.driverAssigned =>
         deliveryMethod == OrderDeliveryMethod.externalDelivery &&
             newStatus == OrderStatus.inDelivery,
-      OrderStatus.inDelivery =>
-        (deliveryMethod == OrderDeliveryMethod.storeDelivery ||
-                deliveryMethod == OrderDeliveryMethod.externalDelivery) &&
-            newStatus == OrderStatus.delivered,
+      OrderStatus.inDelivery => newStatus == OrderStatus.delivered,
       OrderStatus.rejected ||
       OrderStatus.delivered ||
       OrderStatus.cancelled => false,

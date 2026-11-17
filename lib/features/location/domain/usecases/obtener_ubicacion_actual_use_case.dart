@@ -35,8 +35,7 @@ class PermissionFailure extends Failure {
 /// Ocurre cuando el usuario deniega el permiso permanentemente (marcó "no volver a preguntar").
 class PermissionPermanentlyDeniedFailure extends PermissionFailure {
   const PermissionPermanentlyDeniedFailure([
-    super.message =
-        'El permiso de ubicación fue denegado permanentemente. Habilítalo en los ajustes de la aplicación.',
+    super.message = 'El permiso de ubicación fue denegado permanentemente. Habilítalo en los ajustes de la aplicación.',
     super.code,
   ]);
 }
@@ -44,7 +43,8 @@ class PermissionPermanentlyDeniedFailure extends PermissionFailure {
 /// Ocurre cuando el sensor GPS está apagado en el dispositivo o no hay señal.
 class LocationUnavailableFailure extends Failure {
   const LocationUnavailableFailure([
-    super.message = 'El servicio de GPS está desactivado o la ubicación no está disponible',
+    super.message =
+        'El servicio de GPS está desactivado o la ubicación no está disponible',
     super.code,
   ]);
 }
@@ -53,8 +53,7 @@ class LocationUnavailableFailure extends Failure {
 /// interiores, túnel o sensor bloqueado).
 class LocationTimeoutFailure extends LocationUnavailableFailure {
   const LocationTimeoutFailure([
-    super.message =
-        'El GPS no respondió a tiempo. Puedes reintentar, usar coordenadas de prueba o ingresar tu dirección manualmente.',
+    super.message = 'El GPS no respondió a tiempo. Puedes reintentar, usar coordenadas de prueba o ingresar tu dirección manualmente.',
     super.code = 'location_timeout',
   ]);
 }

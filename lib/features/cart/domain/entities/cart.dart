@@ -132,12 +132,14 @@ class Cart {
     if (newQuantity <= 0) {
       return removeItem(productId);
     }
-    final updated = items.map((i) {
-      if (i.productId == productId) {
-        return i.copyWith(quantity: newQuantity);
-      }
-      return i;
-    }).toList(growable: false);
+    final updated = items
+        .map((i) {
+          if (i.productId == productId) {
+            return i.copyWith(quantity: newQuantity);
+          }
+          return i;
+        })
+        .toList(growable: false);
     return Cart(storeId: storeId, items: List.unmodifiable(updated));
   }
 
