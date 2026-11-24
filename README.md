@@ -5,7 +5,7 @@
   <img src="https://img.shields.io/badge/Dart-3.13+-0175C2?style=for-the-badge&logo=dart&logoColor=white" alt="Dart" />
   <img src="https://img.shields.io/badge/Architecture-Modular_Monolith-success?style=for-the-badge" alt="Architecture" />
   <img src="https://img.shields.io/badge/Team-5_Developers-orange?style=for-the-badge" alt="Team" />
-  <img src="https://img.shields.io/badge/Tests-Passing_14%2F14-brightgreen?style=for-the-badge" alt="Tests" />
+  <img src="https://img.shields.io/badge/Tests-Flutter_Test-brightgreen?style=for-the-badge" alt="Flutter tests" />
 </p>
 
 ---
@@ -84,6 +84,49 @@ El desarrollo está organizado para que cada uno de los 5 desarrolladores sea du
 * **RN06:** Al aceptar la oferta de un repartidor, **todas las demás ofertas pendientes se cierran automáticamente**.
 * **RN07:** Un pedido/carrito solo puede contener productos de un único comercio.
 * **RN08:** El precio pactado en el pedido queda **congelado históricamente**, inmutable ante futuras actualizaciones del catálogo.
+
+---
+
+## 🏪 Catálogo de comercios y productos
+
+- Los comercios guardan nombre, dirección, contacto, URL opcional de imagen,
+  horarios por día y un estado abierto/cerrado que se cambia manualmente. Los
+  horarios se conservan como texto informativo; no cambian el estado automáticamente.
+- Cada producto pertenece a un comercio y puede tener una URL opcional de imagen,
+  precio base, disponibilidad y precios escalonados. El catálogo filtra por
+  comercio y, por defecto, muestra solo productos disponibles; la consulta completa
+  también incluye productos agotados. El estado abierto/cerrado no oculta el
+  catálogo por sí solo; se valida antes de aceptar una compra.
+- El precio por cantidad usa el umbral más alto alcanzado (incluido el límite) y
+  conserva el precio base si no se alcanza ninguno. Los umbrales deben ser mayores
+  que uno y no pueden duplicarse entre reglas y escalones.
+- Para productos retornables, `ContainerFeeCalculator` cobra solo los envases
+  faltantes.
+- Las imágenes se proporcionan como URL. Si no pueden cargarse, la interfaz de
+  gestión muestra un icono de respaldo.
+
+### Integración pendiente para carrito y pedidos
+
+Las reglas de precio por cantidad y garantía ya están implementadas en sus módulos,
+pero el flujo actual de compra todavía no las invoca. Al integrar o revisar carrito
+y pedidos:
+
+1. Al calcular el precio de un producto para la cantidad solicitada, llamar a
+   `product.getUnitPriceForQuantity(quantity)`.
+2. Al crear cada `OrderItem`, guardar ese precio como `frozenUnitPrice` para
+   conservar el precio acordado (RN08).
+3. Para cada producto retornable, llamar a
+   `const ContainerFeeCalculator().calculateMissingFee(...)` con la cantidad de
+   envases requeridos, los envases devueltos por el cliente y el depósito unitario.
+   Sumar las tarifas resultantes y asignarlas a `Order.missingContainersFee`.
+   Los productos no retornables no deben generar esta tarifa.
+4. Añadir una prueba de integración que compruebe el precio escalonado congelado
+   y la garantía por envases faltantes en el total del pedido.
+
+Esta integración requiere que el flujo de pedidos tenga la cantidad devuelta por
+producto; no se debe inferir ni reemplazar contratos compartidos sin coordinarlo
+con las personas responsables de esos módulos. No es un fallo de los cálculos
+unitarios del módulo de comercios/productos.
 
 ---
 
