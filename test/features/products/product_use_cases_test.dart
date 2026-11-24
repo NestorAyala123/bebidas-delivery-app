@@ -1,4 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:bebidas_delivery_app/features/pricing/domain/entities/price_rule.dart';
+import 'package:bebidas_delivery_app/features/pricing/domain/entities/quantity_pricing_tier.dart';
 import 'package:bebidas_delivery_app/features/products/application/use_cases/save_product_use_case.dart';
 import 'package:bebidas_delivery_app/features/products/application/use_cases/update_product_availability_use_case.dart';
 import 'package:bebidas_delivery_app/features/products/domain/entities/product.dart';
@@ -69,5 +71,65 @@ void main() {
     );
 
     expect(result.isFailure, isTrue);
+  });
+
+  test('rejects quantity rules that conflict with product tiers', () async {
+    final result = await saveProduct(
+      const Product(
+        id: 'product-1',
+        storeId: 'store-1',
+        name: 'Agua',
+        basePrice: 1.5,
+        quantityTiers: [QuantityPricingTier(minQuantity: 6, unitPrice: 1.2)],
+        priceRules: [
+          PriceRule(
+            id: 'rule-1',
+            productId: 'product-1',
+            minQuantity: 6,
+            unitPrice: 1.1,
+          ),
+        ],
+      ),
+    );
+
+    expect(result.isFailure, isTrue);
+    expect(result.failureOrNull?.message, contains('mismo rango'));
+  });
+
+  test('rejects a quantity rule that does not belong to the product', () async {
+    final result = await saveProduct(
+      const Product(
+        id: 'product-1',
+        storeId: 'store-1',
+        name: 'Agua',
+        basePrice: 1.5,
+        priceRules: [
+          PriceRule(
+            id: 'rule-1',
+            productId: 'another-product',
+            minQuantity: 6,
+            unitPrice: 1.1,
+          ),
+        ],
+      ),
+    );
+
+    expect(result.isFailure, isTrue);
+    expect(result.failureOrNull?.message, contains('pertenecer'));
+  });
+
+  test('requires a positive deposit for returnable products', () async {
+    final result = await saveProduct(
+      const Product(
+        id: 'product-1',
+        storeId: 'store-1',
+        name: 'Botella retornable',
+        basePrice: 1.5,
+        isReturnableContainer: true,
+      ),
+    );
+
+    expect(result.isFailure, isTrue);
+    expect(result.failureOrNull?.message, contains('depósito'));
   });
 }

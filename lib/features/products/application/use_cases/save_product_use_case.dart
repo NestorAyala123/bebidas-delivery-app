@@ -60,6 +60,59 @@ class SaveProductUseCase {
       }
     }
 
+    for (final rule in product.priceRules) {
+      if (rule.productId != product.id) {
+        return Future.value(
+          const FailureResult<Product, Failure>(
+            ValidationFailure('La regla debe pertenecer al producto'),
+          ),
+        );
+      }
+      if (rule.minQuantity <= 1) {
+        return Future.value(
+          const FailureResult<Product, Failure>(
+            ValidationFailure(
+              'La cantidad mínima escalonada debe ser mayor que 1',
+            ),
+          ),
+        );
+      }
+      if (!tierMinimums.add(rule.minQuantity)) {
+        return Future.value(
+          const FailureResult<Product, Failure>(
+            ValidationFailure(
+              'No puede haber dos precios para el mismo rango de cantidad',
+            ),
+          ),
+        );
+      }
+      if (!rule.unitPrice.isFinite || rule.unitPrice < 0) {
+        return Future.value(
+          const FailureResult<Product, Failure>(
+            ValidationFailure('El precio escalonado no puede ser negativo'),
+          ),
+        );
+      }
+    }
+
+    if (!product.containerDepositPrice.isFinite ||
+        product.containerDepositPrice < 0) {
+      return Future.value(
+        const FailureResult<Product, Failure>(
+          ValidationFailure('El depósito no puede ser negativo'),
+        ),
+      );
+    }
+    if (product.isReturnableContainer && product.containerDepositPrice <= 0) {
+      return Future.value(
+        const FailureResult<Product, Failure>(
+          ValidationFailure(
+            'El depósito debe ser mayor que cero para un envase retornable',
+          ),
+        ),
+      );
+    }
+
     if (product.id.trim().isEmpty) return repository.createProduct(product);
 
     final existing = await repository.getProductById(product.id);
