@@ -26,6 +26,7 @@ class _StoreManagementPageState extends State<StoreManagementPage> {
   final _storeAddressController = TextEditingController();
   final _storePhoneController = TextEditingController();
   final _storeDescriptionController = TextEditingController();
+  final _storeImageController = TextEditingController();
   final _productNameController = TextEditingController();
   final _productPriceController = TextEditingController();
   final _productImageController = TextEditingController();
@@ -86,6 +87,7 @@ class _StoreManagementPageState extends State<StoreManagementPage> {
       _storeAddressController,
       _storePhoneController,
       _storeDescriptionController,
+      _storeImageController,
       _productNameController,
       _productPriceController,
       _productImageController,
@@ -122,6 +124,7 @@ class _StoreManagementPageState extends State<StoreManagementPage> {
     _storeAddressController.text = store.address;
     _storePhoneController.text = store.phone;
     _storeDescriptionController.text = store.description;
+    _storeImageController.text = store.imageUrl ?? '';
     _isOpen = store.isOpen;
     _hasOwnDelivery = store.hasOwnDelivery;
     _allowsExternalDelivery = store.allowsExternalDelivery;
@@ -155,6 +158,9 @@ class _StoreManagementPageState extends State<StoreManagementPage> {
       description: _storeDescriptionController.text,
       address: _storeAddressController.text,
       phone: _storePhoneController.text,
+      imageUrl: _storeImageController.text.trim().isEmpty
+          ? null
+          : _storeImageController.text.trim(),
       isOpen: _isOpen,
       hasOwnDelivery: _hasOwnDelivery,
       allowsExternalDelivery: _allowsExternalDelivery,
@@ -259,24 +265,29 @@ class _StoreManagementPageState extends State<StoreManagementPage> {
     if (!mounted) return;
     result.fold(
       onSuccess: (_) {
-        setState(
-          () => _selectedStore = Store(
-            id: store.id,
-            ownerId: store.ownerId,
-            name: store.name,
-            description: store.description,
-            address: store.address,
-            phone: store.phone,
-            openingHours: store.openingHours,
-            latitude: store.latitude,
-            longitude: store.longitude,
-            imageUrl: store.imageUrl,
-            isOpen: value,
-            hasOwnDelivery: store.hasOwnDelivery,
-            allowsExternalDelivery: store.allowsExternalDelivery,
-            allowsPickup: store.allowsPickup,
-          ),
+        final updatedStore = Store(
+          id: store.id,
+          ownerId: store.ownerId,
+          name: store.name,
+          description: store.description,
+          address: store.address,
+          phone: store.phone,
+          openingHours: store.openingHours,
+          latitude: store.latitude,
+          longitude: store.longitude,
+          imageUrl: store.imageUrl,
+          isOpen: value,
+          hasOwnDelivery: store.hasOwnDelivery,
+          allowsExternalDelivery: store.allowsExternalDelivery,
+          allowsPickup: store.allowsPickup,
         );
+        setState(() {
+          _selectedStore = updatedStore;
+          _isOpen = value;
+          _stores = _stores
+              .map((item) => item.id == updatedStore.id ? updatedStore : item)
+              .toList();
+        });
         _showMessage(value ? 'Comercio abierto' : 'Comercio cerrado');
       },
       onFailure: _showFailure,
@@ -338,6 +349,22 @@ class _StoreManagementPageState extends State<StoreManagementPage> {
             _field(_storeAddressController, 'Dirección'),
             _field(_storePhoneController, 'Teléfono'),
             _field(_storeDescriptionController, 'Descripción'),
+            _field(
+              _storeImageController,
+              'URL de imagen del comercio (opcional)',
+              onChanged: (_) => setState(() {}),
+            ),
+            if (_storeImageController.text.trim().isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Image.network(
+                  _storeImageController.text.trim(),
+                  height: 96,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) =>
+                      const Icon(Icons.store, size: 48),
+                ),
+              ),
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
               title: const Text('Comercio abierto'),
@@ -464,6 +491,8 @@ class _StoreManagementPageState extends State<StoreManagementPage> {
               width: 48,
               height: 48,
               fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) =>
+                  const Icon(Icons.local_drink),
             ),
       title: Text(product.name),
       subtitle: Text(
@@ -489,12 +518,14 @@ class _StoreManagementPageState extends State<StoreManagementPage> {
     String label, {
     TextInputType? keyboardType,
     String? hintText,
+    void Function(String)? onChanged,
   }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: TextField(
         controller: controller,
         keyboardType: keyboardType,
+        onChanged: onChanged,
         decoration: InputDecoration(
           labelText: label,
           hintText: hintText,

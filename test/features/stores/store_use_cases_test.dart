@@ -22,6 +22,7 @@ void main() {
         name: 'La Esquina',
         address: 'Av. Central',
         isOpen: true,
+        imageUrl: 'https://example.com/store.png',
         openingHours: {'monday': '09:00-22:00', 'saturday': '10:00-20:00'},
         hasOwnDelivery: true,
         allowsExternalDelivery: false,
@@ -32,6 +33,7 @@ void main() {
     expect(created, isA<Success<Store, Failure>>());
     expect(created.dataOrNull?.openingHours['monday'], '09:00-22:00');
     expect(created.dataOrNull?.openingHours['saturday'], '10:00-20:00');
+    expect(created.dataOrNull?.imageUrl, 'https://example.com/store.png');
 
     final edited = await saveStore(
       const Store(
@@ -69,6 +71,8 @@ void main() {
         name: 'La Esquina',
         address: 'Av. Central',
         isOpen: true,
+        imageUrl: 'https://example.com/store.png',
+        openingHours: {'monday': '09:00-22:00'},
       ),
     );
 
@@ -80,5 +84,7 @@ void main() {
 
     expect(result.isSuccess, isTrue);
     expect(store.dataOrNull?.isOpen, isFalse);
+    expect(store.dataOrNull?.imageUrl, 'https://example.com/store.png');
+    expect(store.dataOrNull?.openingHours['monday'], '09:00-22:00');
   });
 }
