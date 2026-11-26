@@ -15,7 +15,11 @@ class OrderItem {
     this.isReturnable = false,
     this.containerDepositPrice = 0.0,
   }) : assert(quantity > 0, 'La cantidad debe ser mayor a 0'),
-       assert(frozenUnitPrice >= 0, 'El precio no puede ser negativo');
+       assert(frozenUnitPrice >= 0, 'El precio no puede ser negativo'),
+       assert(
+         containerDepositPrice >= 0,
+         'El depósito del envase no puede ser negativo',
+       );
 
   double get subtotal => frozenUnitPrice * quantity;
 }

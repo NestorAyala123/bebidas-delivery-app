@@ -35,7 +35,11 @@ class Order {
     this.confirmedAt,
     this.rejectionReason,
     this.statusHistory = const [],
-  }) : assert(items.length > 0, 'Un pedido debe tener al menos un item');
+  }) : assert(items.length > 0, 'Un pedido debe tener al menos un item'),
+       assert(
+         missingContainersFee >= 0,
+         'El cargo por envases faltantes no puede ser negativo',
+       );
 
   /// Subtotal calculated from frozen prices
   double get itemsSubtotal =>
@@ -71,11 +75,12 @@ class Order {
       );
     }
 
+    final effectiveChangedAt = changedAt ?? DateTime.now();
     final history = List<OrderStatusChange>.of(timeline)
       ..add(
         OrderStatusChange(
           status: newStatus,
-          changedAt: changedAt ?? DateTime.now(),
+          changedAt: effectiveChangedAt,
         ),
       );
 
@@ -91,7 +96,7 @@ class Order {
       missingContainersFee: missingContainersFee,
       createdAt: createdAt,
       confirmedAt: newStatus == OrderStatus.confirmed
-          ? confirmedAt
+          ? (confirmedAt ?? effectiveChangedAt)
           : this.confirmedAt,
       rejectionReason: newStatus == OrderStatus.rejected
           ? rejectionReason!.trim()
@@ -155,16 +160,25 @@ class Order {
           newStatus == OrderStatus.lookingForDriver ||
               newStatus == OrderStatus.cancelled,
       },
-      OrderStatus.readyForPickup => newStatus == OrderStatus.pickedUp,
-      OrderStatus.pickedUp => newStatus == OrderStatus.delivered,
-      OrderStatus.readyForDelivery => newStatus == OrderStatus.inDelivery,
+      OrderStatus.readyForPickup =>
+        (deliveryMethod == OrderDeliveryMethod.pickup &&
+                newStatus == OrderStatus.pickedUp) ||
+            newStatus == OrderStatus.cancelled,
+      OrderStatus.pickedUp =>
+        deliveryMethod == OrderDeliveryMethod.pickup &&
+            newStatus == OrderStatus.delivered,
+      OrderStatus.readyForDelivery =>
+        (deliveryMethod == OrderDeliveryMethod.storeDelivery &&
+                newStatus == OrderStatus.inDelivery) ||
+            newStatus == OrderStatus.cancelled,
       OrderStatus.lookingForDriver =>
         deliveryMethod == OrderDeliveryMethod.externalDelivery &&
             (newStatus == OrderStatus.noDriversAvailable ||
                 newStatus == OrderStatus.driverAssigned ||
                 newStatus == OrderStatus.cancelled),
       OrderStatus.noDriversAvailable =>
-        newStatus == OrderStatus.lookingForDriver ||
+        (deliveryMethod == OrderDeliveryMethod.externalDelivery &&
+                newStatus == OrderStatus.lookingForDriver) ||
             newStatus == OrderStatus.cancelled,
       OrderStatus.driverAssigned =>
         deliveryMethod == OrderDeliveryMethod.externalDelivery &&
