@@ -135,29 +135,45 @@ class _ChatRoomState extends State<_ChatRoom> {
     return Scaffold(
       appBar: AppBar(title: Text(widget.arguments.title)),
       body: _error != null
-          ? Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Text(_error!, textAlign: TextAlign.center),
-              ),
+          ? _ChatStatus(
+              icon: Icons.error_outline,
+              title: 'No se pudo abrir la conversación',
+              message: _error!,
+              actionLabel: 'Intentar de nuevo',
+              onAction: _open,
             )
           : _messages == null
-          ? const Center(child: CircularProgressIndicator())
+          ? const _ChatStatus(
+              loading: true,
+              title: 'Cargando conversación',
+              message: 'Un momento, estamos buscando tus mensajes.',
+            )
           : Column(
               children: [
                 Expanded(
                   child: StreamBuilder<List<ChatMessage>>(
                     stream: _messages,
                     builder: (context, snapshot) {
+                      if (snapshot.hasError) {
+                        return _ChatStatus(
+                          icon: Icons.cloud_off_outlined,
+                          title: 'No se pudieron cargar los mensajes',
+                          message: 'Revisa tu conexión e inténtalo de nuevo.',
+                          actionLabel: 'Actualizar',
+                          onAction: _open,
+                        );
+                      }
                       final messages = snapshot.data ?? const [];
                       if (messages.isEmpty) {
-                        return const Center(
-                          child: Text('Escribe el primer mensaje'),
+                        return const _ChatStatus(
+                          icon: Icons.chat_bubble_outline,
+                          title: 'Aún no hay mensajes',
+                          message: 'Escribe el primer mensaje',
                         );
                       }
                       return ListView.builder(
                         reverse: true,
-                        padding: const EdgeInsets.all(12),
+                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 20),
                         itemCount: messages.length,
                         itemBuilder: (context, index) {
                           final message = messages[messages.length - 1 - index];
@@ -218,40 +234,73 @@ class _Composer extends StatelessWidget {
   final TextEditingController controller;
   final bool sending;
   final VoidCallback onSend;
+  final String hintText;
 
   const _Composer({
     required this.controller,
     required this.sending,
     required this.onSend,
+    this.hintText = 'Escribe un mensaje',
   });
 
   @override
   Widget build(BuildContext context) => SafeArea(
-    child: Padding(
-      padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
-      child: Row(
-        children: [
-          Expanded(
-            child: TextField(
-              controller: controller,
-              minLines: 1,
-              maxLines: 4,
-              maxLength: SendMessageUseCase.maxLength,
-              textInputAction: TextInputAction.send,
-              onSubmitted: (_) => onSend(),
-              decoration: const InputDecoration(
-                hintText: 'Escribe un mensaje',
-                counterText: '',
+    child: Material(
+      color: Theme.of(context).colorScheme.surface,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Expanded(
+              child: TextField(
+                controller: controller,
+                enabled: !sending,
+                minLines: 1,
+                maxLines: 4,
+                maxLength: SendMessageUseCase.maxLength,
+                textInputAction: TextInputAction.send,
+                onSubmitted: (_) => onSend(),
+                decoration: InputDecoration(
+                  hintText: hintText,
+                  counterText: '',
+                  filled: true,
+                  fillColor: Theme.of(context).colorScheme.surfaceContainerLow,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 18,
+                    vertical: 13,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(26),
+                    borderSide: BorderSide.none,
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(26),
+                    borderSide: BorderSide.none,
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(26),
+                    borderSide: BorderSide(
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
+                ),
               ),
             ),
-          ),
-          const SizedBox(width: 8),
-          IconButton.filled(
-            onPressed: sending ? null : onSend,
-            icon: const Icon(Icons.send),
-            tooltip: 'Enviar',
-          ),
-        ],
+            const SizedBox(width: 8),
+            IconButton.filled(
+              onPressed: sending ? null : onSend,
+              icon: sending
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.send),
+              tooltip: sending ? 'Enviando mensaje' : 'Enviar',
+            ),
+          ],
+        ),
       ),
     ),
   );
@@ -379,7 +428,7 @@ class _ChatConversationRoomState extends State<_ChatConversationRoom> {
             ),
           if (notification != null)
             MaterialBanner(
-              backgroundColor: Colors.amber.shade100,
+              backgroundColor: colorScheme.tertiaryContainer,
               content: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -390,9 +439,9 @@ class _ChatConversationRoomState extends State<_ChatConversationRoom> {
                   Text(notification.body, style: const TextStyle(fontSize: 12)),
                 ],
               ),
-              leading: const Icon(
-                Icons.notifications_active,
-                color: Colors.black87,
+              leading: Icon(
+                Icons.notifications_active_outlined,
+                color: colorScheme.onTertiaryContainer,
               ),
               actions: [
                 TextButton(
@@ -403,21 +452,17 @@ class _ChatConversationRoomState extends State<_ChatConversationRoom> {
             ),
           Expanded(
             child: messages.isEmpty
-                ? Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(24),
-                      child: Text(
-                        'Aún no hay mensajes. Escribe el primero para '
-                        'coordinar con ${widget.conversation.counterpartName}.',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(color: colorScheme.onSurfaceVariant),
-                      ),
-                    ),
+                ? _ChatStatus(
+                    icon: Icons.forum_outlined,
+                    title: 'Inicia la conversación',
+                    message:
+                        'Escribe el primer mensaje para coordinar con '
+                        '${widget.conversation.counterpartName}.',
                   )
                 : ListView.builder(
                     controller: _scrollController,
                     reverse: true,
-                    padding: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 20),
                     itemCount: messages.length,
                     itemBuilder: (context, index) {
                       final message = messages[messages.length - 1 - index];
@@ -427,45 +472,117 @@ class _ChatConversationRoomState extends State<_ChatConversationRoom> {
                   ),
           ),
           if (_controller.errorMessage != null)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Text(
-                _controller.errorMessage!,
-                style: const TextStyle(color: Colors.red, fontSize: 12),
-              ),
-            ),
+            _ChatErrorNotice(message: _controller.errorMessage!),
           SafeArea(
             top: false,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _textController,
-                      textInputAction: TextInputAction.send,
-                      maxLength: 500,
-                      maxLines: 4,
-                      minLines: 1,
-                      onSubmitted: (_) => _send(),
-                      decoration: const InputDecoration(
-                        hintText: 'Escribe un mensaje...',
-                        counterText: '',
-                        isDense: true,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  IconButton.filled(
-                    tooltip: 'Enviar mensaje',
-                    onPressed: _controller.isSending ? null : _send,
-                    icon: const Icon(Icons.send),
-                  ),
-                ],
-              ),
+            child: _Composer(
+              controller: _textController,
+              sending: _controller.isSending,
+              onSend: _send,
+              hintText: 'Escribe un mensaje...',
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _ChatStatus extends StatelessWidget {
+  final IconData? icon;
+  final String title;
+  final String message;
+  final bool loading;
+  final String? actionLabel;
+  final VoidCallback? onAction;
+
+  const _ChatStatus({
+    this.icon,
+    required this.title,
+    required this.message,
+    this.loading = false,
+    this.actionLabel,
+    this.onAction,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(28),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 360),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (loading)
+                CircularProgressIndicator(color: colors.primary, strokeWidth: 3)
+              else
+                Icon(
+                  icon ?? Icons.chat_bubble_outline,
+                  size: 42,
+                  color: colors.primary,
+                ),
+              const SizedBox(height: 16),
+              Text(
+                title,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.titleMedium
+                    ?.copyWith(fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                message,
+                textAlign: TextAlign.center,
+                style: TextStyle(color: colors.onSurfaceVariant),
+              ),
+              if (actionLabel != null && onAction != null) ...[
+                const SizedBox(height: 16),
+                OutlinedButton.icon(
+                  onPressed: onAction,
+                  icon: const Icon(Icons.refresh),
+                  label: Text(actionLabel!),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ChatErrorNotice extends StatelessWidget {
+  final String message;
+
+  const _ChatErrorNotice({required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: colors.errorContainer,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            children: [
+              Icon(Icons.error_outline, color: colors.onErrorContainer),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  message,
+                  style: TextStyle(color: colors.onErrorContainer),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

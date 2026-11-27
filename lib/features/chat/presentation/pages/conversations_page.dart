@@ -37,7 +37,7 @@ class _ConversationsView extends StatefulWidget {
 
 class _ConversationsViewState extends State<_ConversationsView> {
   List<ConversationSummary>? _items;
-  bool _failed = false;
+  String? _errorMessage;
   StreamSubscription<UnreadMessages>? _changes;
 
   @override
@@ -65,7 +65,7 @@ class _ConversationsViewState extends State<_ConversationsView> {
     if (!mounted) return;
     setState(() {
       _items = result.dataOrNull ?? _items;
-      _failed = result.isFailure;
+      _errorMessage = result.failureOrNull?.message;
     });
   }
 
@@ -151,7 +151,18 @@ class _ConversationsViewState extends State<_ConversationsView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Mensajes')),
+      appBar: AppBar(
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Mensajes'),
+            Text(
+              'Tus conversaciones',
+              style: Theme.of(context).textTheme.labelMedium,
+            ),
+          ],
+        ),
+      ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _startConversation,
         icon: const Icon(Icons.add_comment_outlined),
@@ -164,18 +175,34 @@ class _ConversationsViewState extends State<_ConversationsView> {
   Widget _buildBody(BuildContext context) {
     final items = _items;
     if (items == null) {
-      return _failed
-          ? const Center(child: Text('No se pudo cargar tus mensajes'))
-          : const Center(child: CircularProgressIndicator());
+      if (_errorMessage != null) {
+        return _InboxStatus(
+          icon: Icons.cloud_off_outlined,
+          title: 'No se pudieron cargar tus mensajes',
+          message: _errorMessage!,
+          actionLabel: 'Intentar de nuevo',
+          onAction: _reload,
+        );
+      }
+      return const _InboxStatus(
+        loading: true,
+        title: 'Cargando conversaciones',
+        message: 'Enseguida verás tus mensajes aquí.',
+      );
     }
     if (items.isEmpty) {
-      return const Center(
-        child: Text('Aún no tienes conversaciones. Inicia una.'),
+      return _InboxStatus(
+        icon: Icons.forum_outlined,
+        title: 'Aún no tienes conversaciones',
+        message: 'Inicia un chat para coordinar pedidos o resolver dudas.',
+        actionLabel: 'Nueva conversación',
+        onAction: _startConversation,
       );
     }
     return ListView.separated(
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 96),
       itemCount: items.length,
-      separatorBuilder: (_, _) => const Divider(height: 1),
+      separatorBuilder: (_, _) => const SizedBox(height: 8),
       itemBuilder: (context, index) => _ConversationTile(
         item: items[index],
         myId: widget.requester.id,
@@ -200,34 +227,133 @@ class _ConversationTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colors = theme.colorScheme;
     final unread = item.unreadCount;
     final last = item.lastMessage;
     final preview = last == null
         ? item.kindLabel
         : '${last.senderId == myId ? 'Tú: ' : ''}${last.text}';
-    return ListTile(
-      leading: CircleAvatar(child: Icon(_kindIcon(item.conversation.type))),
-      title: Text(
-        item.title,
-        style: unread > 0 ? const TextStyle(fontWeight: FontWeight.bold) : null,
+    return Card(
+      elevation: 0,
+      color: unread > 0
+          ? colors.primaryContainer.withAlpha(90)
+          : colors.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(18),
+        side: BorderSide(color: colors.outlineVariant.withAlpha(120)),
       ),
-      subtitle: Text(preview, maxLines: 1, overflow: TextOverflow.ellipsis),
-      trailing: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          if (last != null)
-            Text(_shortTime(last.sentAt), style: theme.textTheme.labelSmall),
-          if (unread > 0) ...[
-            const SizedBox(height: 4),
-            Semantics(
-              label: '$unread sin leer',
-              child: Badge(label: Text('$unread')),
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+        leading: CircleAvatar(
+          backgroundColor: colors.primaryContainer,
+          foregroundColor: colors.onPrimaryContainer,
+          child: Icon(_kindIcon(item.conversation.type)),
+        ),
+        title: Text(
+          item.title,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: theme.textTheme.titleSmall?.copyWith(
+            fontWeight: unread > 0 ? FontWeight.w700 : FontWeight.w600,
+          ),
+        ),
+        subtitle: Padding(
+          padding: const EdgeInsets.only(top: 4),
+          child: Text(
+            preview,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: unread > 0 ? colors.onSurface : colors.onSurfaceVariant,
+              fontWeight: unread > 0 ? FontWeight.w500 : FontWeight.normal,
             ),
+          ),
+        ),
+        trailing: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            if (last != null)
+              Text(_shortTime(last.sentAt), style: theme.textTheme.labelSmall),
+            if (unread > 0) ...[
+              const SizedBox(height: 6),
+              Semantics(
+                label: '$unread sin leer',
+                child: Badge(
+                  backgroundColor: colors.primary,
+                  label: Text('$unread'),
+                ),
+              ),
+            ],
           ],
-        ],
+        ),
+        onTap: onTap,
       ),
-      onTap: onTap,
+    );
+  }
+}
+
+class _InboxStatus extends StatelessWidget {
+  final IconData? icon;
+  final String title;
+  final String message;
+  final bool loading;
+  final String? actionLabel;
+  final VoidCallback? onAction;
+
+  const _InboxStatus({
+    this.icon,
+    required this.title,
+    required this.message,
+    this.loading = false,
+    this.actionLabel,
+    this.onAction,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(28),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 360),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (loading)
+                CircularProgressIndicator(color: colors.primary)
+              else
+                Icon(
+                  icon ?? Icons.chat_bubble_outline,
+                  size: 44,
+                  color: colors.primary,
+                ),
+              const SizedBox(height: 16),
+              Text(
+                title,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.titleMedium
+                    ?.copyWith(fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                message,
+                textAlign: TextAlign.center,
+                style: TextStyle(color: colors.onSurfaceVariant),
+              ),
+              if (actionLabel != null && onAction != null) ...[
+                const SizedBox(height: 16),
+                FilledButton.tonalIcon(
+                  onPressed: onAction,
+                  icon: const Icon(Icons.add_comment_outlined),
+                  label: Text(actionLabel!),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
