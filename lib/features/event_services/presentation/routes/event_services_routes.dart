@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/router/feature_route_module.dart';
+import '../../../auth/presentation/widgets/role_access_gate.dart';
+import '../../../users/domain/entities/role.dart';
 import '../../domain/entities/ficha_servicio.dart';
 import '../pages/detalle_ficha_page.dart';
 import '../pages/listado_servicios_page.dart';
@@ -18,9 +20,21 @@ class EventServicesRoutes implements FeatureRouteModule {
 
   @override
   Map<String, WidgetBuilder> get routes => {
-    listado: (context) => const ListadoServiciosPage(),
-    publicar: (context) => const PublicarFichaPage(),
-    misConsultas: (context) => const MisConsultasPage(),
+    listado: (context) => RoleAccessGate(
+      title: 'Servicios para Eventos',
+      allowedRoles: const {Role.client, Role.eventProvider},
+      child: const ListadoServiciosPage(),
+    ),
+    publicar: (context) => RoleAccessGate(
+      title: 'Publicar servicio',
+      allowedRoles: const {Role.eventProvider},
+      child: const PublicarFichaPage(),
+    ),
+    misConsultas: (context) => RoleAccessGate(
+      title: 'Consultas de eventos',
+      allowedRoles: const {Role.client, Role.eventProvider},
+      child: const MisConsultasPage(),
+    ),
   };
 
   @override
@@ -30,7 +44,11 @@ class EventServicesRoutes implements FeatureRouteModule {
       if (ficha != null) {
         return MaterialPageRoute<void>(
           settings: settings,
-          builder: (context) => DetalleFichaPage(ficha: ficha),
+          builder: (context) => RoleAccessGate(
+            title: 'Ficha de proveedor',
+            allowedRoles: const {Role.client, Role.eventProvider},
+            child: DetalleFichaPage(ficha: ficha),
+          ),
         );
       }
     }
@@ -40,7 +58,11 @@ class EventServicesRoutes implements FeatureRouteModule {
       if (ficha != null) {
         return MaterialPageRoute<void>(
           settings: settings,
-          builder: (context) => SolicitarConsultaPage(ficha: ficha),
+          builder: (context) => RoleAccessGate(
+            title: 'Solicitar consulta',
+            allowedRoles: const {Role.client},
+            child: SolicitarConsultaPage(ficha: ficha),
+          ),
         );
       }
     }

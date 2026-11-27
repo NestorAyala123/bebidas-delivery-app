@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/di/service_locator.dart';
+import '../../../auth/presentation/state/current_identity.dart';
+import '../../../auth/presentation/widgets/role_access_gate.dart';
+import '../../../users/domain/entities/identity_contract.dart';
+import '../../../users/domain/entities/role.dart';
 import '../../domain/entities/event_service.dart';
 import '../../domain/entities/ficha_servicio.dart';
 import '../../domain/usecases/obtener_servicios_use_case.dart';
@@ -90,6 +94,10 @@ class _ListadoServiciosPageState extends State<ListadoServiciosPage> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final identity = currentIdentity();
+    final canPublish =
+        identity?.rbacRole == Role.eventProvider ||
+        (identity == null && widget.controller != null);
 
     return Scaffold(
       backgroundColor: colorScheme.surfaceContainerLowest,
@@ -103,13 +111,14 @@ class _ListadoServiciosPageState extends State<ListadoServiciosPage> {
           IconButton(
             icon: const Icon(Icons.history),
             tooltip: 'Mis Consultas de Eventos',
-            onPressed: _navigateToMisConsultas,
+            onPressed: () => _navigateToMisConsultas(identity),
           ),
-          IconButton(
-            icon: const Icon(Icons.add_circle_outline),
-            tooltip: 'Publicar Ficha',
-            onPressed: _navigateToPublish,
-          ),
+          if (canPublish)
+            IconButton(
+              icon: const Icon(Icons.add_circle_outline),
+              tooltip: 'Publicar Ficha',
+              onPressed: _navigateToPublish,
+            ),
         ],
       ),
       body: Column(
@@ -268,27 +277,46 @@ class _ListadoServiciosPageState extends State<ListadoServiciosPage> {
             ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _navigateToPublish,
-        icon: const Icon(Icons.add),
-        label: const Text('Publicar servicio'),
-        backgroundColor: colorScheme.primary,
-        foregroundColor: colorScheme.onPrimary,
-      ),
+      floatingActionButton: canPublish
+          ? FloatingActionButton.extended(
+              onPressed: _navigateToPublish,
+              icon: const Icon(Icons.add),
+              label: const Text('Publicar servicio'),
+              backgroundColor: colorScheme.primary,
+              foregroundColor: colorScheme.onPrimary,
+            )
+          : null,
     );
   }
 
   void _navigateToDetail(FichaServicio ficha) {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => DetalleFichaPage(ficha: ficha)),
+      MaterialPageRoute(
+        builder: (_) => RoleAccessGate(
+          title: 'Ficha de proveedor',
+          allowedRoles: const {Role.client, Role.eventProvider},
+          child: DetalleFichaPage(ficha: ficha),
+        ),
+      ),
     );
   }
 
-  void _navigateToMisConsultas() {
+  void _navigateToMisConsultas(IdentityContract? identity) {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => const MisConsultasPage()),
+      MaterialPageRoute(
+        builder: (_) => RoleAccessGate(
+          title: 'Consultas de eventos',
+          allowedRoles: const {Role.client, Role.eventProvider},
+          child: MisConsultasPage(
+            customerId: identity?.id ?? 'customer-demo',
+            providerId: identity?.rbacRole == Role.eventProvider
+                ? identity!.id
+                : null,
+          ),
+        ),
+      ),
     );
   }
 
@@ -296,7 +324,11 @@ class _ListadoServiciosPageState extends State<ListadoServiciosPage> {
     final created = await Navigator.push<bool>(
       context,
       MaterialPageRoute(
-        builder: (_) => PublicarFichaPage(controller: _controller),
+        builder: (_) => RoleAccessGate(
+          title: 'Publicar servicio',
+          allowedRoles: const {Role.eventProvider},
+          child: PublicarFichaPage(controller: _controller),
+        ),
       ),
     );
 

@@ -2,6 +2,8 @@ import 'package:flutter/widgets.dart';
 
 import '../../../../core/router/feature_route_module.dart';
 import '../../../auth/presentation/widgets/session_gate.dart';
+import '../../../auth/presentation/widgets/role_access_gate.dart';
+import '../../../users/domain/entities/role.dart';
 import '../pages/delivery_driver_ratings_page.dart';
 import '../pages/delivery_history_page.dart';
 import '../pages/delivery_offers_page.dart';
@@ -16,16 +18,27 @@ class DeliveryRoutes implements FeatureRouteModule {
   Map<String, WidgetBuilder> get routes => {
     offers: (context) => SessionGate(
       title: 'Delivery',
-      builder: (context, identity) => DeliveryOffersPage(identity: identity),
+      builder: (context, identity) => RoleAccessGate(
+        title: 'Delivery',
+        allowedRoles: const {Role.client, Role.store, Role.driver},
+        child: DeliveryOffersPage(identity: identity),
+      ),
     ),
     history: (context) => SessionGate(
       title: 'Historial',
-      builder: (context, identity) => DeliveryHistoryPage(identity: identity),
+      builder: (context, identity) => RoleAccessGate(
+        title: 'Historial de delivery',
+        allowedRoles: const {Role.client, Role.store, Role.driver},
+        child: DeliveryHistoryPage(identity: identity),
+      ),
     ),
     driverRatings: (context) => SessionGate(
       title: 'Mis Calificaciones',
-      builder: (context, identity) =>
-          DeliveryDriverRatingsPage(identity: identity),
+      builder: (context, identity) => RoleAccessGate(
+        title: 'Mis Calificaciones',
+        allowedRoles: const {Role.driver},
+        child: DeliveryDriverRatingsPage(identity: identity),
+      ),
     ),
   };
 

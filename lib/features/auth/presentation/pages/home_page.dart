@@ -8,11 +8,14 @@ import '../../../location/presentation/pages/mapa_proximo_page.dart';
 import '../../../orders/presentation/pages/order_summary_page.dart';
 import '../../../orders/presentation/pages/orders_history_page.dart';
 import '../../../orders/presentation/pages/store_orders_page.dart';
+import '../../../stores/presentation/routes/stores_routes.dart';
 import '../../../users/domain/entities/app_user.dart';
 import '../../../../core/di/service_locator.dart';
 import '../../domain/entities/user_session.dart';
 import '../state/auth_controller.dart';
 import '../routes/auth_routes.dart';
+import '../widgets/role_access_gate.dart';
+import '../../../users/domain/entities/role.dart' as rbac;
 
 class HomePage extends StatelessWidget {
   final UserSession session;
@@ -26,6 +29,10 @@ class HomePage extends StatelessWidget {
     final roleLabel = _roleLabel(session.role);
     final roleColor = _roleColor(session.role);
     final roleIcon = _roleIcon(session.role);
+    final isClient = session.user.isClient;
+    final isStore = session.user.isStore;
+    final canUseDelivery = isClient || isStore || session.user.isDriver;
+    final canBrowseEventServices = isClient || session.user.isEventProvider;
 
     return Scaffold(
       appBar: AppBar(
@@ -101,49 +108,57 @@ class HomePage extends StatelessWidget {
 
             const SizedBox(height: 12),
 
-            // Orders Module: Summary and Creation
-            ListTile(
-              leading: const CircleAvatar(
-                backgroundColor: Color(0xFFE3F2FD),
-                child: Icon(Icons.shopping_cart_checkout, color: Colors.blue),
+            if (isClient) ...[
+              ListTile(
+                leading: const CircleAvatar(
+                  backgroundColor: Color(0xFFE3F2FD),
+                  child: Icon(Icons.shopping_cart_checkout, color: Colors.blue),
+                ),
+                title: const Text('Crear Pedido / Resumen'),
+                subtitle: const Text(
+                  'Precios por rango, envases y creación pendiente',
+                ),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute<void>(
+                      builder: (_) => RoleAccessGate(
+                        title: 'Crear pedido',
+                        allowedRoles: const {rbac.Role.client},
+                        child: OrderSummaryPage(session: session),
+                      ),
+                    ),
+                  );
+                },
               ),
-              title: const Text('Crear Pedido / Resumen'),
-              subtitle: const Text(
-                'Precios por rango, envases y creación pendiente',
-              ),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => OrderSummaryPage(session: session),
-                  ),
-                );
-              },
-            ),
-            const Divider(),
+              const Divider(),
 
-            // Orders Module: History
-            ListTile(
-              leading: const CircleAvatar(
-                backgroundColor: Color(0xFFFFF8E1),
-                child: Icon(Icons.receipt_long, color: Colors.amber),
+              ListTile(
+                leading: const CircleAvatar(
+                  backgroundColor: Color(0xFFFFF8E1),
+                  child: Icon(Icons.receipt_long, color: Colors.amber),
+                ),
+                title: const Text('Historial de Pedidos'),
+                subtitle: const Text(
+                  'Pedidos registrados con precios históricos congelados',
+                ),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute<void>(
+                      builder: (_) => RoleAccessGate(
+                        title: 'Historial de pedidos',
+                        allowedRoles: const {rbac.Role.client},
+                        child: OrdersHistoryPage(session: session),
+                      ),
+                    ),
+                  );
+                },
               ),
-              title: const Text('Historial de Pedidos'),
-              subtitle: const Text(
-                'Pedidos registrados con precios históricos congelados',
-              ),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => OrdersHistoryPage(session: session),
-                  ),
-                );
-              },
-            ),
-            const Divider(),
+              const Divider(),
+            ],
 
             // Chat: available to every role, with the unread count.
             ListTile(
@@ -160,7 +175,19 @@ class HomePage extends StatelessWidget {
             ),
             const Divider(),
 
-            if (session.user.isStore) ...[
+            if (isStore) ...[
+              ListTile(
+                leading: const CircleAvatar(
+                  backgroundColor: Color(0xFFE0F2F1),
+                  child: Icon(Icons.storefront, color: Colors.teal),
+                ),
+                title: const Text('Administrar comercio y catálogo'),
+                subtitle: const Text('Perfil, productos y disponibilidad'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () =>
+                    Navigator.pushNamed(context, StoresRoutes.management),
+              ),
+              const Divider(),
               ListTile(
                 leading: const CircleAvatar(
                   backgroundColor: Color(0xFFE0F2F1),
@@ -172,8 +199,12 @@ class HomePage extends StatelessWidget {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(
-                      builder: (_) => StoreOrdersPage(session: session),
+                    MaterialPageRoute<void>(
+                      builder: (_) => RoleAccessGate(
+                        title: 'Pedidos del comercio',
+                        allowedRoles: const {rbac.Role.store},
+                        child: StoreOrdersPage(session: session),
+                      ),
                     ),
                   );
                 },
@@ -181,53 +212,74 @@ class HomePage extends StatelessWidget {
               const Divider(),
             ],
 
-            // Modules
-            ListTile(
-              leading: const CircleAvatar(
-                backgroundColor: Color(0xFFE8F5E9),
-                child: Icon(Icons.map, color: Colors.green),
+            if (isClient) ...[
+              ListTile(
+                leading: const CircleAvatar(
+                  backgroundColor: Color(0xFFE8F5E9),
+                  child: Icon(Icons.map, color: Colors.green),
+                ),
+                title: const Text('Mapa de Comercios Cercanos'),
+                subtitle: const Text(
+                  'Prototipo de geolocalización y comercios',
+                ),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute<void>(
+                      builder: (_) => RoleAccessGate(
+                        title: 'Mapa de comercios',
+                        allowedRoles: const {rbac.Role.client},
+                        child: const MapaProximoPage(),
+                      ),
+                    ),
+                  );
+                },
               ),
-              title: const Text('Mapa de Comercios Cercanos'),
-              subtitle: const Text('Prototipo de geolocalización y comercios'),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const MapaProximoPage()),
-                );
-              },
-            ),
-            const Divider(),
-            ListTile(
-              leading: const CircleAvatar(
-                backgroundColor: Color(0xFFEDE7F6),
-                child: Icon(Icons.event_seat, color: Colors.deepPurple),
+              const Divider(),
+            ],
+            if (canBrowseEventServices) ...[
+              ListTile(
+                leading: const CircleAvatar(
+                  backgroundColor: Color(0xFFEDE7F6),
+                  child: Icon(Icons.event_seat, color: Colors.deepPurple),
+                ),
+                title: const Text('Servicios para Eventos'),
+                subtitle: const Text('Bartenders, hielo, DJs y barras'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => RoleAccessGate(
+                        title: 'Servicios para Eventos',
+                        allowedRoles: const {
+                          rbac.Role.client,
+                          rbac.Role.eventProvider,
+                        },
+                        child: const ListadoServiciosPage(),
+                      ),
+                    ),
+                  );
+                },
               ),
-              title: const Text('Servicios para Eventos'),
-              subtitle: const Text('Bartenders, hielo, DJs y barras'),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const ListadoServiciosPage(),
-                  ),
-                );
-              },
-            ),
-            const Divider(),
-            ListTile(
-              leading: const CircleAvatar(
-                backgroundColor: Color(0xFFFFF3E0),
-                child: Icon(Icons.local_shipping, color: Colors.orange),
+              const Divider(),
+            ],
+            if (canUseDelivery) ...[
+              ListTile(
+                leading: const CircleAvatar(
+                  backgroundColor: Color(0xFFFFF3E0),
+                  child: Icon(Icons.local_shipping, color: Colors.orange),
+                ),
+                title: const Text('Módulo de Delivery'),
+                subtitle: const Text(
+                  'Ofertas, contraofertas y asignación de repartidor',
+                ),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () =>
+                    Navigator.pushNamed(context, DeliveryRoutes.offers),
               ),
-              title: const Text('Módulo de Delivery'),
-              subtitle: const Text(
-                'Ofertas, contraofertas y asignación de repartidor',
-              ),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => Navigator.pushNamed(context, DeliveryRoutes.offers),
-            ),
+            ],
             const SizedBox(height: 32),
             OutlinedButton.icon(
               onPressed: () => _logout(context),

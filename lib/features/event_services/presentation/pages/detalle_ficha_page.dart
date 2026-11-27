@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../../../auth/presentation/state/current_identity.dart';
 import '../../../chat/domain/entities/chat_conversation.dart';
 import '../../../chat/presentation/chat_launcher.dart';
+import '../../../users/domain/entities/role.dart';
 import '../../domain/entities/consulta_servicio.dart';
 import '../../domain/entities/event_service.dart';
 import '../../domain/entities/ficha_servicio.dart';
@@ -16,6 +18,7 @@ class DetalleFichaPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final canRequestQuote = currentIdentity()?.rbacRole == Role.client;
 
     return Scaffold(
       appBar: AppBar(
@@ -174,25 +177,26 @@ class DetalleFichaPage extends StatelessWidget {
             const SizedBox(height: 20),
 
             // Acción principal: solicitar cotización / consulta
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: () => _openConsulta(context),
-                icon: const Icon(Icons.request_quote_outlined),
-                label: const Text(
-                  'Solicitar Cotización / Consulta',
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: colorScheme.primary,
-                  foregroundColor: colorScheme.onPrimary,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
+            if (canRequestQuote)
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () => _openConsulta(context),
+                  icon: const Icon(Icons.request_quote_outlined),
+                  label: const Text(
+                    'Solicitar Cotización / Consulta',
+                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: colorScheme.primary,
+                    foregroundColor: colorScheme.onPrimary,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                   ),
                 ),
               ),
-            ),
             const SizedBox(height: 24),
 
             // Botones de Acción
