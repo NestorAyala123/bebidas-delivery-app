@@ -12,7 +12,10 @@ void main() {
     await tester.pumpWidget(const BebidasDeliveryApp());
     await tester.pumpAndSettle();
 
-    expect(find.text('Bienvenido a Bebidas Delivery'), findsOneWidget);
+    expect(find.text('Todo para brindar, en un solo lugar.'), findsOneWidget);
     expect(find.text('Iniciar Sesión'), findsOneWidget);
+    expect(find.text('Explora la plataforma'), findsOneWidget);
+    expect(find.text('Administrar comercios'), findsOneWidget);
+    expect(find.text('Negociar entrega'), findsOneWidget);
   });
 }
