@@ -34,6 +34,7 @@ class RegisterUseCase {
       email: request.email.trim(),
       password: request.password,
       name: request.name.trim(),
+      role: request.role,
     );
   }
 }

@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:bebidas_delivery_app/app/app.dart';
@@ -72,6 +73,22 @@ void main() {
       // Verified on LoginPage
       expect(find.text('Correo'), findsOneWidget);
       expect(find.text('Continuar'), findsOneWidget);
+    });
+
+    testWidgets('shows a readable error for invalid credentials', (
+      WidgetTester tester,
+    ) async {
+      await tester.pumpWidget(const BebidasDeliveryApp());
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Iniciar Sesión'));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byType(TextField).at(0), 'cliente@demo.com');
+      await tester.enterText(find.byType(TextField).at(1), 'incorrecta123');
+      await tester.tap(find.text('Continuar'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Correo o contraseña incorrectos'), findsOneWidget);
     });
   });
 }

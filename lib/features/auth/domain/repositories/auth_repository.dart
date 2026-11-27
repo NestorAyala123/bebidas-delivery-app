@@ -1,3 +1,4 @@
+import '../../../users/domain/entities/app_user.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/result/result.dart';
 import '../entities/user_session.dart';
@@ -12,6 +13,7 @@ abstract class AuthRepository {
     required String email,
     required String password,
     required String name,
+    required UserRole role,
   });
 
   Future<Result<void, Failure>> logout();

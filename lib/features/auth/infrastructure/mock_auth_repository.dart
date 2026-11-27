@@ -41,7 +41,7 @@ class MockAuthRepository implements AuthRepository {
     required String email,
     required String password,
     required String name,
-    UserRole role = UserRole.client,
+    required UserRole role,
   }) async {
     final normalizedEmail = email.trim().toLowerCase();
     if (name.trim().isEmpty || normalizedEmail.isEmpty) {

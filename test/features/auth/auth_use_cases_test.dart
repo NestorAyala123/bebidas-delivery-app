@@ -36,13 +36,24 @@ void main() {
     );
 
     expect(registerResult.isSuccess, isTrue);
+    expect(registerResult.dataOrNull?.role, UserRole.driver);
     expect(
       (await GetCurrentUserUseCase(repository)()).dataOrNull?.user.name,
       'Nuevo usuario',
     );
+    expect(
+      (await GetCurrentUserUseCase(repository)()).dataOrNull?.role,
+      UserRole.driver,
+    );
 
     expect((await LogoutUseCase(repository)()).isSuccess, isTrue);
     expect((await GetCurrentUserUseCase(repository)()).dataOrNull, isNull);
+
+    final loginResult = await LoginUseCase(repository)(
+      email: 'new@example.com',
+      password: 'password-123',
+    );
+    expect(loginResult.dataOrNull?.role, UserRole.driver);
   });
 
   test('rejects malformed credentials before reaching repository', () async {
